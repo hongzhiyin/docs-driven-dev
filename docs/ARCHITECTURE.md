@@ -23,6 +23,7 @@ checks.
 |---|---|---|---|
 | CLI package | `src/docs_driven_dev/` | Argument parsing, scaffolding, audit, status, decision skeletons, skill sync | external packages |
 | Skill source | `skill/SKILL.md` | Agent workflow and boundaries | local install paths |
+| Installed skill wrapper | `<skill-target>/bin/docdev` | Cross-project CLI entrypoint generated during sync | package index |
 | Templates | `skill/templates/` | Four source-doc skeletons copied by `docdev init` | target project state |
 | References | `skill/references/` | Optional examples loaded only when needed | CLI execution |
 | Scripts | `scripts/` | Source-checkout wrappers for install, sync, and checks | package index |
@@ -59,6 +60,7 @@ docdev audit <project>
 docdev sync-skill
   -> resolve source skill directory
   -> copy to Codex / Cursor / shared agents targets
+  -> write each copied target's bin/docdev wrapper back to the source checkout
   -> link Claude target to shared agents target
   -> require --force for unmarked existing target dirs
 ```
@@ -98,7 +100,8 @@ The parser is intentionally tiny and stdlib-only.
 
 ## 6. Process Model
 
-- Entry: `docdev` console script or `.venv/bin/docdev` wrapper.
+- Entry: `docdev` console script, source `.venv/bin/docdev` wrapper, or
+  installed skill-local `bin/docdev` wrapper.
 - Shutdown: command exits after a single operation.
 - Background work: none.
 - Network: none.

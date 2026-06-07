@@ -19,6 +19,7 @@ Claude, and shared agent skill homes.
 | E | Install style | Source checkout wrapper in `.venv/bin/docdev`; no network install required | See D-001 |
 | F | Skill sync targets | `~/.codex`, `~/.cursor`, `~/.agents`, and Claude symlink to shared agents skill | See D-003 |
 | G | Audit strictness | Structural drift is reported as warnings unless a required source document or invariant is broken | See D-005 |
+| H | Cross-project CLI discovery | Synced skill copies include `bin/docdev`; `PATH` and `DOCDEV_PROJECT_DIR` are fallbacks, not requirements | See D-006 |
 
 ## 3. Derived Rules
 
@@ -64,6 +65,11 @@ possible, matching the existing shared Lark skill pattern.
 Existing target directories without a `.docdev-skill-source` marker require
 `--force` before replacement.
 
+Synced skill copies must include a skill-local `bin/docdev` wrapper that points
+back to the source checkout. This lets agents invoke deterministic CLI behavior
+from arbitrary project directories even when `docdev` is not on shell `PATH` and
+`DOCDEV_PROJECT_DIR` is unset.
+
 ## 4. Default Handling
 
 | Scenario | Default behaviour |
@@ -72,6 +78,7 @@ Existing target directories without a `.docdev-skill-source` marker require
 | Audit report requested | Write `audit.json` under `<docs_dir>/_generated/docdev/` |
 | Audit quality issue found | Report a warning unless required source structure is missing or invalid |
 | Missing `docdev` wrapper | Use `DOCDEV_PROJECT_DIR` + `PYTHONPATH` fallback |
+| Skill invoked in another project with no `docdev` on `PATH` | Use the installed skill-local `bin/docdev` wrapper |
 | Ambiguous user design choice | Ask 1-3 short questions before changing SPEC |
 | User did not ask for commit | Do not stage or commit automatically |
 

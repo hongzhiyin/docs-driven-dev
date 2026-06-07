@@ -191,3 +191,43 @@ the rationale blocks future agents need.
 - SPEC §3.2, §3.3
 - `src/docs_driven_dev/cli.py`
 - `tests/test_cli.py`
+
+---
+
+## D-006 - Step 4 - Generate skill-local CLI wrappers during sync
+
+**Date**: 2026-06-08
+
+**Context**:
+When docs-driven-dev is invoked from an unrelated project, the agent may have
+the skill context but not have `docdev` on shell `PATH`, and
+`DOCDEV_PROJECT_DIR` may be unset. Asking the agent to search for the source
+checkout works sometimes, but it is brittle and slows down the normal workflow.
+
+**Options**:
+- A. Require users to put `.venv/bin/docdev` on global `PATH` - simple for one
+  machine, but it leaks local shell setup into every agent session.
+- B. Require `DOCDEV_PROJECT_DIR` in shell profile - close to the existing
+  fallback, but still depends on environment propagation into each tool host.
+- C. Generate a `bin/docdev` wrapper inside each copied installed skill - keeps
+  the deterministic CLI available wherever the skill is loaded, while still
+  pointing back to the single source checkout.
+
+**Chosen**: C
+
+**Rationale**:
+- The installed skill becomes self-sufficient for cross-project sessions.
+- The source checkout remains the only editable CLI implementation.
+- The pattern matches the skill/CLI boundary proven by the Bilibili tool, while
+  avoiding a hard requirement that `docdev` be globally installed.
+
+**Risks**:
+- If the source checkout moves, installed wrappers become stale. Mitigation:
+  rerun `./scripts/sync_skill.sh --targets codex,cursor,agents,claude --force`
+  after moving the project.
+
+**Related code / docs**:
+- SPEC §3.4
+- `skill/SKILL.md`
+- `src/docs_driven_dev/cli.py`
+- `tests/test_cli.py`

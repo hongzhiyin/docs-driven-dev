@@ -5,7 +5,7 @@
 ## Current Progress
 
 **Phase**: Phase 1 - portable skill + CLI bootstrap
-**Current Step**: Step 3 complete; ready for real-project usage feedback
+**Current Step**: Step 4 complete; ready for real-project usage feedback
 
 ### Step Status
 
@@ -15,6 +15,7 @@
 | 1 | Create source project with minimal CLI, portable skill, scripts, and docs | Done |
 | 2 | Migrate/sync installed skills and refine cross-agent packaging | Done |
 | 3 | Expand audit quality checks based on real project usage | Done |
+| 4 | Make CLI discoverable from arbitrary project sessions | Done |
 
 ---
 
@@ -87,6 +88,25 @@ the agent homes the user actually uses.
 **Acceptance**:
 1. New checks catch real failure modes without false-positive noise.
 2. Audit still stays stdlib-only and fast.
+
+---
+
+## Step 4 - Cross-project CLI discovery
+
+**Goal**: Let agents use docs-driven-dev from other project directories without
+requiring `docdev` on shell `PATH` or a pre-set `DOCDEV_PROJECT_DIR`.
+
+**Tasks**:
+- [x] Generate a skill-local `bin/docdev` wrapper during `sync-skill`.
+- [x] Update the skill CLI resolution order to prefer PATH, then skill-local
+  wrapper, then `DOCDEV_PROJECT_DIR`.
+- [x] Add a fixture test for the generated installed-skill wrapper.
+- [x] Document the trade-off in SPEC, ARCHITECTURE, and DECISIONS.
+
+**Acceptance**:
+1. A copied installed skill contains an executable `bin/docdev`.
+2. The wrapper points back to the source checkout and runs the stdlib CLI.
+3. Fresh tests and project audit pass with no findings.
 
 ---
 

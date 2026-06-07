@@ -47,6 +47,19 @@ class CliTests(unittest.TestCase):
     def test_sync_dry_run(self) -> None:
         self.assertEqual(cli.main(["sync-skill", "--dry-run", "--targets", "codex,cursor"]), 0)
 
+    def test_copy_skill_writes_installed_wrapper(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            target = Path(tmp) / "installed-skill"
+            status = cli.copy_skill(ROOT / "skill", target, force=False)
+
+            self.assertEqual(status, "copied")
+            wrapper = target / "bin" / "docdev"
+            self.assertTrue(wrapper.exists())
+            self.assertTrue(os.access(wrapper, os.X_OK))
+            text = wrapper.read_text(encoding="utf-8")
+            self.assertIn(f'DOCDEV_PROJECT_DIR="{ROOT}"', text)
+            self.assertIn(f'PYTHONPATH="{ROOT}/src"', text)
+
     def test_audit_warns_on_readme_documentation_map_drift(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             self.assertEqual(cli.main(["init", tmp]), 0)

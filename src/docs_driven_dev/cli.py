@@ -500,6 +500,33 @@ def target_path_for(target: str) -> Path:
     raise ValueError(f"Unknown target {target}")
 
 
+def source_root_for_skill_source(source: Path) -> Path:
+    marker = source / ".docdev-skill-source"
+    if marker.exists():
+        marked = Path(marker.read_text(encoding="utf-8").strip()).expanduser()
+        source = marked.resolve()
+    if source.name == "skill" and (source.parent / "src" / "docs_driven_dev").exists():
+        return source.parent
+    if (source / "src" / "docs_driven_dev").exists():
+        return source
+    return find_source_root()
+
+
+def write_installed_skill_wrapper(target: Path, source: Path) -> None:
+    source_root = source_root_for_skill_source(source)
+    bin_dir = target / "bin"
+    wrapper = bin_dir / "docdev"
+    bin_dir.mkdir(parents=True, exist_ok=True)
+    wrapper.write_text(
+        "#!/usr/bin/env sh\n"
+        f'DOCDEV_PROJECT_DIR="{source_root}" '
+        f'PYTHONPATH="{source_root}/src" '
+        'exec python3 -m docs_driven_dev.cli "$@"\n',
+        encoding="utf-8",
+    )
+    wrapper.chmod(0o755)
+
+
 def copy_skill(source: Path, target: Path, force: bool) -> str:
     if target.exists() or target.is_symlink():
         marker = target / ".docdev-skill-source" if not target.is_symlink() else None
@@ -512,6 +539,7 @@ def copy_skill(source: Path, target: Path, force: bool) -> str:
     target.parent.mkdir(parents=True, exist_ok=True)
     shutil.copytree(source, target)
     (target / ".docdev-skill-source").write_text(str(source) + "\n", encoding="utf-8")
+    write_installed_skill_wrapper(target, source)
     return "copied"
 
 
