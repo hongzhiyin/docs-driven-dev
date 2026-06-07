@@ -1,0 +1,6 @@
+interface:
+  display_name: "Docs-Driven Dev"
+  short_description: "Bootstrap and audit four-file project docs"
+  default_prompt: "Use $docs-driven-dev to bootstrap or maintain a project with SPEC, ARCHITECTURE, ROADMAP, and DECISIONS."
+policy:
+  allow_implicit_invocation: true
