@@ -151,3 +151,43 @@ the virtual environment, Python caches, and docdev audit outputs.
 - `.gitignore`
 - SPEC §2 C
 - D-002
+
+---
+
+## D-005 - Step 3 - Add focused audit warnings for common doc drift
+
+**Date**: 2026-06-08
+
+**Context**:
+After the skill was synced across agent homes, the next practical failure modes
+were not missing files but subtle source-document drift: README links pointing
+at stale docs, SPEC decision rows with blank choices, and D-XXX entries missing
+the rationale blocks future agents need.
+
+**Options**:
+- A. Keep audit limited to missing files and numbering - stable, but misses
+  mistakes that weaken handoff quality.
+- B. Add broad semantic linting for documentation quality - ambitious, but
+  likely noisy and hard to keep deterministic.
+- C. Add narrow structural warnings for README map links, SPEC Choice cells,
+  and DECISIONS Options/Chosen/Risks blocks - catches real drift without trying
+  to judge prose quality.
+
+**Chosen**: C
+
+**Rationale**:
+- The checks match the Step 3 roadmap items directly.
+- Warnings preserve usability for partially drafted docs while still surfacing
+  handoff risks.
+- Fixture tests keep the CLI stdlib-only and guard against obvious false
+  positives in fresh scaffolds.
+
+**Risks**:
+- Some teams may intentionally omit README maps or decision blocks. Mitigation:
+  keep these findings as warnings and refine only after real usage shows a
+  repeated false positive.
+
+**Related code / docs**:
+- SPEC §3.2, §3.3
+- `src/docs_driven_dev/cli.py`
+- `tests/test_cli.py`

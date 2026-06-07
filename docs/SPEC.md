@@ -18,6 +18,7 @@ Claude, and shared agent skill homes.
 | D | Runtime | Python 3.10+ stdlib-only CLI | See D-001 |
 | E | Install style | Source checkout wrapper in `.venv/bin/docdev`; no network install required | See D-001 |
 | F | Skill sync targets | `~/.codex`, `~/.cursor`, `~/.agents`, and Claude symlink to shared agents skill | See D-003 |
+| G | Audit strictness | Structural drift is reported as warnings unless a required source document or invariant is broken | See D-005 |
 
 ## 3. Derived Rules
 
@@ -37,13 +38,24 @@ No other file can silently replace these four as the source of truth.
 | Command | Purpose | Side effects |
 |---|---|---|
 | `docdev init <project>` | Create templates, README pointer, AGENTS pointer, generated dir | Writes project docs |
-| `docdev audit <project>` | Check docs structure and numbering | Optional audit report |
+| `docdev audit <project>` | Check docs structure, numbering, source-map drift, and required rationale blocks | Optional audit report |
 | `docdev status <project>` | Show Phase, Step, next D id | Read-only |
 | `docdev new-decision "<title>" <project>` | Append next D-XXX skeleton | Writes DECISIONS.md |
 | `docdev sync-skill` | Copy/link skill into agent homes | Writes skill target dirs |
 | `docdev doctor` | Show local install and sync state | Read-only |
 
-### 3.3 Sync Behaviour
+### 3.3 Audit Checks
+
+`docdev audit` checks:
+- the four source documents exist;
+- D-XXX ids are present, unique, monotonic, and not silently skipped;
+- roadmap Step sections include acceptance criteria;
+- SPEC has numbered invariants and no empty Choice cells in its Decision Table;
+- each D-XXX entry has Options, Chosen, and Risks content;
+- README Documentation Map links point at the active docs dir;
+- AGENTS mentions the active docs dir.
+
+### 3.4 Sync Behaviour
 
 `docdev sync-skill` may copy the skill to Codex, Cursor, and shared agents
 targets. Claude should use a symlink to `~/.agents/skills/docs-driven-dev` when
@@ -58,6 +70,7 @@ Existing target directories without a `.docdev-skill-source` marker require
 |---|---|
 | No `.docdev.toml` | Use `docs/` |
 | Audit report requested | Write `audit.json` under `<docs_dir>/_generated/docdev/` |
+| Audit quality issue found | Report a warning unless required source structure is missing or invalid |
 | Missing `docdev` wrapper | Use `DOCDEV_PROJECT_DIR` + `PYTHONPATH` fallback |
 | Ambiguous user design choice | Ask 1-3 short questions before changing SPEC |
 | User did not ask for commit | Do not stage or commit automatically |
@@ -74,7 +87,7 @@ def main(argv: Iterable[str] | None = None) -> int:
 Constraints:
 - Input domain: project paths, optional docs dir override, sync target list.
 - Output domain: console summaries, markdown scaffolds, optional JSON audit.
-- Error categories: missing templates, missing docs, unsafe sync replacement.
+- Error categories: missing templates, missing docs, audit warnings/errors, unsafe sync replacement.
 - Related invariants: #1, #2, #3, #4.
 
 ### 5.2 Skill

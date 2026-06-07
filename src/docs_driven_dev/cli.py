@@ -140,7 +140,7 @@ first, then code.
 """
     if path.exists():
         text = path.read_text(encoding="utf-8")
-        if "## Documentation map" in text:
+        if re.search(r"^##\s+Documentation\s+map\b", text, re.I | re.M):
             return
         path.write_text(text.rstrip() + "\n\n" + block, encoding="utf-8")
         return
@@ -218,6 +218,107 @@ def roadmap_step_sections(text: str) -> list[tuple[str, str]]:
     return sections
 
 
+def markdown_cells(line: str) -> list[str]:
+    stripped = line.strip()
+    if not stripped.startswith("|") or not stripped.endswith("|"):
+        return []
+    return [cell.strip() for cell in stripped.strip("|").split("|")]
+
+
+def markdown_separator_row(cells: list[str]) -> bool:
+    return bool(cells) and all(re.fullmatch(r":?-{3,}:?", cell.replace(" ", "")) for cell in cells)
+
+
+def docs_rel_for_markdown(project: Path, docs_dir: Path) -> str:
+    return os.path.relpath(docs_dir.resolve(), project.resolve()).replace(os.sep, "/")
+
+
+def audit_readme_documentation_map(project: Path, docs_dir: Path) -> list[Finding]:
+    path = project / "README.md"
+    if not path.exists():
+        return []
+
+    findings: list[Finding] = []
+    text = path.read_text(encoding="utf-8")
+    if not re.search(r"^##\s+Documentation\s+map\b", text, re.I | re.M):
+        findings.append(Finding("warn", "README.md has no Documentation Map section", str(path)))
+
+    docs_rel = docs_rel_for_markdown(project, docs_dir)
+    for name in DOC_NAMES:
+        expected = f"[{docs_rel}/{name}]({docs_rel}/{name})"
+        if expected not in text:
+            findings.append(Finding("warn", f"README Documentation Map missing {docs_rel}/{name} link", str(path)))
+    return findings
+
+
+def audit_spec_decision_table(spec_path: Path, text: str) -> list[Finding]:
+    findings: list[Finding] = []
+    match = re.search(r"^##\s+2\.\s+Decision Table\b(?P<body>.*?)(?=^##\s+|\Z)", text, re.M | re.S)
+    if not match:
+        return findings
+
+    for line in match.group("body").splitlines():
+        cells = markdown_cells(line)
+        if len(cells) < 4 or markdown_separator_row(cells):
+            continue
+        if cells[0].lower() == "id":
+            continue
+        if not cells[2] or cells[2] in {"-", "—"}:
+            row_id = cells[0] or "?"
+            findings.append(Finding("warn", f"SPEC decision row {row_id} has empty Choice", str(spec_path)))
+    return findings
+
+
+def decision_sections(text: str) -> list[tuple[str, str]]:
+    headings = list(re.finditer(r"^##\s+(D-\d{3})\b[^\n]*", text, re.M))
+    sections: list[tuple[str, str]] = []
+    for idx, match in enumerate(headings):
+        start = match.end()
+        end = headings[idx + 1].start() if idx + 1 < len(headings) else len(text)
+        sections.append((match.group(1), text[start:end]))
+    return sections
+
+
+def labeled_block_body(section: str, labels: tuple[str, ...]) -> str | None:
+    label_pattern = "|".join(re.escape(label) for label in labels)
+    match = re.search(
+        rf"^\*\*[^*\n]*(?:{label_pattern})[^*\n]*\*\*[：:][ \t]*(?P<inline>[^\n]*)$",
+        section,
+        re.I | re.M,
+    )
+    if not match:
+        return None
+
+    start = match.end()
+    next_label = re.search(r"^\*\*[^*\n]+\*\*[：:]", section[start:], re.M)
+    end = start + next_label.start() if next_label else len(section)
+    return (match.group("inline") + "\n" + section[start:end]).strip()
+
+
+def block_has_content(body: str | None) -> bool:
+    if body is None:
+        return False
+    for line in body.splitlines():
+        content = re.sub(r"^[-*]\s*", "", line.strip()).strip()
+        if content and content not in {"-", "—"}:
+            return True
+    return False
+
+
+def audit_decision_entry_completeness(decisions_path: Path, text: str) -> list[Finding]:
+    findings: list[Finding] = []
+    required_blocks: tuple[tuple[str, tuple[str, ...]], ...] = (
+        ("Options", ("Options", "选项")),
+        ("Chosen", ("Chosen", "选择")),
+        ("Risks", ("Risks", "风险")),
+    )
+    for decision_id, section in decision_sections(text):
+        for label, aliases in required_blocks:
+            if not block_has_content(labeled_block_body(section, aliases)):
+                findings.append(Finding("warn", f"{decision_id} is missing {label} content", str(decisions_path)))
+    return findings
+
+
 def audit_project(project: Path, docs_dir: Path) -> tuple[list[Finding], dict[str, object]]:
     findings: list[Finding] = []
     summary: dict[str, object] = {
@@ -237,7 +338,8 @@ def audit_project(project: Path, docs_dir: Path) -> tuple[list[Finding], dict[st
 
     decisions_path = docs_dir / "DECISIONS.md"
     if decisions_path.exists():
-        ids = extract_decision_ids(decisions_path.read_text(encoding="utf-8"))
+        decisions_text = decisions_path.read_text(encoding="utf-8")
+        ids = extract_decision_ids(decisions_text)
         summary["decision_ids"] = ids
         if not ids:
             findings.append(Finding("warn", "DECISIONS.md has no D-XXX entries", str(decisions_path)))
@@ -249,6 +351,7 @@ def audit_project(project: Path, docs_dir: Path) -> tuple[list[Finding], dict[st
             expected = list(range(1, max(ids) + 1))
             if ids != expected:
                 findings.append(Finding("warn", "D-XXX ids skip at least one number", str(decisions_path)))
+        findings.extend(audit_decision_entry_completeness(decisions_path, decisions_text))
 
     roadmap_path = docs_dir / "ROADMAP.md"
     if roadmap_path.exists():
@@ -266,12 +369,15 @@ def audit_project(project: Path, docs_dir: Path) -> tuple[list[Finding], dict[st
         summary["invariant_ids"] = [int(value) for value in invariant_ids]
         if not invariant_ids:
             findings.append(Finding("warn", "SPEC.md has no numbered invariants like **#1**", str(spec_path)))
+        findings.extend(audit_spec_decision_table(spec_path, text))
 
-    for pointer in ("README.md", "AGENTS.md"):
+    findings.extend(audit_readme_documentation_map(project, docs_dir))
+
+    for pointer in ("AGENTS.md",):
         path = project / pointer
         if path.exists():
             text = path.read_text(encoding="utf-8")
-            if os.path.relpath(docs_dir, project) not in text:
+            if docs_rel_for_markdown(project, docs_dir) not in text:
                 findings.append(Finding("warn", f"{pointer} does not mention the active docs dir", str(path)))
 
     return findings, summary

@@ -21,7 +21,7 @@ before filling the rest of the docs.>
 | B | Main framework / SDK | <example: no runtime dependencies> | See D-001 |
 | C | Storage | <example: local markdown files> | - |
 | D | Distribution | <example: source checkout + wrapper script> | See D-XXX |
-| E | <add more> | | |
+| E | <add more> | <add more> | |
 
 ## 3. Derived Rules
 

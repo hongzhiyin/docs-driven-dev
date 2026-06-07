@@ -5,7 +5,7 @@
 ## Current Progress
 
 **Phase**: Phase 1 - portable skill + CLI bootstrap
-**Current Step**: Step 2 complete; Step 3 ready for audit expansion
+**Current Step**: Step 3 complete; ready for real-project usage feedback
 
 ### Step Status
 
@@ -14,7 +14,7 @@
 | 0 | Evaluate existing Cursor skill and choose architecture | Done |
 | 1 | Create source project with minimal CLI, portable skill, scripts, and docs | Done |
 | 2 | Migrate/sync installed skills and refine cross-agent packaging | Done |
-| 3 | Expand audit quality checks based on real project usage | Pending |
+| 3 | Expand audit quality checks based on real project usage | Done |
 
 ---
 
@@ -79,10 +79,10 @@ the agent homes the user actually uses.
 **Goal**: Add checks only after real usage reveals which mistakes are common.
 
 **Tasks**:
-- [ ] Detect README Documentation Map drift more precisely.
-- [ ] Detect SPEC decision rows with empty choices.
-- [ ] Detect D-XXX entries missing options/chosen/risks.
-- [ ] Add fixture tests for malformed docs.
+- [x] Detect README Documentation Map drift more precisely.
+- [x] Detect SPEC decision rows with empty choices.
+- [x] Detect D-XXX entries missing options/chosen/risks.
+- [x] Add fixture tests for malformed docs.
 
 **Acceptance**:
 1. New checks catch real failure modes without false-positive noise.

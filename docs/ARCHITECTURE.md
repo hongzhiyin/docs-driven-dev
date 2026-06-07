@@ -46,8 +46,9 @@ docdev init <project>
 ```text
 docdev audit <project>
   -> read docs_dir
-  -> check four files
-  -> parse D-XXX ids, roadmap Step acceptance, SPEC invariants
+  -> check four files and active README/AGENTS pointers
+  -> parse D-XXX ids, decision entry blocks, roadmap Step acceptance,
+     SPEC invariants, and SPEC Decision Table choices
   -> print findings
   -> optionally write docs/_generated/docdev/audit.json
 ```
@@ -104,7 +105,9 @@ The parser is intentionally tiny and stdlib-only.
 
 ## 7. Known Constraints
 
-- Audit checks are structural, not semantic.
+- Audit checks are structural, not semantic; rationale completeness is checked
+  by required block presence and content, not by judging the quality of the
+  prose.
 - Sync currently copies skill folders for Codex/Cursor/shared agents and uses a
   Claude symlink; platform-specific metadata may need future adapters.
 - Template lookup assumes a source checkout or synced skill directory is
