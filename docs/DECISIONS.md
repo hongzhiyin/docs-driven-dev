@@ -231,3 +231,48 @@ checkout works sometimes, but it is brittle and slows down the normal workflow.
 - `skill/SKILL.md`
 - `src/docs_driven_dev/cli.py`
 - `tests/test_cli.py`
+
+---
+
+## D-007 - Step 4a - Add skill metadata and project-local update lifecycle
+
+**Date**: 2026-06-08
+
+**Context**:
+`docs-driven-dev` already has a clean portable skill plus CLI structure and
+installed `bin/docdev` wrappers. A later `skill-cli-kit` audit added two newer
+conventions that this project had not yet adopted: skill frontmatter should
+declare the required CLI bin/help command, and each source checkout should have
+a project-local update script that runs install, tests, checks, sync, and
+post-sync verification.
+
+**Options**:
+- A. Leave the project as-is because `docdev` and installed wrappers already
+  work - lowest churn, but future agents still see avoidable portability
+  warnings.
+- B. Add a new `docdev update` subcommand - discoverable, but it expands the
+  CLI command surface for a source-maintenance workflow that scripts already
+  cover well.
+- C. Add frontmatter metadata plus `scripts/update_cli.sh` - aligns with
+  `skill-cli-kit` without changing the user-facing docs-driven command surface.
+
+**Chosen**: C
+
+**Rationale**:
+- The skill can advertise its deterministic CLI dependency directly to agent
+  hosts.
+- Source updates get the same repeatable lifecycle as other local skill-backed
+  CLI projects.
+- Keeping the lifecycle in a script avoids adding policy or source-maintenance
+  behavior to the `docdev` CLI itself.
+
+**Risks**:
+- The update script may duplicate sequencing already known to `skill-cli-kit`.
+  Mitigation: keep it tiny and project-local, and let it call existing
+  install/check/sync scripts.
+
+**Related code / docs**:
+- SPEC §2 I, §3.3
+- ROADMAP Step 4a
+- `skill/SKILL.md`
+- `scripts/update_cli.sh`

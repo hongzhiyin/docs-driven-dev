@@ -7,6 +7,10 @@ description: >-
   documentation-first, spec-driven, 四件套文档, 决策日志, 不变式, D-XXX,
   Step/Phase planning, or when a project already has docs/SPEC.md,
   docs/ROADMAP.md, docs/ARCHITECTURE.md, and docs/DECISIONS.md.
+metadata:
+  requires:
+    bins: ["docdev"]
+  cliHelp: "docdev --help"
 ---
 
 # Docs-Driven Development

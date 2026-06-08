@@ -26,7 +26,7 @@ checks.
 | Installed skill wrapper | `<skill-target>/bin/docdev` | Cross-project CLI entrypoint generated during sync | package index |
 | Templates | `skill/templates/` | Four source-doc skeletons copied by `docdev init` | target project state |
 | References | `skill/references/` | Optional examples loaded only when needed | CLI execution |
-| Scripts | `scripts/` | Source-checkout wrappers for install, sync, and checks | package index |
+| Scripts | `scripts/` | Source-checkout wrappers for install, sync, checks, and update lifecycle | package index |
 | Project docs | `docs/` | Source of truth for this project | generated audit output |
 
 ## 3. Data Flow
@@ -63,6 +63,17 @@ docdev sync-skill
   -> write each copied target's bin/docdev wrapper back to the source checkout
   -> link Claude target to shared agents target
   -> require --force for unmarked existing target dirs
+```
+
+### 3.4 Update Lifecycle
+
+```text
+scripts/update_cli.sh
+  -> scripts/install_cli.sh
+  -> python3 -m unittest discover -s tests
+  -> scripts/check_install.sh
+  -> scripts/sync_skill.sh <caller args>
+  -> scripts/check_install.sh
 ```
 
 ## 4. Data Model
@@ -102,6 +113,8 @@ The parser is intentionally tiny and stdlib-only.
 
 - Entry: `docdev` console script, source `.venv/bin/docdev` wrapper, or
   installed skill-local `bin/docdev` wrapper.
+- Source update: `scripts/update_cli.sh --targets codex,cursor,agents,claude
+  --force`.
 - Shutdown: command exits after a single operation.
 - Background work: none.
 - Network: none.

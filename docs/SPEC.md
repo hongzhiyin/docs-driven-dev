@@ -20,6 +20,7 @@ Claude, and shared agent skill homes.
 | F | Skill sync targets | `~/.codex`, `~/.cursor`, `~/.agents`, and Claude symlink to shared agents skill | See D-003 |
 | G | Audit strictness | Structural drift is reported as warnings unless a required source document or invariant is broken | See D-005 |
 | H | Cross-project CLI discovery | Synced skill copies include `bin/docdev`; `PATH` and `DOCDEV_PROJECT_DIR` are fallbacks, not requirements | See D-006 |
+| I | Update lifecycle | Source updates should use a project-local install, test, check, sync, check sequence | See D-007 |
 
 ## 3. Derived Rules
 
@@ -45,7 +46,18 @@ No other file can silently replace these four as the source of truth.
 | `docdev sync-skill` | Copy/link skill into agent homes | Writes skill target dirs |
 | `docdev doctor` | Show local install and sync state | Read-only |
 
-### 3.3 Audit Checks
+### 3.3 Source Update Lifecycle
+
+After changing this source checkout, run:
+
+```bash
+./scripts/update_cli.sh --targets codex,cursor,agents,claude --force
+```
+
+The lifecycle installs the source wrapper, runs tests, checks the local install,
+syncs installed skills, then checks again.
+
+### 3.4 Audit Checks
 
 `docdev audit` checks:
 - the four source documents exist;
@@ -56,7 +68,7 @@ No other file can silently replace these four as the source of truth.
 - README Documentation Map links point at the active docs dir;
 - AGENTS mentions the active docs dir.
 
-### 3.4 Sync Behaviour
+### 3.5 Sync Behaviour
 
 `docdev sync-skill` may copy the skill to Codex, Cursor, and shared agents
 targets. Claude should use a symlink to `~/.agents/skills/docs-driven-dev` when
@@ -79,6 +91,7 @@ from arbitrary project directories even when `docdev` is not on shell `PATH` and
 | Audit quality issue found | Report a warning unless required source structure is missing or invalid |
 | Missing `docdev` wrapper | Use `DOCDEV_PROJECT_DIR` + `PYTHONPATH` fallback |
 | Skill invoked in another project with no `docdev` on `PATH` | Use the installed skill-local `bin/docdev` wrapper |
+| Source has just been updated | Run `./scripts/update_cli.sh --targets codex,cursor,agents,claude --force` |
 | Ambiguous user design choice | Ask 1-3 short questions before changing SPEC |
 | User did not ask for commit | Do not stage or commit automatically |
 
@@ -121,3 +134,4 @@ Constraints:
 3. **#3**: The CLI stays stdlib-only and runnable from a source checkout.
 4. **#4**: Skill sync must never replace an unmarked existing skill directory unless the caller passes `--force`.
 5. **#5**: The installed skill is a decision layer; deterministic operations belong in CLI/scripts.
+6. **#6**: Source changes should be verified and synced through the project-local update lifecycle before installed skills are treated as current.

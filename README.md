@@ -22,6 +22,12 @@ Sync the skill after edits:
 ./scripts/sync_skill.sh --targets codex,cursor,agents,claude --force
 ```
 
+After source changes, run the full local lifecycle:
+
+```bash
+./scripts/update_cli.sh --targets codex,cursor,agents,claude --force
+```
+
 ## Documentation Map
 
 This project's source of truth lives in `docs/`. Any code change must be

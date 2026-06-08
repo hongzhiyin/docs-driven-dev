@@ -5,7 +5,7 @@
 ## Current Progress
 
 **Phase**: Phase 1 - portable skill + CLI bootstrap
-**Current Step**: Step 4 complete; ready for real-project usage feedback
+**Current Step**: Step 4a complete; ready for real-project usage feedback
 
 ### Step Status
 
@@ -16,6 +16,7 @@
 | 2 | Migrate/sync installed skills and refine cross-agent packaging | Done |
 | 3 | Expand audit quality checks based on real project usage | Done |
 | 4 | Make CLI discoverable from arbitrary project sessions | Done |
+| 4a | Adopt latest skill-cli-kit metadata and update lifecycle | Done |
 
 ---
 
@@ -107,6 +108,28 @@ requiring `docdev` on shell `PATH` or a pre-set `DOCDEV_PROJECT_DIR`.
 1. A copied installed skill contains an executable `bin/docdev`.
 2. The wrapper points back to the source checkout and runs the stdlib CLI.
 3. Fresh tests and project audit pass with no findings.
+
+---
+
+## Step 4a - Skill-cli-kit metadata and update lifecycle
+
+**Goal**: Align this mature source checkout with the latest portable
+skill-backed CLI conventions without changing the user-facing `docdev` command
+surface.
+
+**Tasks**:
+- [x] Declare the required `docdev` CLI bin and help command in skill metadata.
+- [x] Add a project-local `scripts/update_cli.sh` lifecycle wrapper.
+- [x] Document the update lifecycle in SPEC, ARCHITECTURE, ROADMAP, DECISIONS,
+  and README.
+- [x] Re-sync installed skills after verification.
+
+**Acceptance**:
+1. `skillcli audit /Users/chihoyo/Project/docs-driven-dev --json` reports 0
+   errors and 0 warnings.
+2. `./scripts/update_cli.sh --targets codex,cursor,agents,claude --force` runs
+   install, tests, check, sync, and check successfully.
+3. `docdev audit /Users/chihoyo/Project/docs-driven-dev` reports no findings.
 
 ---
 
