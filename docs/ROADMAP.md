@@ -5,7 +5,7 @@
 ## Current Progress
 
 **Phase**: Phase 1 - portable skill + CLI bootstrap
-**Current Step**: Step 5a complete; ready for Windows install feedback
+**Current Step**: Step 5b complete; ready for Windows install retest
 
 ### Step Status
 
@@ -23,6 +23,7 @@
 | 4e | Simplify fresh-machine install command name | Done |
 | 5 | Add per-requirement change packets without weakening project docs | Done |
 | 5a | Add Windows PowerShell install entrypoints | Done |
+| 5b | Fix Windows PowerShell install argument forwarding | Done |
 
 ---
 
@@ -266,6 +267,28 @@ requiring `.sh` file association or Git Bash.
 3. README explains why `./scripts/install.sh` opens an app chooser in Windows
    terminals and gives the correct command.
 4. Unit tests and `docdev audit` pass with no findings.
+
+---
+
+## Step 5b - Windows PowerShell install fix
+
+**Goal**: Fix the real Windows failure where `install.ps1` forwarded the
+default sync targets as an unbound positional argument.
+
+**Tasks**:
+- [x] Replace `$Args` splatting in `install.ps1` with explicit named parameter
+  forwarding.
+- [x] Document `Unblock-File` and process-scoped execution-policy bypass for
+  unsigned PowerShell scripts.
+- [x] Add regression coverage for the PowerShell forwarding contract.
+- [x] Run unit tests, `docdev audit`, and update lifecycle sync.
+
+**Acceptance**:
+1. `install.ps1` invokes `update_cli.ps1` as
+   `-Targets <targets> [-Force]`, not through `$Args` splatting.
+2. README and SKILL explain how to handle Windows script signing/execution
+   policy warnings.
+3. Unit tests and `docdev audit` pass.
 
 ---
 

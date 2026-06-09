@@ -114,12 +114,20 @@ Unix shells, Git Bash, or WSL:
 Windows PowerShell:
 
 ```powershell
+Unblock-File .\scripts\*.ps1
 .\scripts\install.ps1
 ```
 
 If Windows asks which app should open `install.sh`, the command was run in a
 Windows shell that does not execute `.sh` files. Use the PowerShell command
 above, or run `bash ./scripts/install.sh` from Git Bash / WSL.
+
+If the current PowerShell policy requires signed scripts, use a process-scoped
+bypass for this install:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\install.ps1
+```
 
 After this, supported agents should load the installed skill and use the
 skill-local wrapper for the active shell when `docdev` is not on `PATH`.

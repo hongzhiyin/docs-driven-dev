@@ -525,3 +525,42 @@ wrappers so agents can call `docdev` without relying on a Unix shell.
 - `scripts/update_cli.ps1`
 - `scripts/install_cli.ps1`
 - `src/docs_driven_dev/cli.py`
+
+---
+
+## D-014 - Step 5b - Use explicit PowerShell parameter forwarding
+
+**Date**: 2026-06-09
+
+**Context**:
+The first Windows run of `scripts/install.ps1` reached the installer after
+`Unblock-File`, but then failed with a PowerShell binding error: no positional
+parameter accepted `codex,cursor,agents,claude`. The script used `$Args` and
+`@Args` to forward `-Targets`, which is too easy to confuse with PowerShell's
+automatic `$args` variable and can degrade into positional argument binding.
+
+**Options**:
+- A. Tell users to call `update_cli.ps1` directly - avoids the failing wrapper,
+  but leaves the advertised install command broken.
+- B. Keep array splatting but rename the variable - likely works, but still
+  keeps unnecessary indirection in the shortest onboarding path.
+- C. Invoke `update_cli.ps1` with explicit named parameters - simplest and
+  least ambiguous for PowerShell binding.
+
+**Chosen**: C
+
+**Rationale**:
+- The install command now forwards `-Targets <targets>` and `-Force` directly.
+- The fix keeps the public `.\scripts\install.ps1` command unchanged.
+- Regression tests can check the exact forwarding contract without needing a
+  Windows PowerShell runtime on macOS.
+
+**Risks**:
+- The repo still lacks live Windows execution in CI. Mitigation: keep the
+  PowerShell scripts thin and use the user's Windows machine feedback as the
+  next verification loop.
+
+**Related code / docs**:
+- ROADMAP Step 5b
+- `scripts/install.ps1`
+- `tests/test_cli.py`

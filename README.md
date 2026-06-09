@@ -41,12 +41,20 @@ macOS, Linux, Git Bash, or WSL:
 Windows PowerShell:
 
 ```powershell
+Unblock-File .\scripts\*.ps1
 .\scripts\install.ps1
 ```
 
 Windows terminals do not execute `.sh` files directly; they may ask which app
 should open the file. Use the PowerShell command above, or run
 `bash ./scripts/install.sh` from Git Bash / WSL.
+
+If your PowerShell execution policy requires signed scripts, run the install in
+a process-scoped bypass shell instead:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\install.ps1
+```
 
 This installs the source wrapper, verifies the CLI, syncs the skill into agent
 homes, and generates each installed skill's local `bin/docdev` wrapper.

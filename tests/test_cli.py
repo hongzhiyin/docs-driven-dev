@@ -202,6 +202,8 @@ class CliTests(unittest.TestCase):
 
         self.assertIn("update_cli.ps1", install)
         self.assertIn("codex,cursor,agents,claude", install)
+        self.assertIn("& $UpdateScript -Targets $Targets -Force", install)
+        self.assertNotIn("@Args", install)
         self.assertIn("python -m unittest discover", update)
         self.assertIn("python -m docs_driven_dev.cli @SyncArgs", update)
         self.assertIn("docdev.ps1", install_cli)
