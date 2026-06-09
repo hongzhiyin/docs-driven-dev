@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -59,6 +60,55 @@ class CliTests(unittest.TestCase):
             text = wrapper.read_text(encoding="utf-8")
             self.assertIn(f'DOCDEV_PROJECT_DIR="{ROOT}"', text)
             self.assertIn(f'PYTHONPATH="{ROOT}/src"', text)
+
+    def test_setup_project_script_creates_audit_report(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp) / "target"
+
+            result = subprocess.run(
+                [str(ROOT / "scripts" / "setup_project.sh"), str(project)],
+                cwd=ROOT,
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertTrue((project / "docs" / "SPEC.md").exists())
+            self.assertTrue((project / "docs" / "_generated" / "docdev" / "audit.json").exists())
+
+    def test_setup_project_script_audits_custom_docs_dir(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp) / "target"
+
+            result = subprocess.run(
+                [
+                    str(ROOT / "scripts" / "setup_project.sh"),
+                    str(project),
+                    "--docs-dir",
+                    "project-docs",
+                    "--write-config",
+                ],
+                cwd=ROOT,
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertTrue((project / "project-docs" / "SPEC.md").exists())
+            self.assertTrue((project / "project-docs" / "_generated" / "docdev" / "audit.json").exists())
+            self.assertFalse((project / "docs" / "_generated" / "docdev" / "audit.json").exists())
+
+    def test_install_script_default_targets_and_force(self) -> None:
+        text = (ROOT / "scripts" / "install.sh").read_text(encoding="utf-8")
+        self.assertIn("TARGETS=${DOCDEV_INSTALL_TARGETS:-codex,cursor,agents,claude}", text)
+        self.assertIn('"$PROJECT_DIR/scripts/update_cli.sh" --targets "$TARGETS" --force', text)
+
+    def test_install_script_supports_no_force(self) -> None:
+        text = (ROOT / "scripts" / "install.sh").read_text(encoding="utf-8")
+        self.assertIn("--no-force", text)
+        self.assertIn('"$PROJECT_DIR/scripts/update_cli.sh" --targets "$TARGETS"', text)
 
     def test_audit_warns_on_readme_documentation_map_drift(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

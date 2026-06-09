@@ -21,6 +21,9 @@ Claude, and shared agent skill homes.
 | G | Audit strictness | Structural drift is reported as warnings unless a required source document or invariant is broken | See D-005 |
 | H | Cross-project CLI discovery | Synced skill copies include `bin/docdev`; `PATH` and `DOCDEV_PROJECT_DIR` are fallbacks, not requirements | See D-006 |
 | I | Update lifecycle | Source updates should use a project-local install, test, check, sync, check sequence | See D-007 |
+| J | Quick start | A source-checkout setup script combines install, doctor, init, and audit report for a target project | See D-008 |
+| K | Target project model | `docdev` commands operate on explicit target project paths; source checkout scripts are maintenance conveniences | See D-009 |
+| L | Fresh machine onboarding | `scripts/install.sh` installs, verifies, syncs, and enables agent-mediated CLI use from a cloned source checkout | See D-010 |
 
 ## 3. Derived Rules
 
@@ -37,6 +40,10 @@ No other file can silently replace these four as the source of truth.
 
 ### 3.2 CLI Commands
 
+`docdev` is a reusable project tool, not a single-repository command. Agents
+should pass the intended target project path explicitly unless the user's
+current working directory is itself the target project.
+
 | Command | Purpose | Side effects |
 |---|---|---|
 | `docdev init <project>` | Create templates, README pointer, AGENTS pointer, generated dir | Writes project docs |
@@ -48,6 +55,30 @@ No other file can silently replace these four as the source of truth.
 
 ### 3.3 Source Update Lifecycle
 
+For a one-command target project bootstrap from this source checkout, run:
+
+```bash
+./scripts/setup_project.sh /path/to/project
+```
+
+This script installs the local wrapper, runs `docdev doctor`, initializes the
+target project, and runs `docdev audit <project> --write-report`.
+
+It may pass `docdev init` options after the project path. When `--docs-dir` is
+passed, the script must audit the same docs directory.
+
+This script is a source checkout convenience, not the normal cross-project
+agent entrypoint.
+
+For fresh-machine installation after cloning the source repo, run:
+
+```bash
+./scripts/install.sh
+```
+
+This uses the default sync targets `codex,cursor,agents,claude` and refreshes
+existing docs-driven-dev skill copies.
+
 After changing this source checkout, run:
 
 ```bash
@@ -56,6 +87,11 @@ After changing this source checkout, run:
 
 The lifecycle installs the source wrapper, runs tests, checks the local install,
 syncs installed skills, then checks again.
+
+The update lifecycle prepares the local wrapper and installed skill-local
+wrappers so agents can later run `docdev` against arbitrary target project
+paths. `scripts/install.sh` is the shorter fresh-machine entrypoint over this
+same lifecycle.
 
 ### 3.4 Audit Checks
 
@@ -91,7 +127,9 @@ from arbitrary project directories even when `docdev` is not on shell `PATH` and
 | Audit quality issue found | Report a warning unless required source structure is missing or invalid |
 | Missing `docdev` wrapper | Use `DOCDEV_PROJECT_DIR` + `PYTHONPATH` fallback |
 | Skill invoked in another project with no `docdev` on `PATH` | Use the installed skill-local `bin/docdev` wrapper |
+| User wants one-command source checkout setup | Use `./scripts/setup_project.sh /path/to/project` |
 | Source has just been updated | Run `./scripts/update_cli.sh --targets codex,cursor,agents,claude --force` |
+| Source repo has just been cloned on a new machine | Run `./scripts/install.sh` |
 | Ambiguous user design choice | Ask 1-3 short questions before changing SPEC |
 | User did not ask for commit | Do not stage or commit automatically |
 

@@ -7,14 +7,51 @@ DECISIONS aligned before and after code changes. The CLI handles deterministic
 work such as scaffolding templates, auditing document structure, appending the
 next D-XXX skeleton, and syncing the skill to agent homes.
 
-## Quick Start
+## Usage Model
+
+`docdev` does not have a single working directory. It operates on whichever
+project path the caller passes:
 
 ```bash
-./scripts/install_cli.sh
-./.venv/bin/docdev doctor
-./.venv/bin/docdev init /path/to/project
-./.venv/bin/docdev audit /path/to/project --write-report
+docdev init /path/to/project
+docdev audit /path/to/project --write-report
+docdev status /path/to/project
 ```
+
+In normal use, an agent loads the `docs-driven-dev` skill, resolves the CLI
+through `docdev` on `PATH` or the installed skill-local `bin/docdev` wrapper,
+then passes the current target project path explicitly.
+
+## Fresh Machine Install
+
+After cloning this source repo on a new machine, run one command from the source
+checkout:
+
+```bash
+./scripts/install.sh
+```
+
+This installs the source wrapper, verifies the CLI, syncs the skill into agent
+homes, and generates each installed skill's local `bin/docdev` wrapper.
+
+After that, any supported agent that loads the `docs-driven-dev` skill can use
+the CLI against arbitrary target projects:
+
+```bash
+docdev init /path/to/project
+docdev audit /path/to/project --write-report
+docdev status /path/to/project
+```
+
+## Source Checkout Setup
+
+```bash
+./scripts/setup_project.sh /path/to/project
+```
+
+Use this only when manually setting up a target project from this source
+checkout. It installs the local `docdev` wrapper, runs `doctor`, initializes the
+target project, and writes an audit report under the target docs directory.
 
 Sync the skill after edits:
 
@@ -22,7 +59,7 @@ Sync the skill after edits:
 ./scripts/sync_skill.sh --targets codex,cursor,agents,claude --force
 ```
 
-After source changes, run the full local lifecycle:
+After changing this source checkout, use the update lifecycle command:
 
 ```bash
 ./scripts/update_cli.sh --targets codex,cursor,agents,claude --force

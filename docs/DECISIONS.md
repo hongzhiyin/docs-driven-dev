@@ -276,3 +276,160 @@ post-sync verification.
 - ROADMAP Step 4a
 - `skill/SKILL.md`
 - `scripts/update_cli.sh`
+
+---
+
+## D-008 - Step 4b - Use a setup script for one-command target bootstrap
+
+**Date**: 2026-06-09
+
+**Context**:
+The README Quick Start required four commands: install the local wrapper, run
+doctor, initialize a target project, and run audit with a report. That is too
+much friction for the most common first-use path, especially when the user only
+wants to apply docs-driven-dev to a project.
+
+**Options**:
+- A. Keep the four commands visible - explicit, but slow and easy to copy
+  incompletely.
+- B. Add a new `docdev bootstrap` subcommand - compact after install, but it
+  expands the core CLI surface for a source-checkout convenience flow.
+- C. Add `scripts/setup_project.sh` - one command from the source checkout
+  while reusing existing deterministic CLI commands unchanged.
+
+**Chosen**: C
+
+**Rationale**:
+- The user-facing Quick Start becomes one command.
+- The core `docdev` CLI stays focused on reusable deterministic operations.
+- The script remains transparent and composes existing install, doctor, init,
+  and audit behavior.
+
+**Risks**:
+- Wrapper scripts can duplicate CLI behavior over time. Mitigation: keep the
+  script thin and let it call existing `docdev` commands instead of
+  reimplementing their logic.
+
+**Related code / docs**:
+- SPEC §3.3
+- ROADMAP Step 4b
+- `README.md`
+- `scripts/setup_project.sh`
+
+---
+
+## D-009 - Step 4c - Treat docdev as a multi-project skill-mediated CLI
+
+**Date**: 2026-06-09
+
+**Context**:
+The README first showed the source checkout setup script. That made the project
+look like it had a unique operational working directory. The intended use is
+different: agents load the skill in arbitrary target projects, resolve the
+`docdev` executable, and pass the relevant project path explicitly.
+
+**Options**:
+- A. Keep the source checkout setup script as the primary README entry - short,
+  but it overemphasizes the implementation checkout.
+- B. Make users install `docdev` globally and rely on current working directory
+  defaults - convenient, but weaker for agent sessions that hop across projects.
+- C. Document the target-project model first and keep source scripts as
+  maintenance/setup conveniences - matches agent-mediated use without removing
+  source checkout workflows.
+
+**Chosen**: C
+
+**Rationale**:
+- It matches how agents use other CLIs: resolve the tool, then pass an explicit
+  target or run from a known target directory.
+- It avoids treating `/Users/chihoyo/Project/docs-driven-dev` as the project
+  being operated on by default.
+- It preserves the one-command source setup path for manual first use.
+
+**Risks**:
+- README becomes slightly longer. Mitigation: keep the source script section
+  short and reserve detailed workflow guidance for the skill.
+
+**Related code / docs**:
+- README Usage Model
+- SPEC §3.2
+- ROADMAP Step 4c
+
+---
+
+## D-010 - Step 4d - Use update lifecycle as the fresh-machine install path
+
+**Date**: 2026-06-09
+
+**Context**:
+On a new computer, the user expects to clone this GitHub source repo, run one
+command, and then use the installed skill from arbitrary agents. The previous
+README described target setup but did not distinguish fresh-machine installation
+from manual source-checkout project initialization.
+
+**Options**:
+- A. Tell users to run `setup_project.sh` first - initializes a target project,
+  but does not clearly describe agent skill installation and sync.
+- B. Add a second install command just for new machines - explicit, but
+  duplicates the existing update lifecycle.
+- C. Document `scripts/update_cli.sh` as both source update lifecycle and
+  fresh-machine install/sync command - one maintained lifecycle with clear
+  post-clone semantics.
+
+**Chosen**: C
+
+**Rationale**:
+- It is already the command that installs, verifies, syncs, and checks installed
+  skill copies.
+- It generates installed skill-local `bin/docdev` wrappers used by agents in
+  other project directories.
+- It avoids adding another script that would need to stay in sync.
+
+**Risks**:
+- The word "update" is slightly less obvious for first install. Mitigation:
+  README and skill docs explicitly label it as the fresh-machine install path.
+
+**Related code / docs**:
+- README Fresh Machine Install
+- SPEC §3.3
+- ROADMAP Step 4d
+- `scripts/update_cli.sh`
+
+---
+
+## D-011 - Step 4e - Add scripts/install.sh as the fresh-machine command
+
+**Date**: 2026-06-09
+
+**Context**:
+The command `./scripts/update_cli.sh --targets codex,cursor,agents,claude
+--force` works but is too long for first install. The user also expects the
+operation name to match common CLI conventions such as LarkCLI, where
+installation is called install and configuration/init are separate steps.
+
+**Options**:
+- A. Keep documenting the full `update_cli.sh` command - explicit, but too
+  verbose for new-machine onboarding.
+- B. Rename `update_cli.sh` to `install.sh` - simple, but loses a useful name
+  for source update lifecycle.
+- C. Add `scripts/install.sh` as a thin fresh-machine entrypoint over
+  `update_cli.sh` - concise install command while preserving the lifecycle
+  script.
+
+**Chosen**: C
+
+**Rationale**:
+- New-machine setup becomes `./scripts/install.sh`.
+- The update lifecycle stays available and explicit for source maintenance.
+- The install script is thin and delegates to existing verified behavior.
+
+**Risks**:
+- Two scripts can appear redundant. Mitigation: document `install.sh` as the
+  first-install entrypoint and `update_cli.sh` as the maintenance lifecycle.
+
+**Related code / docs**:
+- README Fresh Machine Install
+- SPEC §3.3
+- ROADMAP Step 4e
+- `scripts/install.sh`
+- `scripts/update_cli.sh`

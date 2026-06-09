@@ -5,7 +5,7 @@
 ## Current Progress
 
 **Phase**: Phase 1 - portable skill + CLI bootstrap
-**Current Step**: Step 4a complete; ready for real-project usage feedback
+**Current Step**: Step 4e complete; ready for real-project usage feedback
 
 ### Step Status
 
@@ -17,6 +17,10 @@
 | 3 | Expand audit quality checks based on real project usage | Done |
 | 4 | Make CLI discoverable from arbitrary project sessions | Done |
 | 4a | Adopt latest skill-cli-kit metadata and update lifecycle | Done |
+| 4b | Reduce source Quick Start to one command | Done |
+| 4c | Clarify skill-mediated multi-project CLI usage | Done |
+| 4d | Document fresh-machine install and agent usage path | Done |
+| 4e | Simplify fresh-machine install command name | Done |
 
 ---
 
@@ -130,6 +134,84 @@ surface.
 2. `./scripts/update_cli.sh --targets codex,cursor,agents,claude --force` runs
    install, tests, check, sync, and check successfully.
 3. `docdev audit /Users/chihoyo/Project/docs-driven-dev` reports no findings.
+
+---
+
+## Step 4b - One-command Quick Start
+
+**Goal**: Let users bootstrap a target project from the source checkout with one
+command instead of manually running install, doctor, init, and audit.
+
+**Tasks**:
+- [x] Add `scripts/setup_project.sh`.
+- [x] Update README Quick Start to use the new script.
+- [x] Document the lifecycle in SPEC, ARCHITECTURE, ROADMAP, and DECISIONS.
+- [x] Add verification coverage for the script.
+
+**Acceptance**:
+1. `./scripts/setup_project.sh <tmp-project>` creates docs and writes
+   `docs/_generated/docdev/audit.json`.
+2. Custom `--docs-dir` values are audited consistently.
+3. Unit tests and `docdev audit` pass with no findings.
+
+---
+
+## Step 4c - Skill-mediated multi-project usage
+
+**Goal**: Make the README and source docs clear that `docdev` is used against
+target project paths selected by the skill or agent, not against a unique
+working directory.
+
+**Tasks**:
+- [x] Move README emphasis from source checkout Quick Start to usage model.
+- [x] Document explicit target project path selection in SPEC and ARCHITECTURE.
+- [x] Mark `scripts/setup_project.sh` as source-checkout convenience only.
+- [x] Record the operational model decision.
+
+**Acceptance**:
+1. README shows `docdev init/audit/status /path/to/project` before source
+   checkout scripts.
+2. SPEC states that agents should pass explicit target project paths.
+3. `docdev audit` reports no findings.
+
+---
+
+## Step 4d - Fresh-machine install path
+
+**Goal**: Make it explicit that a cloned source repo can be installed and synced
+with one lifecycle command, after which agents can use the installed skill-local
+CLI wrapper against arbitrary target projects.
+
+**Tasks**:
+- [x] Document `update_cli.sh` as the fresh-machine install command.
+- [x] Clarify that `setup_project.sh` is manual source-checkout target setup,
+  not the required agent path.
+- [x] Update SPEC, ARCHITECTURE, ROADMAP, DECISIONS, README, and SKILL.
+
+**Acceptance**:
+1. README shows the new-machine install command separately from source checkout
+   target setup.
+2. Skill docs tell agents to use installed `bin/docdev` wrappers when needed.
+3. `docdev audit` reports no findings.
+
+---
+
+## Step 4e - Install command simplification
+
+**Goal**: Make fresh-machine onboarding use a short install command consistent
+with other CLI tools.
+
+**Tasks**:
+- [x] Add `scripts/install.sh` as the one-command install entrypoint.
+- [x] Keep `scripts/update_cli.sh` as the underlying lifecycle implementation.
+- [x] Update README, SPEC, ARCHITECTURE, ROADMAP, DECISIONS, and SKILL.
+- [x] Add tests for install script defaults and override behavior.
+
+**Acceptance**:
+1. `./scripts/install.sh` installs, verifies, syncs default targets, and checks.
+2. `./scripts/install.sh --targets codex --no-force` can delegate custom sync
+   arguments.
+3. Unit tests and `docdev audit` pass with no findings.
 
 ---
 

@@ -14,8 +14,12 @@ User / Agent
 ```
 
 The skill explains when and why to use the method. The CLI performs repeatable
-filesystem operations. Scripts provide local wrappers for install, sync, and
-checks.
+filesystem operations. Scripts provide local wrappers for project bootstrap,
+install, sync, checks, and source updates.
+
+The source checkout is the implementation home, not the operational working
+directory. `docdev` commands run against whichever target project path the
+caller passes.
 
 ## 2. Module Table
 
@@ -26,7 +30,7 @@ checks.
 | Installed skill wrapper | `<skill-target>/bin/docdev` | Cross-project CLI entrypoint generated during sync | package index |
 | Templates | `skill/templates/` | Four source-doc skeletons copied by `docdev init` | target project state |
 | References | `skill/references/` | Optional examples loaded only when needed | CLI execution |
-| Scripts | `scripts/` | Source-checkout wrappers for install, sync, checks, and update lifecycle | package index |
+| Scripts | `scripts/` | Source-checkout wrappers for target bootstrap, install, sync, checks, and update lifecycle | package index |
 | Project docs | `docs/` | Source of truth for this project | generated audit output |
 
 ## 3. Data Flow
@@ -42,7 +46,17 @@ docdev init <project>
   -> create docs/_generated/docdev
 ```
 
-### 3.2 Audit
+### 3.2 Source Quick Start
+
+```text
+scripts/setup_project.sh <project> [docdev init options]
+  -> scripts/install_cli.sh
+  -> .venv/bin/docdev doctor
+  -> .venv/bin/docdev init <project> [options]
+  -> .venv/bin/docdev audit <project> --write-report
+```
+
+### 3.3 Audit
 
 ```text
 docdev audit <project>
@@ -54,7 +68,7 @@ docdev audit <project>
   -> optionally write docs/_generated/docdev/audit.json
 ```
 
-### 3.3 Sync
+### 3.4 Sync
 
 ```text
 docdev sync-skill
@@ -65,9 +79,12 @@ docdev sync-skill
   -> require --force for unmarked existing target dirs
 ```
 
-### 3.4 Update Lifecycle
+### 3.5 Update Lifecycle
 
 ```text
+scripts/install.sh
+  -> scripts/update_cli.sh --targets codex,cursor,agents,claude --force
+
 scripts/update_cli.sh
   -> scripts/install_cli.sh
   -> python3 -m unittest discover -s tests
@@ -75,6 +92,11 @@ scripts/update_cli.sh
   -> scripts/sync_skill.sh <caller args>
   -> scripts/check_install.sh
 ```
+
+`scripts/install.sh` is the fresh-machine install path after cloning the source
+repo. It calls the update lifecycle with default targets so agents can discover
+the skill and call their skill-local `bin/docdev` wrappers from unrelated target
+projects.
 
 ## 4. Data Model
 
@@ -113,6 +135,9 @@ The parser is intentionally tiny and stdlib-only.
 
 - Entry: `docdev` console script, source `.venv/bin/docdev` wrapper, or
   installed skill-local `bin/docdev` wrapper.
+- Target selection: explicit project path argument; current working directory
+  is only a default when the caller intentionally runs from the target project.
+- Target project setup: `scripts/setup_project.sh /path/to/project`.
 - Source update: `scripts/update_cli.sh --targets codex,cursor,agents,claude
   --force`.
 - Shutdown: command exits after a single operation.
