@@ -564,3 +564,139 @@ automatic `$args` variable and can degrade into positional argument binding.
 - ROADMAP Step 5b
 - `scripts/install.ps1`
 - `tests/test_cli.py`
+
+---
+
+## D-015 - Step 5c - Keep Windows sync moving without Unix shell or symlink assumptions
+
+**Date**: 2026-06-09
+
+**Context**:
+After the PowerShell installer started running, the next reported symptom was
+that the skill did not appear to update in the configured agent folders. The
+update lifecycle runs tests before sync, and this repo has tests that execute a
+Unix `.sh` setup script. Windows PowerShell also commonly refuses symlink
+creation unless developer mode or elevated privileges are available, which can
+block the Claude target after other targets are copied.
+
+**Options**:
+- A. Require Git Bash / WSL and symlink privileges on Windows - preserves the
+  existing Unix assumptions, but makes native PowerShell install unreliable.
+- B. Remove the shell-script tests entirely - avoids Windows failure, but loses
+  useful coverage on macOS/Linux.
+- C. Skip Unix-only script execution tests on Windows and copy Claude as a
+  fallback when symlink creation fails - keeps Unix coverage and makes native
+  Windows sync complete.
+
+**Chosen**: C
+
+**Rationale**:
+- The update lifecycle can continue to sync skill folders on Windows instead
+  of stopping during tests.
+- Claude still prefers the shared `~/.agents` symlink where the platform
+  supports it.
+- The fallback installed copy includes the same `bin/docdev`, `bin/docdev.ps1`,
+  and `bin/docdev.cmd` wrappers as other copied targets.
+
+**Risks**:
+- Claude may have a copied skill on Windows instead of sharing the agents
+  directory by symlink. Mitigation: future sync runs still overwrite it with
+  `--force`, and platforms that support symlinks keep the shared-link behavior.
+
+**Related code / docs**:
+- SPEC §2 O, §3.6
+- ARCHITECTURE §3.5, §7
+- ROADMAP Step 5c
+- `src/docs_driven_dev/cli.py`
+- `tests/test_cli.py`
+
+---
+
+## D-016 - Step 5d - Emit numbered install/update lifecycle logs
+
+**Date**: 2026-06-09
+
+**Context**:
+Windows install failures happen on a machine the agent cannot directly inspect.
+After fixing argument forwarding and sync fallback behavior, the next practical
+need is observability: the user should be able to paste or screenshot the last
+installer line and identify whether the failure happened during wrapper
+installation, tests, doctor, sync, audit, or status.
+
+**Options**:
+- A. Leave logging to the underlying commands - no script change, but failures
+  remain ambiguous when output is long.
+- B. Add verbose logs only to PowerShell - targets the current Windows issue,
+  but leaves Unix and Windows lifecycle output structurally different.
+- C. Add stable prefixed step logs to both PowerShell and Unix lifecycle
+  scripts - slightly more script text, but produces comparable diagnostics.
+
+**Chosen**: C
+
+**Rationale**:
+- `[docdev install]` and `[docdev update]` prefixes are easy to search and
+  recognize in terminal output.
+- Numbered `step N/M start|done|failed` lines make remote failure reports
+  precise without requiring the user to interpret Python or shell output.
+- Keeping Unix and Windows logs aligned makes local validation more useful.
+
+**Risks**:
+- Additional script output is noisier. Mitigation: logs are one line per phase
+  and keep command output unchanged.
+
+**Related code / docs**:
+- SPEC §2 P, §3.4
+- ARCHITECTURE §3.6, §6
+- ROADMAP Step 5d
+- `scripts/install.sh`
+- `scripts/update_cli.sh`
+- `scripts/install.ps1`
+- `scripts/update_cli.ps1`
+- `tests/test_cli.py`
+
+---
+
+## D-017 - Step 5e - Use environment overrides for sync target paths
+
+**Date**: 2026-06-09
+
+**Context**:
+The default sync paths are based on the current user's home directory:
+`~/.codex`, `~/.cursor`, `~/.agents`, and `~/.claude`. That is portable across
+usernames, but it still assumes every agent uses those home-relative skill
+folders. On a new Windows machine, the real skill directory may be elsewhere,
+and the user needs to see or override the exact target paths used by install.
+
+**Options**:
+- A. Keep only home-relative defaults - simple, but hides the actual failure if
+  an agent uses a different skill directory.
+- B. Add command-line flags for every target path - explicit, but makes the
+  one-command install path longer and harder to remember.
+- C. Add environment-variable overrides plus target-path logging - keeps the
+  install command short while allowing machine-specific path configuration.
+
+**Chosen**: C
+
+**Rationale**:
+- Environment variables are a standard fit for machine-specific install
+  locations and can be set temporarily in PowerShell or persistently in Windows
+  user/system environment settings.
+- Exact `DOCDEV_<TARGET>_SKILL_DIR` overrides avoid ambiguity when a tool wants
+  one specific final folder.
+- `DOCDEV_<TARGET>_HOME` remains convenient for normal `home/skills/name`
+  layouts.
+- Printing resolved target paths makes Windows reports actionable without
+  requiring the agent to inspect that machine.
+
+**Risks**:
+- Too many environment variable names can be confusing. Mitigation: direct
+  `DOCDEV_<TARGET>_SKILL_DIR` wins over home overrides, and docs list only the
+  two patterns.
+
+**Related code / docs**:
+- SPEC §2 Q, §3.6
+- ARCHITECTURE §3.5, §5, §6
+- ROADMAP Step 5e
+- `src/docs_driven_dev/cli.py`
+- `scripts/install_cli.ps1`
+- `tests/test_cli.py`

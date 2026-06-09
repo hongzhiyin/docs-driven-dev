@@ -5,7 +5,7 @@
 ## Current Progress
 
 **Phase**: Phase 1 - portable skill + CLI bootstrap
-**Current Step**: Step 5b complete; ready for Windows install retest
+**Current Step**: Step 5e complete; ready for Windows install retest
 
 ### Step Status
 
@@ -24,6 +24,9 @@
 | 5 | Add per-requirement change packets without weakening project docs | Done |
 | 5a | Add Windows PowerShell install entrypoints | Done |
 | 5b | Fix Windows PowerShell install argument forwarding | Done |
+| 5c | Make Windows skill sync complete after install starts running | Done |
+| 5d | Add install/update step logs for remote failure diagnosis | Done |
+| 5e | Add configurable skill target paths for non-default Windows agent homes | Done |
 
 ---
 
@@ -289,6 +292,77 @@ default sync targets as an unbound positional argument.
 2. README and SKILL explain how to handle Windows script signing/execution
    policy warnings.
 3. Unit tests and `docdev audit` pass.
+
+---
+
+## Step 5c - Windows skill sync completion
+
+**Goal**: Fix the next Windows install failure mode where the installer can
+start but the skill does not refresh in every configured agent home.
+
+**Tasks**:
+- [x] Skip Unix shell-script execution tests on Windows while keeping them
+  active on Unix shells.
+- [x] Make Claude sync fall back to copying the skill when symlink creation is
+  unavailable.
+- [x] Document the sync fallback contract in SPEC, ARCHITECTURE, and
+  DECISIONS.
+- [x] Run unit tests, `docdev audit`, and update lifecycle sync.
+
+**Acceptance**:
+1. Windows update lifecycle can reach `docdev sync-skill` without failing on
+   Unix-only `setup_project.sh` tests.
+2. Claude sync failure to create a symlink does not prevent a usable installed
+   skill copy from being written.
+3. Unit tests and `docdev audit` pass.
+
+---
+
+## Step 5d - Install/update diagnostics
+
+**Goal**: Make Windows and Unix install failures diagnosable from the user's
+terminal output when the agent cannot see that machine directly.
+
+**Tasks**:
+- [x] Add stable `[docdev install]` and `[docdev update]` log prefixes.
+- [x] Add numbered update lifecycle steps with start/done/failure messages.
+- [x] Add regression tests that protect the log markers.
+- [x] Document the diagnostic contract in SPEC, ARCHITECTURE, README, SKILL,
+  and DECISIONS.
+- [x] Run unit tests, `docdev audit`, and update lifecycle sync.
+
+**Acceptance**:
+1. Windows PowerShell output identifies which lifecycle step started, finished,
+   or failed.
+2. Unix install/update scripts expose comparable step logs.
+3. A user can report the last `[docdev update] step N/M ...` line to localize
+   the interruption.
+4. Unit tests and `docdev audit` pass.
+
+---
+
+## Step 5e - Configurable skill target paths
+
+**Goal**: Avoid hidden assumptions that every agent skill directory lives under
+the default current-user home path on Windows or other machines.
+
+**Tasks**:
+- [x] Add `DOCDEV_<TARGET>_SKILL_DIR` exact target overrides.
+- [x] Add `DOCDEV_<TARGET>_HOME` base directory overrides, preserving
+  `CODEX_HOME` compatibility for Codex.
+- [x] Print resolved sync target paths before copy/link operations.
+- [x] Generate installed wrappers with OS-native source `src` paths.
+- [x] Document how Windows PowerShell and persistent environment variables
+  affect install/sync.
+- [x] Run unit tests, `docdev audit`, and update lifecycle sync.
+
+**Acceptance**:
+1. `target_path_for` can resolve non-default Codex/Cursor/agents/Claude
+   installed skill paths from environment variables.
+2. `sync-skill` output shows the exact resolved target paths before syncing.
+3. Generated Windows wrappers use a native `src` path instead of manual
+   `/src` string concatenation.
+4. Unit tests and `docdev audit` pass.
 
 ---
 

@@ -58,6 +58,27 @@ powershell -ExecutionPolicy Bypass -File .\scripts\install.ps1
 
 This installs the source wrapper, verifies the CLI, syncs the skill into agent
 homes, and generates each installed skill's local `bin/docdev` wrapper.
+If Windows does not allow symlink creation, the Claude target is copied instead
+of linked so the install can still finish.
+If install stops, report the last line beginning with `[docdev install]` or
+`[docdev update]`; the numbered step shows where it stopped.
+
+By default, sync targets are resolved under the current user's home directory.
+If an agent uses a non-default skill directory, set an environment variable
+before running install:
+
+```powershell
+# Current PowerShell session only.
+$env:DOCDEV_CURSOR_SKILL_DIR = "D:\AgentSkills\cursor\docs-driven-dev"
+$env:DOCDEV_AGENTS_HOME = "$env:USERPROFILE\.agents"
+.\scripts\install.ps1
+```
+
+`DOCDEV_<TARGET>_SKILL_DIR` points at the exact final skill folder.
+`DOCDEV_<TARGET>_HOME` points at the agent home that contains
+`skills\docs-driven-dev`. `<TARGET>` is `CODEX`, `CURSOR`, `AGENTS`, or
+`CLAUDE`. Windows user/system environment variables work too; reopen the
+terminal after changing persistent values.
 
 After that, any supported agent that loads the `docs-driven-dev` skill can use
 the CLI against arbitrary target projects:

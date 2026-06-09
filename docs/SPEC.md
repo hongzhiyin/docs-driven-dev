@@ -26,6 +26,9 @@ Claude, and shared agent skill homes.
 | L | Fresh machine onboarding | `scripts/install.sh` installs, verifies, syncs, and enables agent-mediated CLI use from a cloned source checkout | See D-010 |
 | M | Requirement granularity | Project-level four docs stay required; per-requirement change packets are optional under `docs/changes/` | See D-012 |
 | N | Windows onboarding | PowerShell install scripts mirror the Unix install lifecycle | See D-013 |
+| O | Windows sync resilience | Claude uses a shared-agents symlink when possible, with a copy fallback when the platform refuses symlinks | See D-015 |
+| P | Install diagnostics | Install and update scripts emit prefixed, numbered lifecycle logs so failures can be localized from user output | See D-016 |
+| Q | Skill target overrides | Each sync target supports environment-variable overrides for non-default Windows or agent skill directories | See D-017 |
 
 ## 3. Derived Rules
 
@@ -131,6 +134,11 @@ wrappers so agents can later run `docdev` against arbitrary target project
 paths. `scripts/install.sh` is the shorter fresh-machine entrypoint over this
 same lifecycle.
 
+Install and update scripts should print prefixed lifecycle logs. `install.*`
+entrypoints use `[docdev install]`; update lifecycle scripts use
+`[docdev update]`. Update logs should identify numbered phases and report a
+failed phase with its exit code before exiting when possible.
+
 ### 3.5 Audit Checks
 
 `docdev audit` checks:
@@ -153,7 +161,20 @@ For each change packet under `<docs_dir>/changes/`, `docdev audit` also checks:
 
 `docdev sync-skill` may copy the skill to Codex, Cursor, and shared agents
 targets. Claude should use a symlink to `~/.agents/skills/docs-driven-dev` when
-possible, matching the existing shared Lark skill pattern.
+possible, matching the existing shared Lark skill pattern. If the platform
+refuses symlink creation, Claude may receive a copied skill directory with the
+same generated wrappers instead of blocking the whole sync lifecycle.
+
+Sync target paths resolve in this order:
+1. exact target override `DOCDEV_<TARGET>_SKILL_DIR`;
+2. target home override `DOCDEV_<TARGET>_HOME` plus `skills/docs-driven-dev`;
+3. existing `CODEX_HOME` for Codex only;
+4. default current-user home paths like `~/.codex/skills/docs-driven-dev`.
+
+`<TARGET>` is one of `CODEX`, `CURSOR`, `AGENTS`, or `CLAUDE`.
+Environment variables are read from the current process environment. On
+Windows, that can come from the current PowerShell `$env:...` session or from
+persistent user/system environment variables.
 
 Existing target directories without a `.docdev-skill-source` marker require
 `--force` before replacement.
@@ -178,6 +199,8 @@ even when `docdev` is not on shell `PATH` and `DOCDEV_PROJECT_DIR` is unset.
 | Source has just been updated | Run `./scripts/update_cli.sh --targets codex,cursor,agents,claude --force` |
 | Source repo has just been cloned on a new machine | Run `./scripts/install.sh` |
 | Source repo has just been cloned in Windows PowerShell | Run `.\scripts\install.ps1` |
+| Install fails on another machine | Use the last `[docdev install]` or `[docdev update]` step line to identify the interrupted phase |
+| Agent skill directory is non-default | Set `DOCDEV_<TARGET>_SKILL_DIR` or `DOCDEV_<TARGET>_HOME` before install/sync |
 | Ambiguous user design choice | Ask 1-3 short questions before changing SPEC |
 | User did not ask for commit | Do not stage or commit automatically |
 

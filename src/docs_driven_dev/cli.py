@@ -39,10 +39,17 @@ def project_root_from_module() -> Path:
     return Path(__file__).resolve().parents[2]
 
 
+def path_from_env(name: str) -> Path | None:
+    raw = os.environ.get(name)
+    if not raw:
+        return None
+    return Path(os.path.expandvars(raw)).expanduser()
+
+
 def find_source_root() -> Path:
     env = os.environ.get("DOCDEV_PROJECT_DIR")
     if env:
-        return Path(env).expanduser().resolve()
+        return Path(os.path.expandvars(env)).expanduser().resolve()
 
     module_root = project_root_from_module()
     if (module_root / "skill" / "SKILL.md").exists():
@@ -711,14 +718,22 @@ def cmd_new_decision(args: argparse.Namespace) -> int:
 
 
 def target_path_for(target: str) -> Path:
+    direct = path_from_env(f"DOCDEV_{target.upper()}_SKILL_DIR")
+    if direct is not None:
+        return direct
+
     if target == "codex":
-        return Path(os.environ.get("CODEX_HOME", Path.home() / ".codex")) / "skills" / SKILL_NAME
+        home = path_from_env("DOCDEV_CODEX_HOME") or path_from_env("CODEX_HOME") or Path.home() / ".codex"
+        return home / "skills" / SKILL_NAME
     if target == "cursor":
-        return Path.home() / ".cursor" / "skills" / SKILL_NAME
+        home = path_from_env("DOCDEV_CURSOR_HOME") or Path.home() / ".cursor"
+        return home / "skills" / SKILL_NAME
     if target == "agents":
-        return Path.home() / ".agents" / "skills" / SKILL_NAME
+        home = path_from_env("DOCDEV_AGENTS_HOME") or Path.home() / ".agents"
+        return home / "skills" / SKILL_NAME
     if target == "claude":
-        return Path.home() / ".claude" / "skills" / SKILL_NAME
+        home = path_from_env("DOCDEV_CLAUDE_HOME") or Path.home() / ".claude"
+        return home / "skills" / SKILL_NAME
     raise ValueError(f"Unknown target {target}")
 
 
@@ -736,6 +751,7 @@ def source_root_for_skill_source(source: Path) -> Path:
 
 def write_installed_skill_wrapper(target: Path, source: Path) -> None:
     source_root = source_root_for_skill_source(source)
+    source_src = source_root / "src"
     bin_dir = target / "bin"
     wrapper = bin_dir / "docdev"
     ps_wrapper = bin_dir / "docdev.ps1"
@@ -744,16 +760,17 @@ def write_installed_skill_wrapper(target: Path, source: Path) -> None:
     wrapper.write_text(
         "#!/usr/bin/env sh\n"
         f'DOCDEV_PROJECT_DIR="{source_root}" '
-        f'PYTHONPATH="{source_root}/src" '
+        f'PYTHONPATH="{source_src}" '
         'exec python3 -m docs_driven_dev.cli "$@"\n',
         encoding="utf-8",
     )
     wrapper.chmod(0o755)
     ps_source = str(source_root).replace("'", "''")
+    ps_source_src = str(source_src).replace("'", "''")
     ps_wrapper.write_text(
         "$ErrorActionPreference = 'Stop'\n"
         f"$env:DOCDEV_PROJECT_DIR = '{ps_source}'\n"
-        f"$env:PYTHONPATH = '{ps_source}/src'\n"
+        f"$env:PYTHONPATH = '{ps_source_src}'\n"
         "python -m docs_driven_dev.cli @args\n"
         "exit $LASTEXITCODE\n",
         encoding="utf-8",
@@ -761,7 +778,7 @@ def write_installed_skill_wrapper(target: Path, source: Path) -> None:
     cmd_wrapper.write_text(
         "@echo off\r\n"
         f'set "DOCDEV_PROJECT_DIR={source_root}"\r\n'
-        f'set "PYTHONPATH={source_root}/src"\r\n'
+        f'set "PYTHONPATH={source_src}"\r\n'
         "python -m docs_driven_dev.cli %*\r\n",
         encoding="utf-8",
     )
@@ -783,7 +800,7 @@ def copy_skill(source: Path, target: Path, force: bool) -> str:
     return "copied"
 
 
-def link_claude_to_agents(force: bool) -> str:
+def link_claude_to_agents(force: bool, source: Path | None = None) -> str:
     target = target_path_for("claude")
     agents_target = Path("..") / ".." / ".agents" / "skills" / SKILL_NAME
     if target.exists() or target.is_symlink():
@@ -796,8 +813,19 @@ def link_claude_to_agents(force: bool) -> str:
         else:
             shutil.rmtree(target)
     target.parent.mkdir(parents=True, exist_ok=True)
-    target.symlink_to(agents_target)
-    return "linked to ~/.agents"
+    try:
+        target.symlink_to(agents_target)
+        return "linked to ~/.agents"
+    except OSError as exc:
+        fallback_source = target_path_for("agents")
+        if not (fallback_source / "SKILL.md").exists():
+            fallback_source = source or fallback_source
+        if not (fallback_source / "SKILL.md").exists():
+            raise SystemExit(
+                f"Claude symlink failed ({exc}) and no copy fallback source exists: {fallback_source}"
+            )
+        status = copy_skill(fallback_source, target, force=True)
+        return f"symlink failed ({exc}); {status} fallback"
 
 
 def parse_targets(raw: str) -> list[str]:
@@ -823,18 +851,20 @@ def cmd_sync_skill(args: argparse.Namespace) -> int:
         raise SystemExit(f"Skill source missing SKILL.md: {source}")
 
     targets = parse_targets(args.targets)
-    if args.dry_run:
-        for target in targets:
-            print(f"{target}: {target_path_for(target)}")
-        return 0
-
     if "claude" in targets and "agents" not in targets:
         print("claude target uses ~/.agents as source; syncing agents first")
         targets.insert(0, "agents")
 
+    print("sync target paths:")
+    for target in targets:
+        print(f"  {target}: {target_path_for(target)}")
+
+    if args.dry_run:
+        return 0
+
     for target in targets:
         if target == "claude":
-            status = link_claude_to_agents(args.force)
+            status = link_claude_to_agents(args.force, source)
         else:
             status = copy_skill(source, target_path_for(target), args.force)
         print(f"{target}: {status} -> {target_path_for(target)}")

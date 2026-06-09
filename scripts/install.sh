@@ -9,6 +9,10 @@ PROJECT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 TARGETS=${DOCDEV_INSTALL_TARGETS:-codex,cursor,agents,claude}
 FORCE=1
 
+log() {
+  printf '[docdev install] %s\n' "$*"
+}
+
 while [ $# -gt 0 ]; do
   case "$1" in
     --targets)
@@ -42,8 +46,12 @@ while [ $# -gt 0 ]; do
   esac
 done
 
+log "start: targets=$TARGETS force=$FORCE"
 if [ "$FORCE" -eq 1 ]; then
+  log "delegate: $PROJECT_DIR/scripts/update_cli.sh --targets $TARGETS --force"
   "$PROJECT_DIR/scripts/update_cli.sh" --targets "$TARGETS" --force
 else
+  log "delegate: $PROJECT_DIR/scripts/update_cli.sh --targets $TARGETS"
   "$PROJECT_DIR/scripts/update_cli.sh" --targets "$TARGETS"
 fi
+log "done"
