@@ -5,7 +5,7 @@
 ## Current Progress
 
 **Phase**: Phase 1 - portable skill + CLI bootstrap
-**Current Step**: Step 5e complete; ready for Windows install retest
+**Current Step**: Step 5g complete; ready for install refresh retest
 
 ### Step Status
 
@@ -27,6 +27,8 @@
 | 5c | Make Windows skill sync complete after install starts running | Done |
 | 5d | Add install/update step logs for remote failure diagnosis | Done |
 | 5e | Add configurable skill target paths for non-default Windows agent homes | Done |
+| 5f | Clarify existing-code adoption before requirement change packets | Done |
+| 5g | Clarify terminal PATH, CLI version, and sync replacement semantics | Done |
 
 ---
 
@@ -363,6 +365,51 @@ the default current-user home path on Windows or other machines.
 3. Generated Windows wrappers use a native `src` path instead of manual
    `/src` string concatenation.
 4. Unit tests and `docdev audit` pass.
+
+---
+
+## Step 5f - Existing-code adoption flow
+
+**Goal**: Prevent agents from treating an existing code project without
+docs-driven root docs as blocked when the user asks for a requirement change.
+
+**Tasks**:
+- [x] Document the adopt-then-change sequence in SPEC, README, and SKILL.
+- [x] Clarify that `docs/changes/...` packets should not stand alone without
+  root project docs.
+- [x] Add regression coverage that protects the skill guidance.
+- [x] Run unit tests, `docdev audit`, and installed-skill sync.
+
+**Acceptance**:
+1. The skill tells agents to run `docdev init <project>` first when an existing
+   code project has no `docs/SPEC.md`, then create a change packet.
+2. The docs distinguish "existing codebase" from "already docs-driven
+   project".
+3. Unit tests and `docdev audit` pass.
+
+---
+
+## Step 5g - CLI PATH and sync replacement contract
+
+**Goal**: Remove ambiguity after fresh-machine install: direct terminal use does
+not require global `docdev`, agents use skill-local wrappers, and refreshed
+skill targets are replaced rather than merged.
+
+**Tasks**:
+- [x] Add `docdev -v` / `docdev --version`.
+- [x] Document that install does not mutate the user's global shell `PATH`.
+- [x] Document direct terminal wrapper commands for Unix and Windows.
+- [x] Document that marked or force-synced skill targets are whole-directory
+  replacements, with old paths outside the current target set left untouched.
+- [x] Add regression coverage for version output, docs wording, and stale-file
+  removal during marked-target refresh.
+
+**Acceptance**:
+1. `docdev --version` prints the CLI version.
+2. README and SKILL explain why `docdev` may not be recognized in a normal
+   terminal after install and which wrapper to use.
+3. Tests prove stale files inside a marked installed skill target do not remain
+   after refresh.
 
 ---
 

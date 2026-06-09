@@ -19,6 +19,7 @@ DEFAULT_DOCS_DIR = "docs"
 GENERATED_SUBDIR = "_generated/docdev"
 CHANGES_SUBDIR = "changes"
 SKILL_NAME = "docs-driven-dev"
+VERSION = "0.1.0"
 
 
 @dataclass
@@ -890,6 +891,7 @@ def cmd_doctor(args: argparse.Namespace) -> int:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="docdev", description="Docs-driven development helper CLI.")
+    parser.add_argument("-v", "--version", action="version", version=f"%(prog)s {VERSION}")
     sub = parser.add_subparsers(dest="command", required=True)
 
     init = sub.add_parser("init", help="Create or refresh docs-driven project scaffolding.")

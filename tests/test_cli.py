@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import contextlib
+import io
 import os
 import subprocess
 import sys
@@ -28,6 +30,15 @@ class CliTests(unittest.TestCase):
     def finding_messages(self, project: Path) -> list[str]:
         findings, _summary = cli.audit_project(project, cli.docs_dir_for(project))
         return [item.message for item in findings]
+
+    def test_version_flag(self) -> None:
+        stdout = io.StringIO()
+        with contextlib.redirect_stdout(stdout):
+            with self.assertRaises(SystemExit) as caught:
+                cli.main(["--version"])
+
+        self.assertEqual(caught.exception.code, 0)
+        self.assertEqual(stdout.getvalue().strip(), f"docdev {cli.VERSION}")
 
     def test_init_and_audit(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -146,6 +157,19 @@ class CliTests(unittest.TestCase):
             cmd_text = cmd_wrapper.read_text(encoding="utf-8")
             self.assertIn(f'set "DOCDEV_PROJECT_DIR={ROOT}"', cmd_text)
             self.assertIn("python -m docs_driven_dev.cli %*", cmd_text)
+
+    def test_copy_skill_replaces_marked_target_without_stale_files(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            target = Path(tmp) / "installed-skill"
+            self.assertEqual(cli.copy_skill(ROOT / "skill", target, force=False), "copied")
+            stale = target / "old-installed-only-file.txt"
+            stale.write_text("stale", encoding="utf-8")
+
+            self.assertEqual(cli.copy_skill(ROOT / "skill", target, force=False), "copied")
+
+            self.assertFalse(stale.exists())
+            self.assertTrue((target / "SKILL.md").exists())
+            self.assertTrue((target / "bin" / "docdev").exists())
 
     def test_target_path_env_overrides(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -268,6 +292,28 @@ class CliTests(unittest.TestCase):
         self.assertIn("docdev.ps1", install_cli)
         self.assertIn("docdev.cmd", install_cli)
         self.assertIn('Join-Path $ProjectDir "src"', install_cli)
+
+    def test_skill_documents_existing_code_adoption(self) -> None:
+        text = (ROOT / "skill" / "SKILL.md").read_text(encoding="utf-8")
+        self.assertIn("An existing codebase with no project-level four docs is an adoption case", text)
+        self.assertIn('docdev init <project>` first', text)
+        self.assertIn('docdev new-change "<slug>" <project>', text)
+        self.assertIn("Do not create a standalone `docs/changes/...` packet", text)
+
+    def test_docs_explain_path_and_replacement_contract(self) -> None:
+        readme = (ROOT / "README.md").read_text(encoding="utf-8")
+        skill = (ROOT / "skill" / "SKILL.md").read_text(encoding="utf-8")
+
+        self.assertIn("does not add `docdev` to the global shell `PATH`", readme)
+        self.assertIn("Direct terminal use", readme)
+        self.assertIn("whole-directory replacement", readme)
+        self.assertIn("Old files inside that target skill directory", readme)
+        self.assertIn("should not remain", readme)
+        self.assertIn("manual file overlay", readme)
+        self.assertIn("stale untracked files in the source checkout", readme)
+        self.assertIn("does not mutate the user's global shell `PATH`", skill)
+        self.assertIn("replaces the installed skill directory", skill)
+        self.assertIn("file overlays can leave stale untracked files", skill)
 
     def test_audit_warns_on_readme_documentation_map_drift(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

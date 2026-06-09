@@ -27,6 +27,16 @@ Use `docdev init` for project-level docs. Use `docdev new-change` when an
 existing project needs a scoped requirement packet under
 `docs/changes/YYYY-MM-DD-slug/` before implementation.
 
+For an existing codebase that has no docs-driven four-pack yet, do both:
+
+```bash
+docdev init /path/to/project
+docdev new-change "feature-slug" /path/to/project
+```
+
+Keep the initial root docs minimal and mark unknowns as pending. Do not create
+a standalone `docs/changes/...` packet as the only docs-driven artifact.
+
 ## Fresh Machine Install
 
 After cloning this source repo on a new machine, run one command from the source
@@ -58,10 +68,27 @@ powershell -ExecutionPolicy Bypass -File .\scripts\install.ps1
 
 This installs the source wrapper, verifies the CLI, syncs the skill into agent
 homes, and generates each installed skill's local `bin/docdev` wrapper.
+It does not add `docdev` to the global shell `PATH`. Direct terminal use from
+the source checkout should use `./.venv/bin/docdev` on Unix shells or
+`.\.venv\Scripts\docdev.ps1` / `.\.venv\Scripts\docdev.cmd` on Windows, unless
+you add a PATH entry yourself.
 If Windows does not allow symlink creation, the Claude target is copied instead
 of linked so the install can still finish.
 If install stops, report the last line beginning with `[docdev install]` or
 `[docdev update]`; the numbered step shows where it stopped.
+
+The default install uses force sync. For an existing marked
+`docs-driven-dev` skill target, sync performs a whole-directory replacement:
+the target skill directory is removed and recopied from this source checkout,
+then fresh wrappers are generated. Old files inside that target skill directory
+should not remain. If a previous install used a different target path, that old
+directory is outside the current sync target set and must be removed manually if
+you no longer want it.
+
+Prefer `git pull` in the source checkout or a clean `git clone` over manually
+copying downloaded files over an old source folder. A manual file overlay can
+leave stale untracked files in the source checkout; install syncs from whatever
+currently exists under this checkout's `skill/` directory.
 
 By default, sync targets are resolved under the current user's home directory.
 If an agent uses a non-default skill directory, set an environment variable
@@ -88,6 +115,18 @@ docdev init /path/to/project
 docdev new-change "feature-slug" /path/to/project
 docdev audit /path/to/project --write-report
 docdev status /path/to/project
+```
+
+Direct terminal use after install:
+
+```bash
+./.venv/bin/docdev --version
+./.venv/bin/docdev audit /path/to/project
+```
+
+```powershell
+.\.venv\Scripts\docdev.ps1 --version
+.\.venv\Scripts\docdev.ps1 audit C:\path\to\project
 ```
 
 ## Source Checkout Setup

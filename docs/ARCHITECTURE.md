@@ -95,12 +95,17 @@ docdev sync-skill
   -> resolve source skill directory
   -> resolve target paths from DOCDEV_<TARGET>_SKILL_DIR / DOCDEV_<TARGET>_HOME / defaults
   -> print resolved sync target paths
-  -> copy to Codex / Cursor / shared agents targets
+  -> replace marked or forced Codex / Cursor / shared agents target directories
   -> write each copied target's bin/docdev wrapper back to the source checkout
   -> link Claude target to shared agents target when possible
   -> copy Claude target as fallback when symlink creation is unavailable
   -> require --force for unmarked existing target dirs
 ```
+
+Replacement is not an incremental merge. `copy_skill` removes the current
+target directory when it is force-synced or already marked with
+`.docdev-skill-source`, then copies the current source skill and regenerates
+wrappers. This avoids stale files inside the active target path.
 
 ### 3.6 Update Lifecycle
 
@@ -136,7 +141,10 @@ scripts/update_cli.ps1
 repo on Unix shells. `scripts/install.ps1` is the equivalent Windows
 PowerShell install path. Both call an update lifecycle with default targets so
 agents can discover the skill and call their skill-local wrappers from
-unrelated target projects. Logs are intentionally written to stdout with stable
+unrelated target projects. They do not modify the user's global shell `PATH`;
+direct terminal use from the source checkout goes through the source `.venv`
+wrappers unless the user adds another PATH entry manually. Logs are
+intentionally written to stdout with stable
 `[docdev install]` and `[docdev update]` prefixes so a user can report the last
 visible step when a remote machine fails.
 
@@ -193,6 +201,7 @@ separate from project-level D-XXX numbering.
 - Entry: `docdev` console script, source `.venv/bin/docdev` wrapper, or
   installed skill-local `bin/docdev`, `bin/docdev.ps1`, or `bin/docdev.cmd`
   wrapper.
+- Version: `docdev -v` and `docdev --version` print the CLI version.
 - Target selection: explicit project path argument; current working directory
   is only a default when the caller intentionally runs from the target project.
 - Sync target selection: exact `DOCDEV_<TARGET>_SKILL_DIR` overrides home

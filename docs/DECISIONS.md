@@ -700,3 +700,104 @@ and the user needs to see or override the exact target paths used by install.
 - `src/docs_driven_dev/cli.py`
 - `scripts/install_cli.ps1`
 - `tests/test_cli.py`
+
+---
+
+## D-018 - Step 5f - Adopt existing codebases before opening change packets
+
+**Date**: 2026-06-09
+
+**Context**:
+When the skill is used inside an existing code project that has no
+`docs/SPEC.md` four-pack yet, an agent may report that it cannot run the full
+change-packet workflow. That is too strict. The project is not blocked; it
+needs lightweight docs-driven adoption first. At the same time, a standalone
+`docs/changes/...` packet without root project docs would weaken the
+project-level source-of-truth contract.
+
+**Options**:
+- A. Tell agents to create only `docs/changes/...` in existing code projects -
+  fast, but leaves no durable project-level SPEC/ARCHITECTURE/ROADMAP/DECISIONS.
+- B. Require the user to fully complete the four root docs before any
+  requirement work - rigorous, but too heavy for onboarding an existing repo.
+- C. Run `docdev init` with minimal pending root docs, then create the
+  requirement packet - preserves the root contract while letting feature work
+  start.
+
+**Chosen**: C
+
+**Rationale**:
+- The root four docs remain the durable contract for future work.
+- The requirement packet still captures research, gates, and verification for
+  the current change.
+- Unknown project-level facts can be marked pending and refined during the
+  packet's research phase.
+
+**Risks**:
+- Root docs may start sparse. Mitigation: keep them explicit about pending
+  facts and update them when research reveals durable constraints.
+
+**Related code / docs**:
+- SPEC §2 R, §3.2, §4
+- ROADMAP Step 5f
+- `skill/SKILL.md`
+- `README.md`
+- `tests/test_cli.py`
+
+---
+
+## D-019 - Step 5g - Keep install wrapper-based and make sync replacement explicit
+
+**Date**: 2026-06-09
+
+**Context**:
+After fresh-machine install, a normal terminal may still not recognize
+`docdev` because the install lifecycle prepares source and skill-local wrappers
+but does not edit global shell PATH. The user also needs to know whether
+refreshing an installed skill merges new files into the old directory or
+replaces the old skill content, because stale installed files are a common
+failure mode in reusable skill projects.
+
+**Options**:
+- A. Mutate global PATH during install - makes `docdev` easy to type in a
+  normal terminal, but changes user shell configuration and varies across
+  Windows, macOS, and agent tool hosts.
+- B. Keep wrapper-only install but leave behavior implicit - least code churn,
+  but future users and agents will keep confusing agent CLI availability with
+  global terminal PATH.
+- C. Keep wrapper-only install, add `docdev -v`, document direct wrapper usage,
+  and make sync replacement semantics explicit - preserves install safety while
+  making the operational contract testable.
+
+**Chosen**: C
+
+**Rationale**:
+- Agents do not need global PATH because installed skills include skill-local
+  `bin/docdev` wrappers pointing back to the source checkout.
+- Humans can still run the CLI directly through the source `.venv` wrapper, or
+  add a PATH entry manually if they want a global command.
+- Force sync and marked-target refreshes delete the current target skill
+  directory before copying the source skill, preventing stale files inside the
+  active target path.
+- `docdev -v` / `docdev --version` gives a low-friction sanity check without
+  expanding the workflow command surface.
+
+**Risks**:
+- A user may still expect install to create a global `docdev` command.
+  Mitigation: README and SKILL now state that install does not mutate global
+  PATH and show direct wrapper commands.
+- If the configured target path changes, an old skill directory at the previous
+  path is outside the current sync operation. Mitigation: docs call this out so
+  stale old paths can be removed manually when needed.
+- If the source checkout itself is updated by manually copying files over an old
+  folder, stale untracked source files can remain. Mitigation: docs recommend
+  `git pull` or a clean clone before install.
+
+**Related code / docs**:
+- SPEC §2 S-T, §3.3, §3.4, §3.6, §4
+- ARCHITECTURE §3.5, §3.6, §6
+- ROADMAP Step 5g
+- `src/docs_driven_dev/cli.py`
+- `README.md`
+- `skill/SKILL.md`
+- `tests/test_cli.py`
