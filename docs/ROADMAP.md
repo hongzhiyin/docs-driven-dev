@@ -5,7 +5,7 @@
 ## Current Progress
 
 **Phase**: Phase 1 - portable skill + CLI bootstrap
-**Current Step**: Step 5 complete; ready for real-project change-packet usage
+**Current Step**: Step 5a complete; ready for Windows install feedback
 
 ### Step Status
 
@@ -22,6 +22,7 @@
 | 4d | Document fresh-machine install and agent usage path | Done |
 | 4e | Simplify fresh-machine install command name | Done |
 | 5 | Add per-requirement change packets without weakening project docs | Done |
+| 5a | Add Windows PowerShell install entrypoints | Done |
 
 ---
 
@@ -242,6 +243,29 @@ while preserving this project's project-level CLI/audit/install strengths.
 3. Project-level `docs/ARCHITECTURE.md` remains required for `docdev init` and
    root audit.
 4. Unit tests, project audit, and installed-skill sync pass.
+
+---
+
+## Step 5a - Windows install entrypoints
+
+**Goal**: Make fresh-machine onboarding work from Windows PowerShell without
+requiring `.sh` file association or Git Bash.
+
+**Tasks**:
+- [x] Add PowerShell install, update, and local wrapper scripts.
+- [x] Generate Windows installed-skill wrappers alongside the Unix wrapper.
+- [x] Update README, SPEC, ARCHITECTURE, DECISIONS, and SKILL with Windows
+  command guidance.
+- [x] Add tests that protect the Windows script and wrapper contract.
+- [x] Run unit tests, project audit, and update lifecycle sync.
+
+**Acceptance**:
+1. Windows users can run `.\scripts\install.ps1` from PowerShell after cloning
+   the repo.
+2. Synced skills include `bin/docdev`, `bin/docdev.ps1`, and `bin/docdev.cmd`.
+3. README explains why `./scripts/install.sh` opens an app chooser in Windows
+   terminals and gives the correct command.
+4. Unit tests and `docdev audit` pass with no findings.
 
 ---
 

@@ -28,11 +28,11 @@ caller passes.
 |---|---|---|---|
 | CLI package | `src/docs_driven_dev/` | Argument parsing, scaffolding, audit, status, decision skeletons, skill sync | external packages |
 | Skill source | `skill/SKILL.md` | Agent workflow and boundaries | local install paths |
-| Installed skill wrapper | `<skill-target>/bin/docdev` | Cross-project CLI entrypoint generated during sync | package index |
+| Installed skill wrappers | `<skill-target>/bin/docdev`, `bin/docdev.ps1`, `bin/docdev.cmd` | Cross-project CLI entrypoints generated during sync | package index |
 | Templates | `skill/templates/` | Four source-doc skeletons copied by `docdev init` | target project state |
 | Change templates | `skill/templates/change/` | Requirement packet skeletons copied by `docdev new-change` | target project state |
 | References | `skill/references/` | Optional examples loaded only when needed | CLI execution |
-| Scripts | `scripts/` | Source-checkout wrappers for target bootstrap, install, sync, checks, and update lifecycle | package index |
+| Scripts | `scripts/` | Source-checkout wrappers for target bootstrap, install, sync, checks, and update lifecycle on Unix shells and Windows PowerShell | package index |
 | Project docs | `docs/` | Source of truth for this project | generated audit output |
 
 ## 3. Data Flow
@@ -105,18 +105,30 @@ docdev sync-skill
 scripts/install.sh
   -> scripts/update_cli.sh --targets codex,cursor,agents,claude --force
 
+scripts/install.ps1
+  -> scripts/update_cli.ps1 -Targets codex,cursor,agents,claude -Force
+
 scripts/update_cli.sh
   -> scripts/install_cli.sh
   -> python3 -m unittest discover -s tests
   -> scripts/check_install.sh
   -> scripts/sync_skill.sh <caller args>
   -> scripts/check_install.sh
+
+scripts/update_cli.ps1
+  -> scripts/install_cli.ps1
+  -> python -m unittest discover -s tests
+  -> python -m docs_driven_dev.cli doctor
+  -> python -m docs_driven_dev.cli sync-skill <caller args>
+  -> python -m docs_driven_dev.cli doctor
+  -> python -m docs_driven_dev.cli audit <source checkout>
 ```
 
 `scripts/install.sh` is the fresh-machine install path after cloning the source
-repo. It calls the update lifecycle with default targets so agents can discover
-the skill and call their skill-local `bin/docdev` wrappers from unrelated target
-projects.
+repo on Unix shells. `scripts/install.ps1` is the equivalent Windows
+PowerShell install path. Both call an update lifecycle with default targets so
+agents can discover the skill and call their skill-local wrappers from
+unrelated target projects.
 
 ## 4. Data Model
 
@@ -167,13 +179,15 @@ separate from project-level D-XXX numbering.
 ## 6. Process Model
 
 - Entry: `docdev` console script, source `.venv/bin/docdev` wrapper, or
-  installed skill-local `bin/docdev` wrapper.
+  installed skill-local `bin/docdev`, `bin/docdev.ps1`, or `bin/docdev.cmd`
+  wrapper.
 - Target selection: explicit project path argument; current working directory
   is only a default when the caller intentionally runs from the target project.
 - Target project setup: `scripts/setup_project.sh /path/to/project`.
 - Requirement setup: `docdev new-change "<slug>" /path/to/project`.
 - Source update: `scripts/update_cli.sh --targets codex,cursor,agents,claude
-  --force`.
+  --force`, or `.\scripts\update_cli.ps1 -Targets codex,cursor,agents,claude
+  -Force` on Windows PowerShell.
 - Shutdown: command exits after a single operation.
 - Background work: none.
 - Network: none.
@@ -190,3 +204,6 @@ separate from project-level D-XXX numbering.
   Claude symlink; platform-specific metadata may need future adapters.
 - Template lookup assumes a source checkout or synced skill directory is
   available.
+- Windows PowerShell scripts use `python`; if a Windows machine only exposes
+  Python as `py`, the wrapper may need a future fallback after real-machine
+  testing.

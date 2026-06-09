@@ -16,7 +16,7 @@ Claude, and shared agent skill homes.
 | B | Default docs location | `docs/` with `.docdev.toml` `docs_dir` override | See D-002 |
 | C | Generated output | `<docs_dir>/_generated/docdev/` only | See D-002 |
 | D | Runtime | Python 3.10+ stdlib-only CLI | See D-001 |
-| E | Install style | Source checkout wrapper in `.venv/bin/docdev`; no network install required | See D-001 |
+| E | Install style | Source checkout wrappers under `.venv/bin/` or `.venv/Scripts/`; no network install required | See D-001 |
 | F | Skill sync targets | `~/.codex`, `~/.cursor`, `~/.agents`, and Claude symlink to shared agents skill | See D-003 |
 | G | Audit strictness | Structural drift is reported as warnings unless a required source document or invariant is broken | See D-005 |
 | H | Cross-project CLI discovery | Synced skill copies include `bin/docdev`; `PATH` and `DOCDEV_PROJECT_DIR` are fallbacks, not requirements | See D-006 |
@@ -25,6 +25,7 @@ Claude, and shared agent skill homes.
 | K | Target project model | `docdev` commands operate on explicit target project paths; source checkout scripts are maintenance conveniences | See D-009 |
 | L | Fresh machine onboarding | `scripts/install.sh` installs, verifies, syncs, and enables agent-mediated CLI use from a cloned source checkout | See D-010 |
 | M | Requirement granularity | Project-level four docs stay required; per-requirement change packets are optional under `docs/changes/` | See D-012 |
+| N | Windows onboarding | PowerShell install scripts mirror the Unix install lifecycle | See D-013 |
 
 ## 3. Derived Rules
 
@@ -104,6 +105,15 @@ For fresh-machine installation after cloning the source repo, run:
 ./scripts/install.sh
 ```
 
+On Windows PowerShell, run:
+
+```powershell
+.\scripts\install.ps1
+```
+
+Windows CMD / PowerShell do not execute `.sh` files directly. Users may also
+run `bash ./scripts/install.sh` from Git Bash or WSL.
+
 This uses the default sync targets `codex,cursor,agents,claude` and refreshes
 existing docs-driven-dev skill copies.
 
@@ -148,10 +158,10 @@ possible, matching the existing shared Lark skill pattern.
 Existing target directories without a `.docdev-skill-source` marker require
 `--force` before replacement.
 
-Synced skill copies must include a skill-local `bin/docdev` wrapper that points
-back to the source checkout. This lets agents invoke deterministic CLI behavior
-from arbitrary project directories even when `docdev` is not on shell `PATH` and
-`DOCDEV_PROJECT_DIR` is unset.
+Synced skill copies must include skill-local `bin/docdev`, `bin/docdev.ps1`,
+and `bin/docdev.cmd` wrappers that point back to the source checkout. This lets
+agents invoke deterministic CLI behavior from arbitrary project directories
+even when `docdev` is not on shell `PATH` and `DOCDEV_PROJECT_DIR` is unset.
 
 ## 4. Default Handling
 
@@ -167,6 +177,7 @@ from arbitrary project directories even when `docdev` is not on shell `PATH` and
 | User wants one-command source checkout setup | Use `./scripts/setup_project.sh /path/to/project` |
 | Source has just been updated | Run `./scripts/update_cli.sh --targets codex,cursor,agents,claude --force` |
 | Source repo has just been cloned on a new machine | Run `./scripts/install.sh` |
+| Source repo has just been cloned in Windows PowerShell | Run `.\scripts\install.ps1` |
 | Ambiguous user design choice | Ask 1-3 short questions before changing SPEC |
 | User did not ask for commit | Do not stage or commit automatically |
 

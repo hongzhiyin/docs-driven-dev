@@ -130,11 +130,21 @@ class CliTests(unittest.TestCase):
 
             self.assertEqual(status, "copied")
             wrapper = target / "bin" / "docdev"
+            ps_wrapper = target / "bin" / "docdev.ps1"
+            cmd_wrapper = target / "bin" / "docdev.cmd"
             self.assertTrue(wrapper.exists())
             self.assertTrue(os.access(wrapper, os.X_OK))
+            self.assertTrue(ps_wrapper.exists())
+            self.assertTrue(cmd_wrapper.exists())
             text = wrapper.read_text(encoding="utf-8")
             self.assertIn(f'DOCDEV_PROJECT_DIR="{ROOT}"', text)
             self.assertIn(f'PYTHONPATH="{ROOT}/src"', text)
+            ps_text = ps_wrapper.read_text(encoding="utf-8")
+            self.assertIn(f"$env:DOCDEV_PROJECT_DIR = '{ROOT}'", ps_text)
+            self.assertIn("python -m docs_driven_dev.cli @args", ps_text)
+            cmd_text = cmd_wrapper.read_text(encoding="utf-8")
+            self.assertIn(f'set "DOCDEV_PROJECT_DIR={ROOT}"', cmd_text)
+            self.assertIn("python -m docs_driven_dev.cli %*", cmd_text)
 
     def test_setup_project_script_creates_audit_report(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -184,6 +194,18 @@ class CliTests(unittest.TestCase):
         text = (ROOT / "scripts" / "install.sh").read_text(encoding="utf-8")
         self.assertIn("--no-force", text)
         self.assertIn('"$PROJECT_DIR/scripts/update_cli.sh" --targets "$TARGETS"', text)
+
+    def test_windows_install_scripts_exist_and_delegate(self) -> None:
+        install = (ROOT / "scripts" / "install.ps1").read_text(encoding="utf-8")
+        update = (ROOT / "scripts" / "update_cli.ps1").read_text(encoding="utf-8")
+        install_cli = (ROOT / "scripts" / "install_cli.ps1").read_text(encoding="utf-8")
+
+        self.assertIn("update_cli.ps1", install)
+        self.assertIn("codex,cursor,agents,claude", install)
+        self.assertIn("python -m unittest discover", update)
+        self.assertIn("python -m docs_driven_dev.cli @SyncArgs", update)
+        self.assertIn("docdev.ps1", install_cli)
+        self.assertIn("docdev.cmd", install_cli)
 
     def test_audit_warns_on_readme_documentation_map_drift(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

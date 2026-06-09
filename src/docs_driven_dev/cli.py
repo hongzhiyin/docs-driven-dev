@@ -738,6 +738,8 @@ def write_installed_skill_wrapper(target: Path, source: Path) -> None:
     source_root = source_root_for_skill_source(source)
     bin_dir = target / "bin"
     wrapper = bin_dir / "docdev"
+    ps_wrapper = bin_dir / "docdev.ps1"
+    cmd_wrapper = bin_dir / "docdev.cmd"
     bin_dir.mkdir(parents=True, exist_ok=True)
     wrapper.write_text(
         "#!/usr/bin/env sh\n"
@@ -747,6 +749,22 @@ def write_installed_skill_wrapper(target: Path, source: Path) -> None:
         encoding="utf-8",
     )
     wrapper.chmod(0o755)
+    ps_source = str(source_root).replace("'", "''")
+    ps_wrapper.write_text(
+        "$ErrorActionPreference = 'Stop'\n"
+        f"$env:DOCDEV_PROJECT_DIR = '{ps_source}'\n"
+        f"$env:PYTHONPATH = '{ps_source}/src'\n"
+        "python -m docs_driven_dev.cli @args\n"
+        "exit $LASTEXITCODE\n",
+        encoding="utf-8",
+    )
+    cmd_wrapper.write_text(
+        "@echo off\r\n"
+        f'set "DOCDEV_PROJECT_DIR={source_root}"\r\n'
+        f'set "PYTHONPATH={source_root}/src"\r\n'
+        "python -m docs_driven_dev.cli %*\r\n",
+        encoding="utf-8",
+    )
 
 
 def copy_skill(source: Path, target: Path, force: bool) -> str:

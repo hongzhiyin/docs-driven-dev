@@ -32,9 +32,21 @@ existing project needs a scoped requirement packet under
 After cloning this source repo on a new machine, run one command from the source
 checkout:
 
+macOS, Linux, Git Bash, or WSL:
+
 ```bash
 ./scripts/install.sh
 ```
+
+Windows PowerShell:
+
+```powershell
+.\scripts\install.ps1
+```
+
+Windows terminals do not execute `.sh` files directly; they may ask which app
+should open the file. Use the PowerShell command above, or run
+`bash ./scripts/install.sh` from Git Bash / WSL.
 
 This installs the source wrapper, verifies the CLI, syncs the skill into agent
 homes, and generates each installed skill's local `bin/docdev` wrapper.

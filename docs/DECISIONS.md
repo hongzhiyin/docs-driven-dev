@@ -481,3 +481,47 @@ operations, audit, install, and cross-agent sync.
 - ROADMAP Step 5
 - `temp/DocsDrivenDev-对比与改造方案.md`
 - `temp/SKILL.md`
+
+---
+
+## D-013 - Step 5a - Add PowerShell install and Windows wrappers
+
+**Date**: 2026-06-09
+
+**Context**:
+On a new Windows computer, running `./scripts/install.sh` from a Windows
+terminal opened an app chooser instead of executing the installer. The `.sh`
+entrypoint is correct for Unix shells and Git Bash, but PowerShell/CMD do not
+execute shell scripts by default. The installed skill also needs Windows-native
+wrappers so agents can call `docdev` without relying on a Unix shell.
+
+**Options**:
+- A. Tell Windows users to install Git Bash or WSL and run
+  `bash ./scripts/install.sh` - minimal repo change, but still leaves native
+  PowerShell onboarding broken.
+- B. Replace shell scripts with Python-only commands - cross-platform, but
+  makes the simple install/update lifecycle less transparent and changes the
+  existing Unix workflow.
+- C. Keep the Unix scripts and add PowerShell/CMD counterparts - preserves the
+  existing flow while making Windows onboarding native.
+
+**Chosen**: C
+
+**Rationale**:
+- Windows users get a direct `.\scripts\install.ps1` command.
+- Existing macOS/Linux/Git Bash behavior remains unchanged.
+- Installed skills can expose both Unix and Windows wrappers while still
+  pointing back to the same source checkout.
+
+**Risks**:
+- The Windows scripts are mostly contract-tested from macOS in this repo.
+  Mitigation: keep them thin, equivalent to the shell scripts, and add real
+  Windows execution testing after the user runs them on the new machine.
+
+**Related code / docs**:
+- SPEC §2 N, §3.4, §3.6
+- ROADMAP Step 5a
+- `scripts/install.ps1`
+- `scripts/update_cli.ps1`
+- `scripts/install_cli.ps1`
+- `src/docs_driven_dev/cli.py`
