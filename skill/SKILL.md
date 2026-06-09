@@ -20,6 +20,18 @@ This skill keeps project intent, current shape, progress, and trade-offs in four
 orthogonal documents. The agent uses the documents for judgment; the `docdev`
 CLI handles repeatable filesystem, numbering, audit, and sync operations.
 
+## Invocation Contract
+
+When this skill is explicitly named in the user message, using the skill means
+following one of its workflows and creating or updating the required docs
+artifacts before code changes. Reading this `SKILL.md` and then coding directly
+is not sufficient.
+
+Do not silently downgrade explicit `docs-driven-dev` usage into ad-hoc research
+or direct coding, even for small fixes. If the user explicitly forbids doc file
+changes, state that the full docs-driven workflow is blocked and ask whether to
+proceed outside this skill.
+
 ## File Contract
 
 Project-level source-of-truth layout:
@@ -199,6 +211,28 @@ not freeze because one choice needs later research.
 For an existing codebase, keep this bootstrap lightweight. Create the root
 four-pack so future work has a durable contract, then immediately continue to
 Workflow B for the current requirement.
+
+## Workflow B0 - Small Existing-Project Fix
+
+Use when the user explicitly names `docs-driven-dev` and asks for a narrow bug
+fix or small behavior change.
+
+1. Do not skip docs. If project-level docs are missing, run Workflow A first as
+   a minimal adoption root unless the user explicitly forbids doc files.
+2. Create a scoped change packet with `docdev new-change "<slug>" <project>`.
+3. Keep the packet minimal:
+   - SPEC: one expected behavior invariant or acceptance rule.
+   - ROADMAP: goal, touched files, acceptance checks, and verification command.
+   - DECISIONS: add or update only when there is a real trade-off.
+   - ARCHITECTURE: omit unless module boundaries, data flow, lifecycle,
+     persistence, public APIs, events, config, migration, or cross-cutting
+     structure changes.
+4. Treat an explicit user request like "fix it", "补上吧", or "implement it" as
+   implementation approval after the packet states scope and acceptance.
+5. Then implement the narrow fix, verify it, record verification in the packet,
+   and run `docdev audit <project>`.
+6. Never replace this workflow with direct code edits just because the change
+   looks small.
 
 ## Workflow B - Existing Project Requirement
 

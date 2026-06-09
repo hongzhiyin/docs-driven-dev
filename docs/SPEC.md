@@ -32,6 +32,8 @@ Claude, and shared agent skill homes.
 | R | Existing code adoption | Existing code projects without four docs should be lightly initialized before opening a requirement change packet | See D-018 |
 | S | Terminal PATH contract | Install prepares source and skill-local wrappers but does not mutate the user's global shell `PATH` | See D-019 |
 | T | Sync replacement contract | Force sync and marked-target refreshes replace the target skill directory instead of merging files | See D-019 |
+| U | Explicit invocation | When the skill is explicitly named, agents must follow one workflow and create/update required docs before code | See D-020 |
+| V | Small-fix path | Narrow bug fixes use a minimal B0 packet rather than skipping docs or forcing a heavy packet | See D-020 |
 
 ## 3. Derived Rules
 
@@ -77,6 +79,30 @@ Change packets default to Simplified Chinese templates because they are
 usually created from interactive requirement work. Code identifiers, file
 paths, commands, config keys, class/function names, branch names, and error
 messages retain their original spelling.
+
+### 3.2.1 Explicit Skill Invocation
+
+When a user explicitly names `docs-driven-dev` or references the installed
+skill, an agent must follow one of the skill workflows. Reading the skill and
+then doing ad-hoc research or direct code edits is not sufficient.
+
+For any code change under explicit skill invocation, the agent must create or
+update the required docs artifacts before editing code unless the user
+explicitly forbids doc file changes. If doc changes are forbidden, the agent
+must state that the full docs-driven workflow is blocked and ask whether to
+proceed outside this skill.
+
+Small fixes do not skip docs. They use a minimal `Workflow B0` packet:
+- initialize a minimal root four-pack first when project-level docs are missing;
+- create a scoped change packet;
+- keep SPEC to one expected behavior rule or invariant;
+- keep ROADMAP to goal, touched files, acceptance checks, and verification;
+- update DECISIONS only when a real trade-off exists;
+- omit packet ARCHITECTURE unless structure changes.
+
+After the packet states scope and acceptance, explicit user language such as
+"fix it", "补上吧", or "implement it" counts as implementation approval for the
+narrow fix.
 
 ### 3.3 CLI Commands
 
@@ -221,6 +247,8 @@ even when `docdev` is not on shell `PATH` and `DOCDEV_PROJECT_DIR` is unset.
 | Human terminal cannot find `docdev` after install | Use the source `.venv` wrapper or add a PATH entry manually |
 | Existing project needs a new feature or research packet | Use `docdev new-change "<slug>" <project>` |
 | Existing code project has no `docs/SPEC.md` | Run `docdev init <project>` first, then `docdev new-change "<slug>" <project>` |
+| Skill explicitly named for a small bug fix | Use Workflow B0: minimal adoption if needed, then a minimal change packet before code |
+| Skill explicitly named but user forbids docs | State that the full docs-driven workflow is blocked and ask whether to proceed outside the skill |
 | Change packet omits `ARCHITECTURE.md` | Require a ROADMAP reason explaining why architecture detail is unnecessary |
 | User wants one-command source checkout setup | Use `./scripts/setup_project.sh /path/to/project` |
 | Source has just been updated | Run `./scripts/update_cli.sh --targets codex,cursor,agents,claude --force` |
@@ -274,3 +302,4 @@ Constraints:
 5. **#5**: The installed skill is a decision layer; deterministic operations belong in CLI/scripts.
 6. **#6**: Source changes should be verified and synced through the project-local update lifecycle before installed skills are treated as current.
 7. **#7**: Requirement-level work packets must not weaken the project-level four-doc contract; they add scoped working memory under `<docs_dir>/changes/`.
+8. **#8**: Explicit `docs-driven-dev` invocation must not be silently downgraded into direct coding; docs artifacts come first for code changes.

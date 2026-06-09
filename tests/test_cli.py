@@ -300,6 +300,29 @@ class CliTests(unittest.TestCase):
         self.assertIn('docdev new-change "<slug>" <project>', text)
         self.assertIn("Do not create a standalone `docs/changes/...` packet", text)
 
+    def test_skill_requires_workflow_when_explicitly_named(self) -> None:
+        text = (ROOT / "skill" / "SKILL.md").read_text(encoding="utf-8")
+
+        self.assertIn("## Invocation Contract", text)
+        self.assertIn("When this skill is explicitly named in the user message", text)
+        self.assertIn("Reading this `SKILL.md` and then coding directly", text)
+        self.assertIn("is not sufficient", text)
+        self.assertIn("Do not silently downgrade explicit `docs-driven-dev` usage", text)
+        self.assertIn("Workflow B0 - Small Existing-Project Fix", text)
+        self.assertLess(text.index("Workflow B0 - Small Existing-Project Fix"), text.index("Workflow B - Existing Project Requirement"))
+        self.assertIn('docdev new-change "<slug>" <project>', text)
+        self.assertIn('Treat an explicit user request like "fix it", "补上吧", or "implement it"', text)
+
+    def test_readme_documents_explicit_invocation_fast_path(self) -> None:
+        text = (ROOT / "README.md").read_text(encoding="utf-8")
+
+        self.assertIn("should not treat it", text)
+        self.assertIn("as a loose reference method", text)
+        self.assertIn("For narrow bug fixes, use", text)
+        self.assertIn("the small-fix path", text)
+        self.assertIn("If", text)
+        self.assertIn("the user explicitly forbids doc files", text)
+
     def test_docs_explain_path_and_replacement_contract(self) -> None:
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
         skill = (ROOT / "skill" / "SKILL.md").read_text(encoding="utf-8")

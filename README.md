@@ -37,6 +37,14 @@ docdev new-change "feature-slug" /path/to/project
 Keep the initial root docs minimal and mark unknowns as pending. Do not create
 a standalone `docs/changes/...` packet as the only docs-driven artifact.
 
+When the user explicitly names `docs-driven-dev`, the agent should not treat it
+as a loose reference method. It should follow one of the skill workflows and
+create or update docs artifacts before code changes. For narrow bug fixes, use
+the small-fix path: minimal root docs if missing, a scoped change packet, one
+expected behavior rule, touched files, acceptance checks, and verification. If
+the user explicitly forbids doc files, the agent should state that the full
+docs-driven workflow is blocked before proceeding outside the skill.
+
 ## Fresh Machine Install
 
 After cloning this source repo on a new machine, run one command from the source

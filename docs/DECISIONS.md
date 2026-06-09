@@ -801,3 +801,51 @@ failure mode in reusable skill projects.
 - `README.md`
 - `skill/SKILL.md`
 - `tests/test_cli.py`
+
+---
+
+## D-020 - Step 5h - Require workflow execution when docs-driven-dev is explicit
+
+**Date**: 2026-06-09
+
+**Context**:
+A Codex agent can read the skill after the user explicitly names
+`docs-driven-dev`, but still treat it as optional methodology and directly edit
+code. The reported failure was a narrow existing-project fix where the agent
+decided that initializing project docs and opening a change packet was too much
+document churn. The current skill did not give a small-fix path, so the agent
+chose between a heavy workflow and no docs workflow.
+
+**Options**:
+- A. Keep the existing workflows and rely on agent judgment - no churn, but the
+  same silent downgrade can recur.
+- B. Require the full Workflow B packet for every explicit invocation - strict,
+  but too heavy for small bug fixes and likely to encourage future agents to
+  avoid the skill.
+- C. Add a hard invocation contract plus a minimal B0 small-fix workflow -
+  prevents silent downgrade while keeping narrow fixes low-overhead.
+
+**Chosen**: C
+
+**Rationale**:
+- Explicitly naming the skill should have observable process consequences:
+  required docs artifacts before code changes.
+- A B0 path gives agents a legitimate low-documentation route for small fixes
+  instead of inventing a direct-coding shortcut.
+- Treating "fix it", "补上吧", or "implement it" as implementation approval only
+  after scope and acceptance are stated reconciles the skill with Codex's
+  default implementation bias.
+
+**Risks**:
+- Even B0 can feel heavy in very large existing repositories. Mitigation: keep
+  root adoption minimal, keep the packet narrow, and allow proceeding outside
+  the skill only when the user explicitly forbids doc files.
+- Agents may still miss the path if it appears after the broad existing-project
+  workflow. Mitigation: place B0 before Workflow B in the skill.
+
+**Related code / docs**:
+- SPEC §2 U-V, §3.2.1, §4, §7
+- ROADMAP Step 5h
+- `skill/SKILL.md`
+- `README.md`
+- `tests/test_cli.py`

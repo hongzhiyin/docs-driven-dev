@@ -5,7 +5,7 @@
 ## Current Progress
 
 **Phase**: Phase 1 - portable skill + CLI bootstrap
-**Current Step**: Step 5g complete; ready for install refresh retest
+**Current Step**: Step 5h complete; ready for explicit-skill invocation retest
 
 ### Step Status
 
@@ -29,6 +29,7 @@
 | 5e | Add configurable skill target paths for non-default Windows agent homes | Done |
 | 5f | Clarify existing-code adoption before requirement change packets | Done |
 | 5g | Clarify terminal PATH, CLI version, and sync replacement semantics | Done |
+| 5h | Make explicit skill invocation mandatory and add small-fix fast path | Done |
 
 ---
 
@@ -410,6 +411,32 @@ skill targets are replaced rather than merged.
    terminal after install and which wrapper to use.
 3. Tests prove stale files inside a marked installed skill target do not remain
    after refresh.
+
+---
+
+## Step 5h - Explicit invocation and small-fix path
+
+**Goal**: Prevent agents from treating an explicitly named `docs-driven-dev`
+skill as optional methodology, while avoiding excessive workflow weight for
+narrow bug fixes.
+
+**Tasks**:
+- [x] Add an invocation contract that requires one skill workflow when the user
+  explicitly names `docs-driven-dev`.
+- [x] Add `Workflow B0 - Small Existing-Project Fix` before the broader
+  existing-project workflow.
+- [x] Define the minimal docs expected for a narrow bug fix.
+- [x] Clarify that direct code edits are not sufficient after explicit skill
+  invocation unless the user forbids docs and chooses to proceed outside the
+  skill.
+- [x] Add regression coverage for the invocation contract and B0 wording.
+
+**Acceptance**:
+1. SKILL states that reading the skill and coding directly is not sufficient
+   when `docs-driven-dev` is explicitly named.
+2. SKILL has a B0 workflow for narrow fixes that still creates/updates docs
+   artifacts before code.
+3. Unit tests and `docdev audit` pass.
 
 ---
 
