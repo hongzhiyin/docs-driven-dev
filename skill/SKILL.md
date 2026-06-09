@@ -3,10 +3,11 @@ name: docs-driven-dev
 description: >-
   Bootstrap, audit, and maintain projects that use docs-driven development:
   SPEC / ARCHITECTURE / ROADMAP / DECISIONS as source-of-truth documents,
-  usually under `docs/`. Use when the user asks for doc-driven,
-  documentation-first, spec-driven, 四件套文档, 决策日志, 不变式, D-XXX,
-  Step/Phase planning, or when a project already has docs/SPEC.md,
-  docs/ROADMAP.md, docs/ARCHITECTURE.md, and docs/DECISIONS.md.
+  usually under `docs/`, plus scoped per-requirement change packets under
+  `docs/changes/`. Use when the user asks for doc-driven,
+  documentation-first, spec-driven, research-before-code, 四件套文档, 需求工作包,
+  决策日志, 不变式, D-XXX, Step/Phase planning, or when a project already has
+  docs/SPEC.md, docs/ROADMAP.md, docs/ARCHITECTURE.md, and docs/DECISIONS.md.
 metadata:
   requires:
     bins: ["docdev"]
@@ -21,7 +22,7 @@ CLI handles repeatable filesystem, numbering, audit, and sync operations.
 
 ## File Contract
 
-Default source-of-truth layout:
+Project-level source-of-truth layout:
 
 ```text
 docs/
@@ -33,9 +34,19 @@ docs/
     audit.json     # optional machine-generated reports
 ```
 
+Requirement-level work packets live below the active docs dir:
+
+```text
+docs/changes/YYYY-MM-DD-slug/
+  SPEC.md
+  ROADMAP.md
+  DECISIONS.md
+  ARCHITECTURE.md  # optional; ROADMAP records the omission reason
+```
+
 Use `docs/` unless the project has `.docdev.toml` with `docs_dir = "..."`.
 Generated reports must stay under `<docs_dir>/_generated/docdev/`; do not mix
-audit output into the four source-of-truth files.
+audit output into source-of-truth files.
 
 ## CLI
 
@@ -55,6 +66,7 @@ user named.
 
 ```bash
 docdev init /path/to/project
+docdev new-change "feature-slug" /path/to/project
 docdev audit /path/to/project --write-report
 docdev status /path/to/project
 docdev new-decision "Step N - trade-off title" /path/to/project
@@ -110,6 +122,8 @@ Two mechanisms keep the method useful:
 
 1. SPEC has numbered invariants like `**#1**`; never silently violate them.
 2. ROADMAP Steps include acceptance criteria before implementation begins.
+3. For existing-project feature work, a change packet keeps research,
+   implementation gates, and verification records scoped to that requirement.
 
 ## Workflow A - Bootstrap
 
@@ -129,10 +143,47 @@ up docs-driven development.
 If a decision is unknown, write `pending D-XXX` and continue. Bootstrap should
 not freeze because one choice needs later research.
 
-## Workflow B - Extend
+## Workflow B - Existing Project Requirement
+
+Use when the user wants a feature, refactor, research task, or behaviour change
+inside a project that already exists.
+
+1. Read project-level SPEC first, then ROADMAP, DECISIONS, and ARCHITECTURE as
+   needed.
+2. Restate the suspected goal in one sentence and ask only the next 1-3
+   high-leverage questions.
+3. Run `docdev new-change "<slug>" <project>` to create a scoped work packet.
+   Use `--with-architecture` only when structural impact is already clear.
+4. Research before designing. Write concrete findings with file paths into the
+   packet ROADMAP research log. Move behavior constraints into packet SPEC and
+   structural facts into packet ARCHITECTURE when it exists.
+5. Stop at the implementation gate: goal, scope, non-goals, relevant existing
+   code, open questions, implementation steps, verification, and user approval
+   must be clear before production code changes.
+6. Implement in small steps after approval. If reality reveals a new
+   user-visible trade-off, update SPEC/DECISIONS and confirm before continuing.
+7. Verify each acceptance criterion, record verification results, run
+   `docdev audit <project>`, and leave remaining risks explicit.
+
+If `ARCHITECTURE.md` is omitted in a packet, keep the ROADMAP omission reason
+accurate. Add ARCHITECTURE before implementation once research shows module,
+data-flow, lifecycle, persistence, public API, event, config, migration, or
+cross-cutting impact.
+
+### Bounded Read-Only Research
+
+When the active platform supports sub-agents and the project area is broad, use
+bounded read-only delegation to reduce main-context pressure. Delegate concrete
+questions such as "find current implementations of X" or "compare tests around
+Y"; require returned file paths, line references when available, concise
+findings, and uncertainty. Consolidate the results into the change packet.
+Do not delegate product decisions, implementation approval, or ambiguous user
+trade-offs.
+
+## Workflow C - Project-Level Extend
 
 Use when `<docs_dir>/SPEC.md` exists and the user wants a feature, refactor, or
-behaviour change.
+behaviour change that alters the durable project-level contract.
 
 1. Read SPEC first, then ROADMAP, then DECISIONS/ARCHITECTURE as needed.
 2. Align intent: state the problem, at-risk invariants, module surface, and
@@ -184,6 +235,10 @@ Use `docdev new-decision "<title>" <project>` to append the next skeleton.
 - Long prose in SPEC with no numbered invariants.
 - ROADMAP entries that say only "do the thing" and omit acceptance.
 - Generated reports or scratch notes placed beside the four source documents.
+- Starting production code for a substantial existing-project requirement
+  before creating or updating a change packet.
+- Hiding unresolved assumptions in code comments instead of SPEC open questions
+  or DECISIONS.
 
 ## Reference
 

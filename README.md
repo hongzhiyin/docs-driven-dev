@@ -14,6 +14,7 @@ project path the caller passes:
 
 ```bash
 docdev init /path/to/project
+docdev new-change "feature-slug" /path/to/project
 docdev audit /path/to/project --write-report
 docdev status /path/to/project
 ```
@@ -21,6 +22,10 @@ docdev status /path/to/project
 In normal use, an agent loads the `docs-driven-dev` skill, resolves the CLI
 through `docdev` on `PATH` or the installed skill-local `bin/docdev` wrapper,
 then passes the current target project path explicitly.
+
+Use `docdev init` for project-level docs. Use `docdev new-change` when an
+existing project needs a scoped requirement packet under
+`docs/changes/YYYY-MM-DD-slug/` before implementation.
 
 ## Fresh Machine Install
 
@@ -39,6 +44,7 @@ the CLI against arbitrary target projects:
 
 ```bash
 docdev init /path/to/project
+docdev new-change "feature-slug" /path/to/project
 docdev audit /path/to/project --write-report
 docdev status /path/to/project
 ```

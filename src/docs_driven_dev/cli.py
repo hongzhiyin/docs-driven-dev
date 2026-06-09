@@ -13,8 +13,11 @@ from typing import Iterable
 
 
 DOC_NAMES = ("SPEC.md", "ARCHITECTURE.md", "ROADMAP.md", "DECISIONS.md")
+CHANGE_REQUIRED_DOC_NAMES = ("SPEC.md", "ROADMAP.md", "DECISIONS.md")
+CHANGE_OPTIONAL_DOC_NAMES = ("ARCHITECTURE.md",)
 DEFAULT_DOCS_DIR = "docs"
 GENERATED_SUBDIR = "_generated/docdev"
+CHANGES_SUBDIR = "changes"
 SKILL_NAME = "docs-driven-dev"
 
 
@@ -87,6 +90,10 @@ def generated_dir_for(project: Path, docs_dir: Path) -> Path:
     return docs_dir / GENERATED_SUBDIR
 
 
+def changes_dir_for(docs_dir: Path) -> Path:
+    return docs_dir / CHANGES_SUBDIR
+
+
 def skill_source_dir() -> Path:
     root = find_source_root()
     if (root / "skill" / "SKILL.md").exists():
@@ -112,6 +119,14 @@ def template_dir_for(explicit: str | None = None) -> Path:
     )
 
 
+def change_template_dir_for(lang: str, explicit: str | None = None) -> Path:
+    base = template_dir_for(explicit)
+    candidate = base / "change" / lang
+    if candidate.exists():
+        return candidate
+    raise SystemExit(f"Could not find change templates for language {lang}: {candidate}")
+
+
 def copy_template(name: str, docs_dir: Path, template_dir: Path, force: bool) -> bool:
     source = template_dir / name
     target = docs_dir / name
@@ -121,6 +136,12 @@ def copy_template(name: str, docs_dir: Path, template_dir: Path, force: bool) ->
         return False
     shutil.copy2(source, target)
     return True
+
+
+def normalize_slug(raw: str) -> str:
+    slug = re.sub(r"[^\w.-]+", "-", raw.strip().lower(), flags=re.UNICODE)
+    slug = re.sub(r"-{2,}", "-", slug).strip("-.")
+    return slug or "change"
 
 
 def ensure_readme_pointer(project: Path, docs_rel: str) -> None:
@@ -201,6 +222,42 @@ def cmd_init(args: argparse.Namespace) -> int:
     if skipped:
         print("Skipped existing: " + ", ".join(skipped))
     print(f"Generated reports dir: {docs_rel}/{GENERATED_SUBDIR}")
+    return 0
+
+
+def cmd_new_change(args: argparse.Namespace) -> int:
+    project = Path(args.project).expanduser().resolve()
+    docs_dir = docs_dir_for(project, args.docs_dir)
+    templates = change_template_dir_for(args.lang, args.template_dir)
+    date = args.date or _dt.date.today().isoformat()
+    slug = normalize_slug(args.slug)
+    packet_dir = changes_dir_for(docs_dir) / f"{date}-{slug}"
+
+    docs_dir.mkdir(parents=True, exist_ok=True)
+    if packet_dir.exists() and not args.force:
+        raise SystemExit(f"Change packet exists: {packet_dir}. Pass --force to refresh templates.")
+    packet_dir.mkdir(parents=True, exist_ok=True)
+
+    copied: list[str] = []
+    skipped: list[str] = []
+    names = list(CHANGE_REQUIRED_DOC_NAMES)
+    if args.with_architecture:
+        names.extend(CHANGE_OPTIONAL_DOC_NAMES)
+
+    for name in names:
+        if copy_template(name, packet_dir, templates, args.force):
+            copied.append(name)
+        else:
+            skipped.append(name)
+
+    rel = os.path.relpath(packet_dir, project)
+    print(f"Created change packet at {rel}")
+    if copied:
+        print("Copied: " + ", ".join(copied))
+    if skipped:
+        print("Skipped existing: " + ", ".join(skipped))
+    if not args.with_architecture:
+        print("ARCHITECTURE.md omitted; keep the ROADMAP omission reason current.")
     return 0
 
 
@@ -319,6 +376,162 @@ def audit_decision_entry_completeness(decisions_path: Path, text: str) -> list[F
     return findings
 
 
+def audit_roadmap_acceptance(roadmap_path: Path, text: str) -> tuple[list[Finding], list[str]]:
+    findings: list[Finding] = []
+    steps = roadmap_step_sections(text)
+    for title, body in steps:
+        if "验收" not in body and "Acceptance" not in body:
+            findings.append(Finding("warn", f"{title} has no acceptance section", str(roadmap_path)))
+    return findings, [title for title, _ in steps]
+
+
+def architecture_omission_reason_exists(text: str) -> bool:
+    for line in text.splitlines():
+        upper = line.upper()
+        lower = line.lower()
+        if "ARCHITECTURE" not in upper:
+            continue
+        has_omission = "omission" in lower or "省略" in line
+        has_reason = "reason" in lower or "原因" in line or "理由" in line
+        if has_omission and has_reason:
+            return True
+    return False
+
+
+def current_phase_from_roadmap(text: str) -> str:
+    match = re.search(r"^\*\*[^*\n]*(?:Phase|阶段)[^*\n]*\*\*:\s*(.+)$", text, re.I | re.M)
+    return match.group(1).strip() if match else ""
+
+
+def markdown_section(text: str, labels: tuple[str, ...]) -> str | None:
+    pattern = "|".join(re.escape(label) for label in labels)
+    match = re.search(rf"^#+\s+[^\n]*(?:{pattern})[^\n]*$", text, re.I | re.M)
+    if not match:
+        return None
+    start = match.end()
+    next_heading = re.search(r"^#+\s+", text[start:], re.M)
+    end = start + next_heading.start() if next_heading else len(text)
+    return text[start:end]
+
+
+def checkbox_counts(section: str | None) -> tuple[int, int]:
+    if section is None:
+        return 0, 0
+    checked = len(re.findall(r"^[ \t]*[-*]\s+\[[xX]\]\s+", section, re.M))
+    unchecked = len(re.findall(r"^[ \t]*[-*]\s+\[\s\]\s+", section, re.M))
+    return checked, unchecked
+
+
+def section_has_real_table_row(section: str | None, pending_terms: tuple[str, ...] = ()) -> bool:
+    if section is None:
+        return False
+    for line in section.splitlines():
+        cells = markdown_cells(line)
+        if len(cells) < 2 or markdown_separator_row(cells):
+            continue
+        lowered = " ".join(cells).lower()
+        if any(term.lower() in lowered for term in pending_terms):
+            continue
+        if any("<" in cell and ">" in cell for cell in cells):
+            continue
+        if cells[0].lower() in {"id", "acceptance", "验收项"}:
+            continue
+        return True
+    return False
+
+
+def audit_change_packet(packet_dir: Path) -> tuple[list[Finding], dict[str, object]]:
+    findings: list[Finding] = []
+    summary: dict[str, object] = {"path": str(packet_dir), "architecture": "present"}
+
+    for name in CHANGE_REQUIRED_DOC_NAMES:
+        path = packet_dir / name
+        if not path.exists():
+            findings.append(Finding("error", f"change packet missing {name}", str(path)))
+
+    decisions_path = packet_dir / "DECISIONS.md"
+    if decisions_path.exists():
+        decisions_text = decisions_path.read_text(encoding="utf-8")
+        ids = extract_decision_ids(decisions_text)
+        summary["decision_ids"] = ids
+        if not ids:
+            findings.append(Finding("warn", "change packet DECISIONS.md has no D-XXX entries", str(decisions_path)))
+        elif len(ids) != len(set(ids)):
+            findings.append(Finding("error", "change packet has duplicate D-XXX ids", str(decisions_path)))
+        elif ids != sorted(ids):
+            findings.append(Finding("error", "change packet D-XXX ids are not monotonic", str(decisions_path)))
+        else:
+            expected = list(range(1, max(ids) + 1))
+            if ids != expected:
+                findings.append(Finding("warn", "change packet D-XXX ids skip at least one number", str(decisions_path)))
+        findings.extend(audit_decision_entry_completeness(decisions_path, decisions_text))
+
+    roadmap_path = packet_dir / "ROADMAP.md"
+    roadmap_text = roadmap_path.read_text(encoding="utf-8") if roadmap_path.exists() else ""
+    if roadmap_text:
+        roadmap_findings, steps = audit_roadmap_acceptance(roadmap_path, roadmap_text)
+        findings.extend(roadmap_findings)
+        summary["roadmap_steps"] = steps
+
+    architecture_path = packet_dir / "ARCHITECTURE.md"
+    if not architecture_path.exists():
+        summary["architecture"] = "omitted"
+        if not roadmap_text or not architecture_omission_reason_exists(roadmap_text):
+            findings.append(
+                Finding(
+                    "warn",
+                    "change packet omits ARCHITECTURE.md without a ROADMAP omission reason",
+                    str(roadmap_path if roadmap_path.exists() else architecture_path),
+                )
+            )
+
+    spec_path = packet_dir / "SPEC.md"
+    if spec_path.exists():
+        spec_text = spec_path.read_text(encoding="utf-8")
+        invariant_ids = re.findall(r"\*\*#(\d+)\*\*", spec_text)
+        summary["invariant_ids"] = [int(value) for value in invariant_ids]
+        if not invariant_ids:
+            findings.append(Finding("warn", "change packet SPEC.md has no numbered invariants like **#1**", str(spec_path)))
+
+    phase = current_phase_from_roadmap(roadmap_text)
+    phase_lower = phase.lower()
+    implementing = "实现中" in phase or "implementation" in phase_lower or "implementing" in phase_lower
+    completed = "已完成" in phase or "completed" in phase_lower or "done" in phase_lower
+
+    if implementing or completed:
+        pre_section = markdown_section(roadmap_text, ("Pre-Implementation Gate", "实现前门禁"))
+        checked, unchecked = checkbox_counts(pre_section)
+        if checked + unchecked == 0:
+            findings.append(Finding("warn", "change packet has no pre-implementation gate checklist", str(roadmap_path)))
+        elif unchecked:
+            findings.append(Finding("warn", "change packet entered implementation before completing the pre-implementation gate", str(roadmap_path)))
+
+        research = markdown_section(roadmap_text, ("Research Log", "调研记录"))
+        if not section_has_real_table_row(research):
+            findings.append(Finding("warn", "change packet entered implementation without a concrete research log", str(roadmap_path)))
+
+    if completed:
+        completion_section = markdown_section(roadmap_text, ("Completion Gate", "完成前门禁"))
+        checked, unchecked = checkbox_counts(completion_section)
+        if checked + unchecked == 0:
+            findings.append(Finding("warn", "completed change packet has no completion gate checklist", str(roadmap_path)))
+        elif unchecked:
+            findings.append(Finding("warn", "completed change packet has unfinished completion gate items", str(roadmap_path)))
+
+        verification = markdown_section(roadmap_text, ("Verification Records", "验证记录"))
+        if not section_has_real_table_row(verification, ("pending", "待验证")):
+            findings.append(Finding("warn", "completed change packet has no completed verification records", str(roadmap_path)))
+
+    return findings, summary
+
+
+def discover_change_packets(docs_dir: Path) -> list[Path]:
+    changes_dir = changes_dir_for(docs_dir)
+    if not changes_dir.exists():
+        return []
+    return sorted(path for path in changes_dir.iterdir() if path.is_dir())
+
+
 def audit_project(project: Path, docs_dir: Path) -> tuple[list[Finding], dict[str, object]]:
     findings: list[Finding] = []
     summary: dict[str, object] = {
@@ -356,11 +569,9 @@ def audit_project(project: Path, docs_dir: Path) -> tuple[list[Finding], dict[st
     roadmap_path = docs_dir / "ROADMAP.md"
     if roadmap_path.exists():
         text = roadmap_path.read_text(encoding="utf-8")
-        steps = roadmap_step_sections(text)
-        summary["roadmap_steps"] = [title for title, _ in steps]
-        for title, body in steps:
-            if "验收" not in body and "Acceptance" not in body:
-                findings.append(Finding("warn", f"{title} has no acceptance section", str(roadmap_path)))
+        roadmap_findings, steps = audit_roadmap_acceptance(roadmap_path, text)
+        findings.extend(roadmap_findings)
+        summary["roadmap_steps"] = steps
 
     spec_path = docs_dir / "SPEC.md"
     if spec_path.exists():
@@ -379,6 +590,13 @@ def audit_project(project: Path, docs_dir: Path) -> tuple[list[Finding], dict[st
             text = path.read_text(encoding="utf-8")
             if docs_rel_for_markdown(project, docs_dir) not in text:
                 findings.append(Finding("warn", f"{pointer} does not mention the active docs dir", str(path)))
+
+    change_summaries: list[dict[str, object]] = []
+    for packet_dir in discover_change_packets(docs_dir):
+        packet_findings, packet_summary = audit_change_packet(packet_dir)
+        findings.extend(packet_findings)
+        change_summaries.append(packet_summary)
+    summary["change_packets"] = change_summaries
 
     return findings, summary
 
@@ -441,6 +659,10 @@ def cmd_status(args: argparse.Namespace) -> int:
     print(f"Phase: {phase or '?'}")
     print(f"Step: {step or '?'}")
     print(f"Next decision: D-{next_id:03d}")
+    packets = discover_change_packets(docs_dir)
+    print(f"Change packets: {len(packets)}")
+    if packets:
+        print(f"Latest change: {packets[-1].name}")
     return 0
 
 
@@ -631,6 +853,17 @@ def build_parser() -> argparse.ArgumentParser:
     init.add_argument("--no-readme", action="store_true")
     init.add_argument("--no-agents", action="store_true")
     init.set_defaults(func=cmd_init)
+
+    change = sub.add_parser("new-change", help="Create a per-requirement change packet.")
+    change.add_argument("slug")
+    change.add_argument("project", nargs="?", default=".")
+    change.add_argument("--docs-dir", default=None)
+    change.add_argument("--template-dir", default=None)
+    change.add_argument("--lang", choices=("zh", "en"), default="zh")
+    change.add_argument("--date", default=None)
+    change.add_argument("--with-architecture", action="store_true")
+    change.add_argument("--force", action="store_true")
+    change.set_defaults(func=cmd_new_change)
 
     audit = sub.add_parser("audit", help="Check docs-driven project invariants.")
     audit.add_argument("project", nargs="?", default=".")

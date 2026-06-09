@@ -45,6 +45,81 @@ class CliTests(unittest.TestCase):
             self.assertIn("D-001", text)
             self.assertIn("D-002", text)
 
+    def test_new_change_creates_default_packet_without_architecture(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp)
+            self.assertEqual(cli.main(["init", tmp]), 0)
+            self.assertEqual(cli.main(["new-change", "sample-feature", tmp, "--date", "2026-06-09"]), 0)
+
+            packet = project / "docs" / "changes" / "2026-06-09-sample-feature"
+            self.assertTrue((packet / "SPEC.md").exists())
+            self.assertTrue((packet / "ROADMAP.md").exists())
+            self.assertTrue((packet / "DECISIONS.md").exists())
+            self.assertFalse((packet / "ARCHITECTURE.md").exists())
+            self.assertEqual(self.finding_messages(project), [])
+
+    def test_new_change_can_include_architecture_and_english_templates(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp)
+            self.assertEqual(cli.main(["init", tmp]), 0)
+            self.assertEqual(
+                cli.main(
+                    [
+                        "new-change",
+                        "api-contract",
+                        tmp,
+                        "--date",
+                        "2026-06-09",
+                        "--lang",
+                        "en",
+                        "--with-architecture",
+                    ]
+                ),
+                0,
+            )
+
+            packet = project / "docs" / "changes" / "2026-06-09-api-contract"
+            self.assertTrue((packet / "ARCHITECTURE.md").exists())
+            spec = (packet / "SPEC.md").read_text(encoding="utf-8")
+            self.assertIn("One-Sentence Goal", spec)
+            self.assertEqual(self.finding_messages(project), [])
+
+    def test_audit_warns_when_change_omits_architecture_without_reason(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp)
+            self.assertEqual(cli.main(["init", tmp]), 0)
+            self.assertEqual(cli.main(["new-change", "small-copy", tmp, "--date", "2026-06-09"]), 0)
+
+            roadmap = project / "docs" / "changes" / "2026-06-09-small-copy" / "ROADMAP.md"
+            text = roadmap.read_text(encoding="utf-8")
+            roadmap.write_text(
+                text.replace(
+                    "**ARCHITECTURE 省略理由 / Architecture Omission Reason**: 当前需求尚未确认结构、数据流、接口、配置或迁移变化；如调研发现需要结构说明，先补 `ARCHITECTURE.md` 再实现。\n",
+                    "",
+                ),
+                encoding="utf-8",
+            )
+
+            messages = self.finding_messages(project)
+            self.assertIn("change packet omits ARCHITECTURE.md without a ROADMAP omission reason", messages)
+
+    def test_audit_warns_when_change_enters_implementation_without_gate(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp)
+            self.assertEqual(cli.main(["init", tmp]), 0)
+            self.assertEqual(cli.main(["new-change", "approval-gate", tmp, "--date", "2026-06-09"]), 0)
+
+            roadmap = project / "docs" / "changes" / "2026-06-09-approval-gate" / "ROADMAP.md"
+            text = roadmap.read_text(encoding="utf-8")
+            roadmap.write_text(text.replace("**阶段 / Phase**: 需求接入", "**阶段 / Phase**: 实现中"), encoding="utf-8")
+
+            messages = self.finding_messages(project)
+            self.assertIn(
+                "change packet entered implementation before completing the pre-implementation gate",
+                messages,
+            )
+            self.assertIn("change packet entered implementation without a concrete research log", messages)
+
     def test_sync_dry_run(self) -> None:
         self.assertEqual(cli.main(["sync-skill", "--dry-run", "--targets", "codex,cursor"]), 0)
 

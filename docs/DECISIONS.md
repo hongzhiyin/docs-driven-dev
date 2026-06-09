@@ -188,7 +188,7 @@ the rationale blocks future agents need.
   repeated false positive.
 
 **Related code / docs**:
-- SPEC §3.2, §3.3
+- SPEC §3.3, §3.5
 - `src/docs_driven_dev/cli.py`
 - `tests/test_cli.py`
 
@@ -227,7 +227,7 @@ checkout works sometimes, but it is brittle and slows down the normal workflow.
   after moving the project.
 
 **Related code / docs**:
-- SPEC §3.4
+- SPEC §3.6
 - `skill/SKILL.md`
 - `src/docs_driven_dev/cli.py`
 - `tests/test_cli.py`
@@ -272,7 +272,7 @@ post-sync verification.
   install/check/sync scripts.
 
 **Related code / docs**:
-- SPEC §2 I, §3.3
+- SPEC §2 I, §3.4
 - ROADMAP Step 4a
 - `skill/SKILL.md`
 - `scripts/update_cli.sh`
@@ -311,7 +311,7 @@ wants to apply docs-driven-dev to a project.
   reimplementing their logic.
 
 **Related code / docs**:
-- SPEC §3.3
+- SPEC §3.4
 - ROADMAP Step 4b
 - `README.md`
 - `scripts/setup_project.sh`
@@ -352,7 +352,7 @@ different: agents load the skill in arbitrary target projects, resolve the
 
 **Related code / docs**:
 - README Usage Model
-- SPEC §3.2
+- SPEC §3.3
 - ROADMAP Step 4c
 
 ---
@@ -391,7 +391,7 @@ from manual source-checkout project initialization.
 
 **Related code / docs**:
 - README Fresh Machine Install
-- SPEC §3.3
+- SPEC §3.4
 - ROADMAP Step 4d
 - `scripts/update_cli.sh`
 
@@ -429,7 +429,55 @@ installation is called install and configuration/init are separate steps.
 
 **Related code / docs**:
 - README Fresh Machine Install
-- SPEC §3.3
+- SPEC §3.4
 - ROADMAP Step 4e
 - `scripts/install.sh`
 - `scripts/update_cli.sh`
+
+---
+
+## D-012 - Step 5 - Add per-requirement packets as a second mode
+
+**Date**: 2026-06-09
+
+**Context**:
+The repo now includes `temp/` reference material from an older pure skill. That
+workflow is stronger for existing-project feature work because it uses
+per-requirement work packets, research logs, implementation gates, optional
+architecture docs, Chinese-first templates, and verification records. The
+current source project is stronger at project-level docs, deterministic CLI
+operations, audit, install, and cross-agent sync.
+
+**Options**:
+- A. Replace the current project-level four-doc model with the older skill
+  workflow - improves requirement discipline, but loses the durable project
+  contract and would invalidate existing root audit behavior.
+- B. Keep the current model unchanged and leave `temp/` as informal reference -
+  avoids churn, but agents would still miss the older workflow's strongest
+  existing-project practices.
+- C. Add requirement-level change packets under `docs/changes/` while keeping
+  the project-level four-doc contract required - combines scoped feature memory
+  with existing CLI/audit/install guarantees.
+
+**Chosen**: C
+
+**Rationale**:
+- Project-level `SPEC.md`, `ARCHITECTURE.md`, `ROADMAP.md`, and
+  `DECISIONS.md` remain the durable source of truth.
+- Change packets isolate feature research, approvals, and verification so
+  parallel requirements do not pollute root docs.
+- The CLI can scaffold and audit the repeatable parts while the skill continues
+  to own judgment, research discipline, and user approval gates.
+
+**Risks**:
+- Two document levels can confuse agents. Mitigation: README and SKILL must
+  state when to use project docs versus change packets.
+- Recursive audit can become noisy for draft packets. Mitigation: use warnings
+  for workflow quality gaps and reserve errors for missing required packet
+  files or broken project-level source structure.
+
+**Related code / docs**:
+- SPEC §3.2, §3.3, §3.5
+- ROADMAP Step 5
+- `temp/DocsDrivenDev-对比与改造方案.md`
+- `temp/SKILL.md`

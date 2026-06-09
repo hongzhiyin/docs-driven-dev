@@ -5,7 +5,7 @@
 ## Current Progress
 
 **Phase**: Phase 1 - portable skill + CLI bootstrap
-**Current Step**: Step 4e complete; ready for real-project usage feedback
+**Current Step**: Step 5 complete; ready for real-project change-packet usage
 
 ### Step Status
 
@@ -21,6 +21,7 @@
 | 4c | Clarify skill-mediated multi-project CLI usage | Done |
 | 4d | Document fresh-machine install and agent usage path | Done |
 | 4e | Simplify fresh-machine install command name | Done |
+| 5 | Add per-requirement change packets without weakening project docs | Done |
 
 ---
 
@@ -212,6 +213,35 @@ with other CLI tools.
 2. `./scripts/install.sh --targets codex --no-force` can delegate custom sync
    arguments.
 3. Unit tests and `docdev audit` pass with no findings.
+
+---
+
+## Step 5 - Dual project/change mode
+
+**Goal**: Absorb the older pure-skill workflow's requirement-level discipline
+while preserving this project's project-level CLI/audit/install strengths.
+
+**Tasks**:
+- [x] Document the dual-mode contract in SPEC, ARCHITECTURE, DECISIONS, README,
+  and SKILL.
+- [x] Add `docdev new-change` for `docs/changes/YYYY-MM-DD-slug/` work packets.
+- [x] Add change-packet templates with research log, implementation gates,
+  open questions, and verification records.
+- [x] Extend audit and status output for existing change packets.
+- [x] Add tests for change creation, optional architecture handling, gate
+  checks, and install/update compatibility.
+- [x] Run unit tests, `docdev audit`, and the update lifecycle sync.
+
+**Acceptance**:
+1. `docdev new-change "sample-feature" <tmp-project>` creates a valid
+   `docs/changes/<date>-sample-feature/` packet without requiring
+   `ARCHITECTURE.md`.
+2. `docdev audit <tmp-project>` checks both project docs and change packets,
+   warning when a packet omits architecture without a ROADMAP reason or enters
+   implementation without completed gates.
+3. Project-level `docs/ARCHITECTURE.md` remains required for `docdev init` and
+   root audit.
+4. Unit tests, project audit, and installed-skill sync pass.
 
 ---
 

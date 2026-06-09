@@ -8,9 +8,10 @@
 User / Agent
   -> docs-driven-dev skill
       -> docdev CLI for deterministic operations
-          -> project docs, generated reports, skill target dirs
+          -> project docs, change packets, generated reports, skill target dirs
   -> project source docs
       -> SPEC / ARCHITECTURE / ROADMAP / DECISIONS
+      -> changes/YYYY-MM-DD-slug/ requirement work packets
 ```
 
 The skill explains when and why to use the method. The CLI performs repeatable
@@ -29,6 +30,7 @@ caller passes.
 | Skill source | `skill/SKILL.md` | Agent workflow and boundaries | local install paths |
 | Installed skill wrapper | `<skill-target>/bin/docdev` | Cross-project CLI entrypoint generated during sync | package index |
 | Templates | `skill/templates/` | Four source-doc skeletons copied by `docdev init` | target project state |
+| Change templates | `skill/templates/change/` | Requirement packet skeletons copied by `docdev new-change` | target project state |
 | References | `skill/references/` | Optional examples loaded only when needed | CLI execution |
 | Scripts | `scripts/` | Source-checkout wrappers for target bootstrap, install, sync, checks, and update lifecycle | package index |
 | Project docs | `docs/` | Source of truth for this project | generated audit output |
@@ -56,7 +58,22 @@ scripts/setup_project.sh <project> [docdev init options]
   -> .venv/bin/docdev audit <project> --write-report
 ```
 
-### 3.3 Audit
+### 3.3 Requirement Change Packet
+
+```text
+docdev new-change <slug> <project>
+  -> resolve docs_dir from arg or .docdev.toml
+  -> create docs/changes/<date>-<slug>/
+  -> copy change templates for SPEC / ROADMAP / DECISIONS
+  -> optionally copy ARCHITECTURE
+  -> leave generated reports under docs/_generated/docdev
+```
+
+Change packets are scoped working memory for existing-project requirements.
+They do not replace root project docs. `ARCHITECTURE.md` is optional inside a
+change packet when ROADMAP records the omission reason.
+
+### 3.4 Audit
 
 ```text
 docdev audit <project>
@@ -64,11 +81,14 @@ docdev audit <project>
   -> check four files and active README/AGENTS pointers
   -> parse D-XXX ids, decision entry blocks, roadmap Step acceptance,
      SPEC invariants, and SPEC Decision Table choices
+  -> discover docs/changes/* packets
+  -> check required packet docs, optional architecture reason, gates,
+     research log, and verification records
   -> print findings
   -> optionally write docs/_generated/docdev/audit.json
 ```
 
-### 3.4 Sync
+### 3.5 Sync
 
 ```text
 docdev sync-skill
@@ -79,7 +99,7 @@ docdev sync-skill
   -> require --force for unmarked existing target dirs
 ```
 
-### 3.5 Update Lifecycle
+### 3.6 Update Lifecycle
 
 ```text
 scripts/install.sh
@@ -122,6 +142,19 @@ docs_dir = "docs"
 
 The parser is intentionally tiny and stdlib-only.
 
+### 4.3 Change Packet
+
+```text
+docs/changes/YYYY-MM-DD-slug/
+  SPEC.md
+  ROADMAP.md
+  DECISIONS.md
+  ARCHITECTURE.md  # optional
+```
+
+The date and slug are filesystem identity. Packet-local D-XXX numbering is
+separate from project-level D-XXX numbering.
+
 ## 5. Configuration
 
 | Field / Env | Default | Meaning | Required |
@@ -138,6 +171,7 @@ The parser is intentionally tiny and stdlib-only.
 - Target selection: explicit project path argument; current working directory
   is only a default when the caller intentionally runs from the target project.
 - Target project setup: `scripts/setup_project.sh /path/to/project`.
+- Requirement setup: `docdev new-change "<slug>" /path/to/project`.
 - Source update: `scripts/update_cli.sh --targets codex,cursor,agents,claude
   --force`.
 - Shutdown: command exits after a single operation.
@@ -149,6 +183,9 @@ The parser is intentionally tiny and stdlib-only.
 - Audit checks are structural, not semantic; rationale completeness is checked
   by required block presence and content, not by judging the quality of the
   prose.
+- Change-packet gate checks infer state from ROADMAP phase text and checkbox
+  structure; they are workflow guardrails, not semantic proof that a plan is
+  good.
 - Sync currently copies skill folders for Codex/Cursor/shared agents and uses a
   Claude symlink; platform-specific metadata may need future adapters.
 - Template lookup assumes a source checkout or synced skill directory is
