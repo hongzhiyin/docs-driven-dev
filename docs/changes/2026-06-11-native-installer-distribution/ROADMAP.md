@@ -33,7 +33,7 @@
 |---|---|---|---|---|
 | R-1 | 当前新机器安装 | 现有 README 和 SPEC 要求先 clone 源码，再运行 `./scripts/install.sh` / `.\scripts\install.ps1`；安装不改全局 PATH，wrapper 指向源码 checkout | `README.md`、`docs/SPEC.md` §3.4、`docs/ARCHITECTURE.md` §3.6 | 新方案必须把用户安装路径和源码维护路径拆开 |
 | R-2 | 当前 CLI 命令面 | `docdev` 现有命令为 init/new-change/audit/status/new-decision/sync-skill/doctor/version，没有 update | `./.venv/bin/docdev --help`、`src/docs_driven_dev/cli.py` | 需要新增 `docdev update` 或明确等价 update 脚本 |
-| R-3 | 版本来源 | `pyproject.toml` 和 `src/docs_driven_dev/__init__.py` 当前均为 `0.1.0` | `pyproject.toml`、`src/docs_driven_dev/__init__.py` | package 脚本应校验版本一致，避免 release manifest 漂移 |
+| R-3 | 版本来源 | `pyproject.toml` 和 `src/docs_driven_dev/__init__.py` 当前均为 `0.1.1` | `pyproject.toml`、`src/docs_driven_dev/__init__.py` | package 脚本应校验版本一致，避免 release manifest 漂移 |
 | R-4 | 当前同步边界 | `sync-skill` 会生成 installed skill wrappers，且 source lifecycle 会跑 tests/check/sync/check | `scripts/update_cli.sh`、`scripts/sync_skill.sh`、`docs/ARCHITECTURE.md` §3.5-3.6 | native update 可选 sync，但不应让每次 update 都有隐式跨 agent 目录副作用 |
 | R-5 | Claude Code native installer 参照 | 官方文档提供 `install.sh`、`install.ps1`、`install.cmd`；native install 支持 latest/stable/指定版本；有 `claude update`；release manifest 包含平台 checksum，manifest 可用 GPG 签名校验 | https://code.claude.com/docs/en/setup | docdev 可借鉴 release channel、manifest/checksum、用户目录安装、显式 update；首版可先做 checksum，签名后续增强 |
 | R-6 | Claude Code 用户目录卸载路径 | 官方文档的 native uninstall 删除 `~/.local/bin/claude` 和 `~/.local/share/claude`，Windows 删除 `%USERPROFILE%\.local\bin\claude.exe` 和 `%USERPROFILE%\.local\share\claude` | https://code.claude.com/docs/en/setup | docdev 使用 `~/.local/bin/docdev` 和 `~/.local/share/docdev` 符合参照模型 |
@@ -142,7 +142,7 @@
 - [x] 增加单元测试或脚本 contract 测试
 
 **Acceptance**:
-1. 本地运行脚本产生 `docdev-0.1.0.tar.gz`、checksum、manifest 和 installer assets。
+1. 本地运行脚本产生 `docdev-<version>.tar.gz`、checksum、manifest 和 installer assets。
 2. 解包后可通过 `PYTHONPATH=<release>/src python3 -m docs_driven_dev.cli --version` 运行。
 
 ---
@@ -236,6 +236,12 @@
 | Release asset inspection | `gh release view v0.1.0 --json ...` | 通过 | 非 draft prerelease，五个 assets uploaded |
 | Private direct URL smoke | `GITHUB_TOKEN="$(gh auth token)" ./scripts/install_remote.sh --release-base-url https://github.com/hongzhiyin/docs-driven-dev/releases/download/v0.1.0 ...` | 受限 | private repo 普通 download URL 返回 404；需公开仓库或使用 `gh release download` / API |
 | GitHub asset smoke | `gh release download v0.1.0 --dir /private/tmp/docdev-github-smoke.EtDbot/assets --clobber` then local file install | 通过 | 下载回来的 GitHub assets 可安装，launcher `--version` / `init` / `audit` 均通过 |
+| Version bump | Update `pyproject.toml`, `src/docs_driven_dev/__init__.py`, and CLI `VERSION` to `0.1.1` | 通过 | 修正 v0.1.0 artifact 未包含 private caveat docs 的自洽性 |
+| Public install docs | README and SKILL install commands use `https://github.com/hongzhiyin/docs-driven-dev/releases/latest/download/install_remote.sh` | 通过 | 为公开仓库无 token smoke 做准备 |
+| v0.1.1 tests | `PYTHONPATH=src python3 -m unittest discover -s tests` | 通过 | 30 tests |
+| v0.1.1 audit | `./.venv/bin/docdev audit /Users/chihoyo/Project/docs-driven-dev` | 通过 | No findings |
+| v0.1.1 package | `./scripts/package_release.sh --out /private/tmp/docdev-release-assets-0.1.1` | 通过 | 生成 `docdev-0.1.1.tar.gz`、checksum、manifest、installer assets |
+| v0.1.1 local smoke | `./scripts/install_remote.sh --release-base-url file:///private/tmp/docdev-release-assets-0.1.1 ...` | 通过 | launcher `docdev --version` returns `0.1.1` |
 
 ## 5. 风险与后续
 

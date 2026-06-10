@@ -20,7 +20,7 @@ DEFAULT_DOCS_DIR = "docs"
 GENERATED_SUBDIR = "_generated/docdev"
 CHANGES_SUBDIR = "changes"
 SKILL_NAME = "docs-driven-dev"
-VERSION = "0.1.0"
+VERSION = "0.1.1"
 
 
 @dataclass

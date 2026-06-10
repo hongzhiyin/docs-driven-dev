@@ -15,7 +15,7 @@
 | 模块 / 文件 | 当前职责 | 与本需求关系 |
 |---|---|---|
 | `src/docs_driven_dev/cli.py` | stdlib-only CLI，提供 init/new-change/audit/status/new-decision/sync-skill/doctor/version | 需要新增 update 命令或明确等价 update 入口 |
-| `src/docs_driven_dev/__init__.py` | 定义 `__version__ = "0.1.0"` | release version 来源之一，需要与 `pyproject.toml` 一致 |
+| `src/docs_driven_dev/__init__.py` | 定义 `__version__ = "0.1.1"` | release version 来源之一，需要与 `pyproject.toml` 一致 |
 | `pyproject.toml` | Python 项目元数据和 console script | release package 需要读取或校验版本 |
 | `scripts/install.sh` / `scripts/install.ps1` | cloned source checkout 的 fresh-machine install 入口 | 保留为开发者/source 安装路径，不再作为唯一新机器路径 |
 | `scripts/update_cli.sh` / `scripts/update_cli.ps1` | source checkout update lifecycle：install wrapper、tests、doctor、sync、audit/status | 保留为源码维护生命周期；native update 需要新入口或 CLI 命令 |

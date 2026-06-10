@@ -130,7 +130,7 @@ checksum, installs under the user's home directory, writes a launcher, and runs
 Unix shells:
 
 ```bash
-curl -fsSL https://github.com/<owner>/<repo>/releases/latest/download/install_remote.sh | sh
+curl -fsSL https://github.com/hongzhiyin/docs-driven-dev/releases/latest/download/install_remote.sh | sh
 ```
 
 Local smoke tests or mirrors may set:

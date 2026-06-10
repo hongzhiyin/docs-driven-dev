@@ -55,7 +55,7 @@ installs into the user's home directory, writes a launcher, and runs
 After release assets are published, Unix shells use the remote installer:
 
 ```bash
-curl -fsSL https://github.com/<owner>/<repo>/releases/latest/download/install_remote.sh | sh
+curl -fsSL https://github.com/hongzhiyin/docs-driven-dev/releases/latest/download/install_remote.sh | sh
 ```
 
 `scripts/package_release.sh` prepares the release asset directory expected by
