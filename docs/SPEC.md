@@ -16,7 +16,7 @@ Claude, and shared agent skill homes.
 | B | Default docs location | `docs/` with `.docdev.toml` `docs_dir` override | See D-002 |
 | C | Generated output | `<docs_dir>/_generated/docdev/` only | See D-002 |
 | D | Runtime | Python 3.10+ stdlib-only CLI | See D-001 |
-| E | Install style | Source checkout wrappers under `.venv/bin/` or `.venv/Scripts/`; no network install required | See D-001 |
+| E | Install style | Release installer installs versioned user-directory releases; source checkout wrappers remain the developer maintenance path | See D-021 |
 | F | Skill sync targets | `~/.codex`, `~/.cursor`, `~/.agents`, and Claude symlink to shared agents skill | See D-003 |
 | G | Audit strictness | Structural drift is reported as warnings unless a required source document or invariant is broken | See D-005 |
 | H | Cross-project CLI discovery | Synced skill copies include `bin/docdev`; `PATH` and `DOCDEV_PROJECT_DIR` are fallbacks, not requirements | See D-006 |
@@ -34,6 +34,9 @@ Claude, and shared agent skill homes.
 | T | Sync replacement contract | Force sync and marked-target refreshes replace the target skill directory instead of merging files | See D-019 |
 | U | Explicit invocation | When the skill is explicitly named, agents must follow one workflow and create/update required docs before code | See D-020 |
 | V | Small-fix path | Narrow bug fixes use a minimal B0 packet rather than skipping docs or forcing a heavy packet | See D-020 |
+| W | Release packaging | `scripts/package_release.sh` emits `docdev-<version>.tar.gz`, a SHA256 file, `manifest.json`, and installer script assets for GitHub Releases | See D-021 |
+| X | Native update | `docdev update` updates release installs through manifest/artifact download, checksum verification, current-pointer switch, and doctor | See D-021 |
+| Y | Private repository installs | Public GitHub Releases are the default; private releases require explicit `gh auth` or token handling | See D-021 |
 
 ## 3. Derived Rules
 
@@ -118,10 +121,60 @@ current working directory is itself the target project.
 | `docdev status <project>` | Show Phase, Step, next D id | Read-only |
 | `docdev new-decision "<title>" <project>` | Append next D-XXX skeleton | Writes DECISIONS.md |
 | `docdev sync-skill` | Copy/link skill into agent homes | Writes skill target dirs |
+| `docdev update` | Update a native release install from a release manifest and artifact | Writes user install dirs; optionally syncs skill target dirs |
 | `docdev doctor` | Show local install and sync state | Read-only |
 | `docdev --version` / `docdev -v` | Show CLI version | Read-only |
 
-### 3.4 Source Update Lifecycle
+### 3.4 Native Release Install and Update
+
+For user installation from a published GitHub Release, the native installer is
+the preferred path. It downloads a release manifest and artifact, verifies the
+artifact SHA256, installs under the user's home directory, switches a
+`current` pointer after verification, writes a launcher, and runs
+`docdev doctor`.
+
+Default Unix layout:
+
+```text
+~/.local/share/docdev/releases/<version>/
+~/.local/share/docdev/current -> releases/<version>
+~/.local/bin/docdev
+```
+
+The launcher sets `DOCDEV_PROJECT_DIR` and `PYTHONPATH` to the `current`
+release so users do not need a source checkout or manual environment setup.
+The installer may warn when `~/.local/bin` is not on `PATH`, but it must not
+mutate shell startup files automatically.
+
+`docdev update` is the preferred native update entrypoint. It resolves the
+latest or requested version, downloads and verifies the release, switches
+`current`, runs doctor, and performs skill sync only when the caller explicitly
+requests that side effect.
+
+Release artifacts are built by:
+
+```bash
+./scripts/package_release.sh
+```
+
+The script writes release output outside the source-of-truth docs, and must not
+place temporary artifacts in `docs/` except generated docdev reports under
+`docs/_generated/docdev/`. A complete release asset directory includes:
+
+```text
+docdev-<version>.tar.gz
+docdev-<version>.tar.gz.sha256
+manifest.json
+install_remote.sh
+install_remote.ps1
+```
+
+Public GitHub Releases are the default distribution target. Private repository
+installs require explicit authentication, such as `gh auth` or a token passed
+to the installer process. Tokens must not be written into generated launchers
+or persistent install metadata.
+
+### 3.5 Source Checkout Lifecycle
 
 For a one-command target project bootstrap from this source checkout, run:
 
@@ -138,7 +191,7 @@ passed, the script must audit the same docs directory.
 This script is a source checkout convenience, not the normal cross-project
 agent entrypoint.
 
-For fresh-machine installation after cloning the source repo, run:
+For developer installation after cloning the source repo, run:
 
 ```bash
 ./scripts/install.sh
@@ -154,7 +207,8 @@ Windows CMD / PowerShell do not execute `.sh` files directly. Users may also
 run `bash ./scripts/install.sh` from Git Bash or WSL.
 
 This uses the default sync targets `codex,cursor,agents,claude` and refreshes
-existing docs-driven-dev skill copies.
+existing docs-driven-dev skill copies. It is the source checkout maintenance
+path, not the primary native release installation path for new users.
 
 After changing this source checkout, run:
 
@@ -183,7 +237,7 @@ entrypoints use `[docdev install]`; update lifecycle scripts use
 `[docdev update]`. Update logs should identify numbered phases and report a
 failed phase with its exit code before exiting when possible.
 
-### 3.5 Audit Checks
+### 3.6 Audit Checks
 
 `docdev audit` checks:
 - the four source documents exist;
@@ -201,7 +255,7 @@ For each change packet under `<docs_dir>/changes/`, `docdev audit` also checks:
 - implementation-phase packets have completed pre-implementation gates;
 - completed packets have completion gates and verification records.
 
-### 3.6 Sync Behaviour
+### 3.7 Sync Behaviour
 
 `docdev sync-skill` may copy the skill to Codex, Cursor, and shared agents
 targets. Claude should use a symlink to `~/.agents/skills/docs-driven-dev` when
@@ -252,8 +306,10 @@ even when `docdev` is not on shell `PATH` and `DOCDEV_PROJECT_DIR` is unset.
 | Change packet omits `ARCHITECTURE.md` | Require a ROADMAP reason explaining why architecture detail is unnecessary |
 | User wants one-command source checkout setup | Use `./scripts/setup_project.sh /path/to/project` |
 | Source has just been updated | Run `./scripts/update_cli.sh --targets codex,cursor,agents,claude --force` |
-| Source repo has just been cloned on a new machine | Run `./scripts/install.sh` |
-| Source repo has just been cloned in Windows PowerShell | Run `.\scripts\install.ps1` |
+| User wants release-style install from GitHub Releases | Run the native remote installer and verify manifest/checksum before activation |
+| Native release install has been updated | Run `docdev update`; use `--sync-skill` only when skill targets should be refreshed |
+| Source repo has just been cloned for development | Run `./scripts/install.sh` |
+| Source repo has just been cloned for development in Windows PowerShell | Run `.\scripts\install.ps1` |
 | Source checkout was manually overwritten | Prefer replacing it with a clean git checkout before install |
 | Existing installed docs-driven-dev skill is refreshed by default install | Replace the current target skill directory; do not merge files |
 | Install fails on another machine | Use the last `[docdev install]` or `[docdev update]` step line to identify the interrupted phase |
@@ -290,7 +346,8 @@ Constraints:
 
 - No cloud service, daemon, or database.
 - No automatic semantic rewrite of existing project docs.
-- No dependency on a package index or network install.
+- No dependency on a package index or global Python install.
+- No mandatory network dependency for source checkout development workflows.
 - No attempt to enforce every documentation quality rule mechanically.
 
 ## 7. Invariants
@@ -303,3 +360,4 @@ Constraints:
 6. **#6**: Source changes should be verified and synced through the project-local update lifecycle before installed skills are treated as current.
 7. **#7**: Requirement-level work packets must not weaken the project-level four-doc contract; they add scoped working memory under `<docs_dir>/changes/`.
 8. **#8**: Explicit `docs-driven-dev` invocation must not be silently downgraded into direct coding; docs artifacts come first for code changes.
+9. **#9**: Native release installers and updates must verify artifact checksums before switching the active `current` release.

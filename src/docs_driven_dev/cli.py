@@ -6,6 +6,7 @@ import json
 import os
 import re
 import shutil
+import subprocess
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -889,6 +890,29 @@ def cmd_doctor(args: argparse.Namespace) -> int:
     return 0 if templates.exists() else 1
 
 
+def cmd_update(args: argparse.Namespace) -> int:
+    source_root = find_source_root()
+    installer = source_root / "scripts" / "install_remote.sh"
+    if not installer.exists():
+        raise SystemExit(f"Native installer script missing: {installer}")
+
+    command = [str(installer)]
+    if args.version:
+        command.extend(["--version", args.version])
+    if args.release_base_url:
+        command.extend(["--release-base-url", args.release_base_url])
+    if args.install_root:
+        command.extend(["--install-root", args.install_root])
+    if args.bin_dir:
+        command.extend(["--bin-dir", args.bin_dir])
+    if args.sync_skill:
+        command.append("--sync-skill")
+
+    env = os.environ.copy()
+    env.setdefault("DOCDEV_INSTALL_LOG_PREFIX", "[docdev update]")
+    return subprocess.run(command, check=False, env=env).returncode
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="docdev", description="Docs-driven development helper CLI.")
     parser.add_argument("-v", "--version", action="version", version=f"%(prog)s {VERSION}")
@@ -943,6 +967,14 @@ def build_parser() -> argparse.ArgumentParser:
 
     doctor = sub.add_parser("doctor", help="Show local install and sync state.")
     doctor.set_defaults(func=cmd_doctor)
+
+    update = sub.add_parser("update", help="Update a native release install.")
+    update.add_argument("--version", default=None, help="Version to install. Default: latest.")
+    update.add_argument("--release-base-url", default=None, help="Manifest/artifact base URL.")
+    update.add_argument("--install-root", default=None, help="Override DOCDEV_INSTALL_ROOT.")
+    update.add_argument("--bin-dir", default=None, help="Override DOCDEV_BIN_DIR.")
+    update.add_argument("--sync-skill", action="store_true", help="Refresh skill targets after update.")
+    update.set_defaults(func=cmd_update)
     return parser
 
 

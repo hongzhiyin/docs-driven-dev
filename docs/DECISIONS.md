@@ -849,3 +849,57 @@ chose between a heavy workflow and no docs workflow.
 - `skill/SKILL.md`
 - `README.md`
 - `tests/test_cli.py`
+
+---
+
+## D-021 - Native installer distribution before npm publishing
+
+**Date**: 2026-06-11
+
+**Context**:
+The project currently installs from a cloned source checkout and generates
+wrappers that point back to that checkout. The next portability step is
+cross-machine distribution: users should be able to install and update a
+released `docdev` without first cloning the repo or configuring
+`DOCDEV_PROJECT_DIR`. The user explicitly wants a GitHub Releases / native
+installer style path before considering npm.
+
+**Options**:
+- A. Publish npm first - familiar for CLI distribution, but it introduces Node
+  and package-manager policy before this Python stdlib CLI needs it.
+- B. Keep source checkout install as the only supported path - already works for
+  local development, but keeps new-machine setup coupled to Git clone, source
+  paths, and wrapper refresh.
+- C. Add GitHub Releases / native installer distribution first - creates a
+  public-release path with manifest/checksum, user-directory install, launcher,
+  and explicit update while keeping source checkout workflows for maintainers.
+
+**Chosen**: C
+
+**Rationale**:
+- It matches the desired Claude Code native installer pattern more closely than
+  npm: download a release manifest/artifact, verify checksum, install under the
+  user's home directory, and update through a command or script.
+- It avoids global `pip`, global npm, and system Python mutation, preserving the
+  project's stdlib-only and wrapper-based safety posture.
+- A public GitHub Release is enough for the first distribution loop; private
+  repositories can be documented as an advanced path that requires `gh auth` or
+  token handling.
+- Source checkout install/update remains useful for maintainers and can be
+  documented separately from user installation.
+
+**Risks**:
+- GitHub availability becomes part of the install path. Mitigation: keep local
+  source checkout install working and make release base URL configurable for
+  tests or mirrors.
+- Checksum-only manifests do not provide a full signing trust chain. Mitigation:
+  require checksum verification now and leave signed manifest support as a
+  future D-XXX enhancement.
+- Private repository installs are more complex. Mitigation: design public repo
+  first and document private repo authentication requirements explicitly.
+
+**Related code / docs**:
+- `docs/changes/2026-06-11-native-installer-distribution/`
+- Future SPEC §2 / §3.4 updates
+- Future ARCHITECTURE install/update data-flow updates
+- Future README and `skill/SKILL.md` install guidance updates

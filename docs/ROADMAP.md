@@ -5,7 +5,7 @@
 ## Current Progress
 
 **Phase**: Phase 1 - portable skill + CLI bootstrap
-**Current Step**: Step 5h complete; ready for explicit-skill invocation retest
+**Current Step**: Step 6 complete; ready for release asset publication and Windows live verification
 
 ### Step Status
 
@@ -30,6 +30,7 @@
 | 5f | Clarify existing-code adoption before requirement change packets | Done |
 | 5g | Clarify terminal PATH, CLI version, and sync replacement semantics | Done |
 | 5h | Make explicit skill invocation mandatory and add small-fix fast path | Done |
+| 6 | Add GitHub Releases / native installer distribution | Done |
 
 ---
 
@@ -437,6 +438,35 @@ narrow bug fixes.
 2. SKILL has a B0 workflow for narrow fixes that still creates/updates docs
    artifacts before code.
 3. Unit tests and `docdev audit` pass.
+
+---
+
+## Step 6 - Native installer distribution
+
+**Goal**: Let users install and update `docdev` from GitHub Releases style
+artifacts without cloning the source checkout or configuring
+`DOCDEV_PROJECT_DIR`.
+
+**Tasks**:
+- [x] Create `docs/changes/2026-06-11-native-installer-distribution/` with
+  SPEC / ROADMAP / DECISIONS / ARCHITECTURE.
+- [x] Record D-021 for GitHub Releases / native installer before npm.
+- [x] Update README, SPEC, ARCHITECTURE, ROADMAP, and SKILL contracts.
+- [x] Add `scripts/package_release.sh` for tarball, checksum, and manifest.
+- [x] Add Unix remote installer and native update path.
+- [x] Add Windows PowerShell installer framework.
+- [x] Add tests and local smoke checks for package/install/update.
+
+**Acceptance**:
+1. Local release packaging emits artifact, checksum, and manifest without
+   polluting source-of-truth docs.
+2. A local simulated release install can run `docdev --version`,
+   `docdev doctor`, `docdev init <tmp>`, and `docdev audit <tmp>` through the
+   generated launcher.
+3. Checksum mismatch prevents activation of a release.
+4. README / SPEC / ARCHITECTURE / SKILL distinguish native user install from
+   source checkout developer maintenance.
+5. Unit tests and `docdev audit /Users/chihoyo/Project/docs-driven-dev` pass.
 
 ---
 

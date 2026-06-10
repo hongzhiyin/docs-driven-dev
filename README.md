@@ -45,9 +45,61 @@ expected behavior rule, touched files, acceptance checks, and verification. If
 the user explicitly forbids doc files, the agent should state that the full
 docs-driven workflow is blocked before proceeding outside the skill.
 
-## Fresh Machine Install
+## Native Release Install
 
-After cloning this source repo on a new machine, run one command from the source
+The intended cross-machine user path is a GitHub Release style installer. It
+downloads a manifest and release artifact, verifies the artifact checksum,
+installs into the user's home directory, writes a launcher, and runs
+`docdev doctor`.
+
+After release assets are published, Unix shells use the remote installer:
+
+```bash
+curl -fsSL https://github.com/<owner>/<repo>/releases/latest/download/install_remote.sh | sh
+```
+
+`scripts/package_release.sh` prepares the release asset directory expected by
+that command: `docdev-<version>.tar.gz`, its `.sha256`, `manifest.json`,
+`install_remote.sh`, and `install_remote.ps1`.
+
+For local smoke tests or mirrors, point the installer at a release artifact
+directory:
+
+```bash
+DOCDEV_RELEASE_BASE_URL="file:///path/to/release-assets" ./scripts/install_remote.sh
+```
+
+Default layout:
+
+```text
+~/.local/share/docdev/releases/<version>/
+~/.local/share/docdev/current
+~/.local/bin/docdev
+```
+
+The launcher sets `DOCDEV_PROJECT_DIR` and `PYTHONPATH` to the current release;
+users do not need a source checkout or a manual `DOCDEV_PROJECT_DIR`. The
+installer does not edit shell startup files. If `~/.local/bin` is not on PATH,
+run `~/.local/bin/docdev` directly or add that directory yourself.
+
+Native installs update with:
+
+```bash
+docdev update
+```
+
+Use `docdev update --sync-skill` only when installed agent skill folders should
+also be refreshed. Private GitHub releases require explicit `gh auth` or a
+token for the installer process; tokens should not be written into launchers or
+persistent install metadata.
+
+Windows PowerShell follows the same install/update contract through the
+PowerShell installer framework. Until it has live Windows verification, treat
+the script as a documented framework plus static contract.
+
+## Source Checkout Install
+
+After cloning this source repo for development, run one command from the source
 checkout:
 
 macOS, Linux, Git Bash, or WSL:
@@ -75,7 +127,8 @@ powershell -ExecutionPolicy Bypass -File .\scripts\install.ps1
 ```
 
 This installs the source wrapper, verifies the CLI, syncs the skill into agent
-homes, and generates each installed skill's local `bin/docdev` wrapper.
+homes, and generates each installed skill's local `bin/docdev` wrapper. It is
+the developer maintenance path, not the primary native release install path.
 It does not add `docdev` to the global shell `PATH`. Direct terminal use from
 the source checkout should use `./.venv/bin/docdev` on Unix shells or
 `.\.venv\Scripts\docdev.ps1` / `.\.venv\Scripts\docdev.cmd` on Windows, unless

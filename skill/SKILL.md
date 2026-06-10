@@ -119,9 +119,48 @@ The CLI is allowed to copy templates, append the next D-XXX skeleton, audit
 structure, and sync this skill. It does not choose product design, relax
 invariants, or decide trade-offs for the user.
 
-## Fresh Machine Install
+## Native Release Install
 
-On a new machine, after cloning the source repo, install and sync the skill with:
+For ordinary user installation after GitHub Release assets are published, prefer
+the remote native installer over asking the user to clone the source checkout.
+The installer downloads a manifest and artifact, verifies the artifact
+checksum, installs under the user's home directory, writes a launcher, and runs
+`docdev doctor`.
+
+Unix shells:
+
+```bash
+curl -fsSL https://github.com/<owner>/<repo>/releases/latest/download/install_remote.sh | sh
+```
+
+Local smoke tests or mirrors may set:
+
+```bash
+DOCDEV_RELEASE_BASE_URL="file:///path/to/release-assets" ./scripts/install_remote.sh
+```
+
+The default native layout is:
+
+```text
+~/.local/share/docdev/releases/<version>/
+~/.local/share/docdev/current
+~/.local/bin/docdev
+```
+
+The generated launcher sets `DOCDEV_PROJECT_DIR` and `PYTHONPATH` to the
+current release. The installer does not edit shell startup files; if
+`~/.local/bin` is not on PATH, use the full launcher path or add PATH manually.
+Native release installs update with `docdev update`. Use
+`docdev update --sync-skill` only when skill target directories should also be
+refreshed.
+
+Private GitHub Releases require explicit `gh auth` or a token passed to the
+installer process. Do not write tokens into launchers or persistent install
+metadata.
+
+## Source Checkout Install
+
+After cloning the source repo for development, install and sync the skill with:
 
 Unix shells, Git Bash, or WSL:
 
@@ -147,7 +186,8 @@ bypass for this install:
 powershell -ExecutionPolicy Bypass -File .\scripts\install.ps1
 ```
 
-After this, supported agents should load the installed skill and use the
+This is the source checkout maintenance path. After this, supported agents should
+load the installed skill and use the
 skill-local wrapper for the active shell when `docdev` is not on `PATH`.
 The default install runs force sync. For a marked existing skill target, sync
 replaces the installed skill directory before copying the current source skill,

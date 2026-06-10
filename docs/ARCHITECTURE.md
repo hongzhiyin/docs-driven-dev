@@ -9,14 +9,18 @@ User / Agent
   -> docs-driven-dev skill
       -> docdev CLI for deterministic operations
           -> project docs, change packets, generated reports, skill target dirs
+          -> native release update when installed from a release
+  -> GitHub Release installer
+      -> user install root / launcher / versioned releases
   -> project source docs
       -> SPEC / ARCHITECTURE / ROADMAP / DECISIONS
       -> changes/YYYY-MM-DD-slug/ requirement work packets
 ```
 
 The skill explains when and why to use the method. The CLI performs repeatable
-filesystem operations. Scripts provide local wrappers for project bootstrap,
-install, sync, checks, and source updates.
+filesystem operations. Scripts provide release packaging, remote installation,
+local wrappers for project bootstrap, install, sync, checks, and source
+updates.
 
 The source checkout is the implementation home, not the operational working
 directory. `docdev` commands run against whichever target project path the
@@ -26,13 +30,15 @@ caller passes.
 
 | Module | Path | Responsibility | Does not depend on |
 |---|---|---|---|
-| CLI package | `src/docs_driven_dev/` | Argument parsing, scaffolding, audit, status, decision skeletons, skill sync | external packages |
+| CLI package | `src/docs_driven_dev/` | Argument parsing, scaffolding, audit, status, decision skeletons, skill sync, native update dispatch | external packages |
 | Skill source | `skill/SKILL.md` | Agent workflow and boundaries | local install paths |
 | Installed skill wrappers | `<skill-target>/bin/docdev`, `bin/docdev.ps1`, `bin/docdev.cmd` | Cross-project CLI entrypoints generated during sync | package index |
+| Native launcher | `~/.local/bin/docdev` | User-facing release launcher pointing at `~/.local/share/docdev/current` | source checkout |
+| Release install root | `~/.local/share/docdev/releases/<version>` and `current` | Versioned release installs and active version pointer | unverified artifacts |
 | Templates | `skill/templates/` | Four source-doc skeletons copied by `docdev init` | target project state |
 | Change templates | `skill/templates/change/` | Requirement packet skeletons copied by `docdev new-change` | target project state |
 | References | `skill/references/` | Optional examples loaded only when needed | CLI execution |
-| Scripts | `scripts/` | Source-checkout wrappers for target bootstrap, install, sync, checks, and update lifecycle on Unix shells and Windows PowerShell | package index |
+| Scripts | `scripts/` | Release packaging, remote installers, source-checkout wrappers for target bootstrap, install, sync, checks, and update lifecycle on Unix shells and Windows PowerShell | package index |
 | Project docs | `docs/` | Source of truth for this project | generated audit output |
 
 ## 3. Data Flow
@@ -148,6 +154,57 @@ intentionally written to stdout with stable
 `[docdev install]` and `[docdev update]` prefixes so a user can report the last
 visible step when a remote machine fails.
 
+### 3.7 Release Packaging
+
+```text
+scripts/package_release.sh [--version <version>] [--out <dir>]
+  -> verify pyproject.toml and package __version__ match the release version
+  -> stage source files required to run docdev
+  -> exclude .git, .venv, docs/_generated/docdev/*, caches, and build outputs
+  -> write docdev-<version>.tar.gz
+  -> write docdev-<version>.tar.gz.sha256
+  -> write manifest.json
+  -> copy install_remote.sh and install_remote.ps1 as top-level release assets
+```
+
+Release output is a build artifact, not project doctrine. It stays outside the
+four source documents and out of `docs/_generated/docdev/`.
+
+### 3.8 Native Remote Install
+
+```text
+scripts/install_remote.sh
+  -> resolve release base URL and version/latest channel
+  -> download manifest and artifact
+  -> verify artifact SHA256 against the manifest
+  -> unpack into ~/.local/share/docdev/releases/<version>
+  -> switch ~/.local/share/docdev/current
+  -> write ~/.local/bin/docdev launcher
+  -> run docdev doctor
+
+~/.local/bin/docdev
+  -> DOCDEV_PROJECT_DIR=~/.local/share/docdev/current
+  -> PYTHONPATH=~/.local/share/docdev/current/src
+  -> python3 -m docs_driven_dev.cli "$@"
+```
+
+The installer does not edit shell profiles. If `~/.local/bin` is not on PATH,
+it prints a warning and the direct launcher path.
+
+### 3.9 Native Update
+
+```text
+docdev update [--version <version>] [--release-base-url <url>] [--sync-skill]
+  -> use the same manifest/artifact/checksum/install logic as remote install
+  -> switch current only after verification succeeds
+  -> run doctor
+  -> optionally run sync-skill when requested
+```
+
+Source checkout maintenance continues to use `scripts/update_cli.*`; that path
+runs tests and sync checks for maintainers and is intentionally separate from a
+normal user's release update.
+
 ## 4. Data Model
 
 ### 4.1 Finding
@@ -192,13 +249,18 @@ separate from project-level D-XXX numbering.
 | `.docdev.toml` `docs_dir` | `docs` | Project source-doc folder | no |
 | `DOCDEV_PROJECT_DIR` | auto-detected | Source checkout for CLI fallback and templates | no |
 | `DOCDEV_TEMPLATE_DIR` | source skill templates | Explicit template directory | no |
+| `DOCDEV_INSTALL_ROOT` | `~/.local/share/docdev` | Native release install root; useful for tests and custom user layouts | no |
+| `DOCDEV_BIN_DIR` | `~/.local/bin` | Native launcher directory | no |
+| `DOCDEV_RELEASE_BASE_URL` | GitHub Release asset base | Manifest/artifact download source for remote install/update | no |
+| `GITHUB_TOKEN` | unset | Optional private GitHub Release access token; not persisted | no |
 | `DOCDEV_<TARGET>_SKILL_DIR` | unset | Exact installed skill directory for `CODEX`, `CURSOR`, `AGENTS`, or `CLAUDE` | no |
 | `DOCDEV_<TARGET>_HOME` | unset | Agent home containing `skills/docs-driven-dev` for `CODEX`, `CURSOR`, `AGENTS`, or `CLAUDE` | no |
 | `CODEX_HOME` | `~/.codex` | Legacy Codex skill home fallback when `DOCDEV_CODEX_HOME` is unset | no |
 
 ## 6. Process Model
 
-- Entry: `docdev` console script, source `.venv/bin/docdev` wrapper, or
+- Entry: native release `~/.local/bin/docdev` launcher, `docdev` console script,
+  source `.venv/bin/docdev` wrapper, or
   installed skill-local `bin/docdev`, `bin/docdev.ps1`, or `bin/docdev.cmd`
   wrapper.
 - Version: `docdev -v` and `docdev --version` print the CLI version.
@@ -208,6 +270,12 @@ separate from project-level D-XXX numbering.
   overrides, and home overrides compose with `skills/docs-driven-dev`.
 - Target project setup: `scripts/setup_project.sh /path/to/project`.
 - Requirement setup: `docdev new-change "<slug>" /path/to/project`.
+- Native install: remote installer downloads a release manifest/artifact,
+  verifies checksum, installs under `DOCDEV_INSTALL_ROOT` or
+  `~/.local/share/docdev`, and writes a launcher under `DOCDEV_BIN_DIR` or
+  `~/.local/bin`.
+- Native update: `docdev update` updates release installs and runs doctor; skill
+  sync is explicit.
 - Source update: `scripts/update_cli.sh --targets codex,cursor,agents,claude
   --force`, or `.\scripts\update_cli.ps1 -Targets codex,cursor,agents,claude
   -Force` on Windows PowerShell.
@@ -215,7 +283,9 @@ separate from project-level D-XXX numbering.
   install or update stops on another machine.
 - Shutdown: command exits after a single operation.
 - Background work: none.
-- Network: none.
+- Network: native remote install/update fetch GitHub Release assets; normal
+  docs scaffolding, audit, source checkout maintenance, and local smoke tests
+  do not require network.
 
 ## 7. Known Constraints
 
@@ -234,3 +304,5 @@ separate from project-level D-XXX numbering.
 - Windows PowerShell scripts use `python`; if a Windows machine only exposes
   Python as `py`, the wrapper may need a future fallback after real-machine
   testing.
+- Native installer checksum verification provides file integrity, not a full
+  publisher signing trust chain. Signed manifests are a future enhancement.

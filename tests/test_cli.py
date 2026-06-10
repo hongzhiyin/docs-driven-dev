@@ -2,9 +2,12 @@ from __future__ import annotations
 
 import contextlib
 import io
+import json
 import os
+import shutil
 import subprocess
 import sys
+import tarfile
 import tempfile
 import unittest
 from unittest import mock
@@ -39,6 +42,34 @@ class CliTests(unittest.TestCase):
 
         self.assertEqual(caught.exception.code, 0)
         self.assertEqual(stdout.getvalue().strip(), f"docdev {cli.VERSION}")
+
+    def test_update_dispatches_to_native_installer(self) -> None:
+        completed = subprocess.CompletedProcess(args=["install_remote"], returncode=7)
+        with mock.patch("docs_driven_dev.cli.find_source_root", return_value=ROOT):
+            with mock.patch("docs_driven_dev.cli.subprocess.run", return_value=completed) as run:
+                code = cli.main(
+                    [
+                        "update",
+                        "--version",
+                        "0.1.0",
+                        "--release-base-url",
+                        "file:///tmp/assets",
+                        "--install-root",
+                        "/tmp/install-root",
+                        "--bin-dir",
+                        "/tmp/bin",
+                        "--sync-skill",
+                    ]
+                )
+
+        self.assertEqual(code, 7)
+        command = run.call_args.args[0]
+        env = run.call_args.kwargs["env"]
+        self.assertEqual(command[0], str(ROOT / "scripts" / "install_remote.sh"))
+        self.assertIn("--version", command)
+        self.assertIn("0.1.0", command)
+        self.assertIn("--sync-skill", command)
+        self.assertEqual(env["DOCDEV_INSTALL_LOG_PREFIX"], "[docdev update]")
 
     def test_init_and_audit(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -265,14 +296,18 @@ class CliTests(unittest.TestCase):
     def test_install_and_update_scripts_emit_step_logs(self) -> None:
         install_sh = (ROOT / "scripts" / "install.sh").read_text(encoding="utf-8")
         update_sh = (ROOT / "scripts" / "update_cli.sh").read_text(encoding="utf-8")
+        install_remote_sh = (ROOT / "scripts" / "install_remote.sh").read_text(encoding="utf-8")
         install_ps = (ROOT / "scripts" / "install.ps1").read_text(encoding="utf-8")
         update_ps = (ROOT / "scripts" / "update_cli.ps1").read_text(encoding="utf-8")
+        install_remote_ps = (ROOT / "scripts" / "install_remote.ps1").read_text(encoding="utf-8")
 
         self.assertIn("[docdev install]", install_sh)
+        self.assertIn("DOCDEV_INSTALL_LOG_PREFIX", install_remote_sh)
         self.assertIn("[docdev update]", update_sh)
         self.assertIn('run_step 4 5 "sync skill targets"', update_sh)
         self.assertIn("failed with exit code", update_sh)
         self.assertIn("[docdev install]", install_ps)
+        self.assertIn("DOCDEV_INSTALL_LOG_PREFIX", install_remote_ps)
         self.assertIn("[docdev update]", update_ps)
         self.assertIn('Invoke-DocdevNativeStep 4 7 "sync skill targets"', update_ps)
         self.assertIn('Invoke-DocdevNativeStep 7 7 "status source checkout"', update_ps)
@@ -292,6 +327,149 @@ class CliTests(unittest.TestCase):
         self.assertIn("docdev.ps1", install_cli)
         self.assertIn("docdev.cmd", install_cli)
         self.assertIn('Join-Path $ProjectDir "src"', install_cli)
+
+    def test_remote_install_scripts_exist(self) -> None:
+        install_sh = (ROOT / "scripts" / "install_remote.sh").read_text(encoding="utf-8")
+        install_ps = (ROOT / "scripts" / "install_remote.ps1").read_text(encoding="utf-8")
+
+        self.assertIn("DOCDEV_RELEASE_BASE_URL", install_sh)
+        self.assertIn("GITHUB_TOKEN", install_sh)
+        self.assertIn("checksum mismatch", install_sh)
+        self.assertIn("~/.local/share/docdev", install_sh)
+        self.assertIn("Get-FileHash -Algorithm SHA256", install_ps)
+        self.assertIn("New-Item -ItemType Junction", install_ps)
+
+    def test_package_release_script_emits_manifest_and_excludes_local_artifacts(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            result = subprocess.run(
+                [str(ROOT / "scripts" / "package_release.sh"), "--out", tmp],
+                cwd=ROOT,
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            manifest_path = Path(tmp) / "manifest.json"
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            artifact = Path(tmp) / manifest["artifact"]
+            checksum = Path(tmp) / f"{manifest['artifact']}.sha256"
+            install_sh = Path(tmp) / "install_remote.sh"
+            install_ps1 = Path(tmp) / "install_remote.ps1"
+
+            self.assertEqual(manifest["version"], cli.VERSION)
+            self.assertTrue(artifact.exists())
+            self.assertTrue(checksum.exists())
+            self.assertTrue(install_sh.exists())
+            self.assertTrue(os.access(install_sh, os.X_OK))
+            self.assertTrue(install_ps1.exists())
+            self.assertEqual(len(manifest["sha256"]), 64)
+            self.assertEqual(
+                manifest["installers"],
+                [
+                    {"platform": "unix", "artifact": "install_remote.sh"},
+                    {"platform": "windows", "artifact": "install_remote.ps1"},
+                ],
+            )
+
+            with tarfile.open(artifact, "r:gz") as archive:
+                names = archive.getnames()
+
+            self.assertIn(f"docdev-{cli.VERSION}/src/docs_driven_dev/cli.py", names)
+            self.assertIn(f"docdev-{cli.VERSION}/skill/SKILL.md", names)
+            self.assertFalse(any("__pycache__" in name for name in names))
+            self.assertFalse(any(name.endswith(".pyc") for name in names))
+            self.assertFalse(any("/.git/" in name or "/.venv/" in name for name in names))
+            self.assertFalse(any("docs/_generated/docdev/" in name and not name.endswith("docs/_generated/docdev/") for name in names))
+
+    @unittest.skipIf(os.name == "nt", "install_remote.sh is a Unix shell script")
+    def test_install_remote_script_supports_local_release_assets(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            assets = root / "assets"
+            install_root = root / "share" / "docdev"
+            bin_dir = root / "bin"
+            project = root / "target"
+
+            package = subprocess.run(
+                [str(ROOT / "scripts" / "package_release.sh"), "--out", str(assets)],
+                cwd=ROOT,
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+            self.assertEqual(package.returncode, 0, package.stdout + package.stderr)
+
+            install = subprocess.run(
+                [
+                    str(ROOT / "scripts" / "install_remote.sh"),
+                    "--release-base-url",
+                    assets.as_uri(),
+                    "--install-root",
+                    str(install_root),
+                    "--bin-dir",
+                    str(bin_dir),
+                ],
+                cwd=ROOT,
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+            self.assertEqual(install.returncode, 0, install.stdout + install.stderr)
+
+            launcher = bin_dir / "docdev"
+            self.assertTrue(launcher.exists())
+            self.assertTrue((install_root / "current").exists())
+            self.assertEqual(
+                subprocess.run([str(launcher), "init", str(project)], text=True, capture_output=True, check=False).returncode,
+                0,
+            )
+            audit = subprocess.run([str(launcher), "audit", str(project)], text=True, capture_output=True, check=False)
+            self.assertEqual(audit.returncode, 0, audit.stdout + audit.stderr)
+            self.assertIn("No findings.", audit.stdout)
+
+    @unittest.skipIf(os.name == "nt", "install_remote.sh is a Unix shell script")
+    def test_install_remote_rejects_checksum_mismatch(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            assets = root / "assets"
+            bad_assets = root / "bad-assets"
+            install_root = root / "share" / "docdev"
+            bin_dir = root / "bin"
+
+            package = subprocess.run(
+                [str(ROOT / "scripts" / "package_release.sh"), "--out", str(assets)],
+                cwd=ROOT,
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+            self.assertEqual(package.returncode, 0, package.stdout + package.stderr)
+            shutil.copytree(assets, bad_assets)
+            manifest_path = bad_assets / "manifest.json"
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            manifest["sha256"] = "0" * 64
+            manifest_path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+
+            install = subprocess.run(
+                [
+                    str(ROOT / "scripts" / "install_remote.sh"),
+                    "--release-base-url",
+                    bad_assets.as_uri(),
+                    "--install-root",
+                    str(install_root),
+                    "--bin-dir",
+                    str(bin_dir),
+                ],
+                cwd=ROOT,
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+
+            self.assertNotEqual(install.returncode, 0)
+            self.assertIn("checksum mismatch", install.stderr)
+            self.assertFalse((install_root / "current").exists())
 
     def test_skill_documents_existing_code_adoption(self) -> None:
         text = (ROOT / "skill" / "SKILL.md").read_text(encoding="utf-8")
