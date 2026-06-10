@@ -6,7 +6,7 @@
 
 | 字段 | 内容 |
 |---|---|
-| 状态 | 方案待确认 |
+| 状态 | 完成 |
 | 需求来源 | 用户请求：将 docs-driven-dev 从源码 checkout + wrapper + sync-skill 升级为 GitHub Releases / native installer 风格分发 |
 | 工作包目录 | `docs/changes/2026-06-11-native-installer-distribution/` |
 | 最后更新 | 2026-06-11 |
@@ -136,7 +136,7 @@
 
 | ID | 问题 | 当前判断 | 是否阻塞实现 |
 |---|---|---|---|
-| Q1 | GitHub owner/repo 和最终公开 release URL 是什么？ | 方案可先用可配置 `DOCDEV_RELEASE_REPO` / base URL，正式 README 命令等仓库公开后定稿 | 否 |
+| Q1 | GitHub owner/repo 和最终公开 release URL 是什么？ | 已定为 `hongzhiyin/docs-driven-dev`；公开安装入口使用 `https://github.com/hongzhiyin/docs-driven-dev/releases/latest/download/install_remote.sh` | 否 |
 | Q2 | 首版是否需要 manifest GPG 签名？ | 首版先做 SHA256 manifest；D-021 和调研记录说明 Claude Code 有签名 manifest，可作为后续增强 | 否 |
 | Q3 | `docdev update` 是否默认自动 `sync-skill`？ | 倾向不默认隐式 sync，提供 `--sync-skill` 或提示，避免更新命令有过多跨 agent 副作用 | 否 |
 | Q4 | Windows 是否要在本轮达到 live-verified？ | 本轮至少文档和脚本框架；真实 Windows 机器验证可作为后续 Step | 否 |

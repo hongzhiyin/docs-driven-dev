@@ -4,8 +4,8 @@
 
 ## 0. 当前状态
 
-**阶段 / Phase**: 完成待同步
-**当前 Step / Current Step**: Step 9 - 文档、测试、smoke、audit 收尾
+**阶段 / Phase**: 完成
+**当前 Step / Current Step**: Step 9 complete; public latest installer smoke passed
 **ARCHITECTURE 省略理由 / Architecture Omission Reason**: 不省略。该需求改变分发结构、安装数据流、launcher 契约、update 生命周期和 Windows 入口，已创建 `ARCHITECTURE.md`。
 
 ## 1. Gates
@@ -52,7 +52,7 @@
 | 6 | 实施 Unix remote install | 完成 |
 | 7 | 实施 update 路径 | 完成 |
 | 8 | 补 Windows PowerShell 框架 | 完成 |
-| 9 | 文档、测试、smoke、audit 收尾 | 进行中 |
+| 9 | 文档、测试、smoke、audit 收尾 | 完成 |
 
 ---
 
@@ -249,12 +249,16 @@
 | v0.1.2 audit | `./.venv/bin/docdev audit /Users/chihoyo/Project/docs-driven-dev` | 通过 | No findings |
 | v0.1.2 package | `./scripts/package_release.sh --out /private/tmp/docdev-release-assets-0.1.2` | 通过 | 生成 `docdev-0.1.2.tar.gz`、checksum、manifest、installer assets |
 | v0.1.2 local smoke | `./scripts/install_remote.sh --release-base-url file:///private/tmp/docdev-release-assets-0.1.2 ...` | 通过 | launcher `docdev --version` returns `0.1.2` |
+| Repo visibility | `gh repo edit hongzhiyin/docs-driven-dev --visibility public --accept-visibility-change-consequences` and `gh repo view --json nameWithOwner,visibility,url` | 通过 | Canonical repo is public at `https://github.com/hongzhiyin/docs-driven-dev` |
+| v0.1.2 latest release | `gh release edit v0.1.2 --prerelease=false --latest` and `gh release view v0.1.2 --json tagName,isDraft,isPrerelease,url,assets` | 通过 | Release is not draft, not prerelease, and has five assets |
+| Public latest install smoke | `curl -fsSL https://github.com/hongzhiyin/docs-driven-dev/releases/latest/download/install_remote.sh \| sh` with temp install env overrides | 通过 | latest manifest resolved to `docdev-0.1.2.tar.gz`; checksum, install, launcher, doctor passed |
+| Public launcher init/audit | `/private/tmp/docdev-latest-smoke.VYO6KQ/bin/docdev --version`, `init`, and `audit` | 通过 | `docdev 0.1.2`; temp project audit No findings |
 
 ## 5. 风险与后续
 
 | ID | 风险 / 后续 | 影响 | 处理 |
 |---|---|---|---|
-| F-1 | GitHub release URL 已发布但仓库仍是 private | 普通 `github.com/.../releases/download/...` URL 返回 404，不能验证无 token curl 一行安装 | 公开仓库后重测，或为 private repo 增加 `gh release download` / API installer 路径 |
+| F-1 | Private GitHub Releases still need authenticated download handling | 不再阻塞 canonical public install；private forks/repos still cannot use unauthenticated `github.com/.../releases/download/...` URLs | Canonical repo is public and latest smoke passed; keep private repo caveat in README/SPEC/SKILL |
 | F-2 | checksum-only 不等于签名验证 | 能发现传输/文件损坏，但不能提供完整发布者签名信任链 | 后续增强 manifest signature |
 | F-3 | Windows 未必能在当前机器 live test | PowerShell installer 可能需要真实 Windows 反馈 | 已加静态 contract，后续 live verify |
 | F-4 | `docdev update` 增加 CLI 命令面 | 可能让 source checkout update 和 native update 混淆 | help/README 明确区分 |
