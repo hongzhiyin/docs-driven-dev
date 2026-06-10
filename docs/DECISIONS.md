@@ -903,3 +903,94 @@ installer style path before considering npm.
 - Future SPEC §2 / §3.4 updates
 - Future ARCHITECTURE install/update data-flow updates
 - Future README and `skill/SKILL.md` install guidance updates
+
+---
+
+## D-022 - Native launcher only for cross-machine agent CLI resolution
+
+**Date**: 2026-06-11
+
+**Context**:
+After adding GitHub Releases / native installer distribution, the installed
+skill still described source checkout fallbacks such as skill-local wrappers and
+`DOCDEV_PROJECT_DIR` as part of normal CLI resolution. That undermines the
+native installer goal: on another machine there may be no
+`/Users/chihoyo/Project/docs-driven-dev` checkout, and agents should not infer
+or depend on one.
+
+**Options**:
+- A. Keep source checkout fallbacks in the agent resolution order - useful for
+  this development machine, but misleading for cross-machine release installs.
+- B. Keep skill-local wrappers as the main fallback - compatible with older
+  source-sync installs, but still allows wrappers to point back to a missing
+  source path.
+- C. Make agent resolution use only `docdev` on `PATH` or the native launcher;
+  keep source checkout fallbacks only for explicit developer maintenance.
+
+**Chosen**: C
+
+**Rationale**:
+- Native installs produce a stable launcher at `~/.local/bin/docdev` pointing to
+  `~/.local/share/docdev/current`, so agents do not need source checkout
+  access.
+- If neither `docdev` nor the native launcher exists, the honest next step is
+  to ask the user to install, not to guess a machine-specific source path.
+- Source checkout wrappers remain useful for maintainers, but they should not be
+  part of the cross-machine agent contract.
+
+**Risks**:
+- Existing source-synced local installs may still have working skill-local
+  wrappers. Mitigation: keep them documented under source checkout development,
+  not agent-native resolution.
+- Windows native launcher behavior still needs live verification. Mitigation:
+  keep Windows marked as framework/static-contract until tested.
+
+**Related code / docs**:
+- SPEC §2 H, §3.3, §4
+- `skill/SKILL.md`
+- `README.md`
+- `tests/test_cli.py`
+
+---
+
+## D-023 - Use Chinese workflow prose in the skill while preserving CLI keywords
+
+**Date**: 2026-06-11
+
+**Context**:
+The skill is not only machine-readable instructions for agents; it is also a
+document the maintainer reads to verify whether agents will behave as intended.
+The previous English-only prose made review slower for the primary maintainer,
+while commands, paths, frontmatter, workflow names, and test anchors still
+benefit from stable English keywords.
+
+**Options**:
+- A. Keep the entire skill in English - convenient for existing tests and
+  grep-friendly, but harder for the maintainer to audit deeply.
+- B. Translate everything into Chinese - easiest to read locally, but risks
+  weakening tool discovery, command copy/paste, and existing keyword anchors.
+- C. Use Chinese for workflow prose and maintainer-facing guidance, while
+  preserving English headings, commands, paths, environment variables, and key
+  contract phrases.
+
+**Chosen**: C
+
+**Rationale**:
+- Chinese prose makes the skill easier for the maintainer to inspect and tune.
+- English keywords such as `Invocation Contract`, `Workflow B0`,
+  `docdev audit`, and `DOCDEV_PROJECT_DIR` remain stable for search, tests, and
+  agent/tool recognition.
+- The mixed style matches the README direction: user-facing explanation in
+  Chinese, executable surfaces left literal.
+
+**Risks**:
+- Tests that assert prose can become brittle across language changes.
+  Mitigation: update tests to check core contract phrases rather than long
+  English-only sentences.
+- Future contributors may mix styles inconsistently. Mitigation: keep headings
+  bilingual where useful and preserve literal commands/paths.
+
+**Related code / docs**:
+- `skill/SKILL.md`
+- `README.md`
+- `tests/test_cli.py`

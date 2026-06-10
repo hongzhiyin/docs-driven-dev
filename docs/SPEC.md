@@ -19,7 +19,7 @@ Claude, and shared agent skill homes.
 | E | Install style | Release installer installs versioned user-directory releases; source checkout wrappers remain the developer maintenance path | See D-021 |
 | F | Skill sync targets | `~/.codex`, `~/.cursor`, `~/.agents`, and Claude symlink to shared agents skill | See D-003 |
 | G | Audit strictness | Structural drift is reported as warnings unless a required source document or invariant is broken | See D-005 |
-| H | Cross-project CLI discovery | Synced skill copies include `bin/docdev`; `PATH` and `DOCDEV_PROJECT_DIR` are fallbacks, not requirements | See D-006 |
+| H | Cross-project CLI discovery | Agents use `docdev` on PATH or the native launcher; source checkout wrappers are developer-only fallbacks | See D-006, D-021, D-022 |
 | I | Update lifecycle | Source updates should use a project-local install, test, check, sync, check sequence | See D-007 |
 | J | Quick start | A source-checkout setup script combines install, doctor, init, and audit report for a target project | See D-008 |
 | K | Target project model | `docdev` commands operate on explicit target project paths; source checkout scripts are maintenance conveniences | See D-009 |
@@ -112,6 +112,13 @@ narrow fix.
 `docdev` is a reusable project tool, not a single-repository command. Agents
 should pass the intended target project path explicitly unless the user's
 current working directory is itself the target project.
+
+Agents resolve the CLI without relying on local source paths or compatibility
+wrappers. The normal order is: `docdev` on `PATH`, then the native Unix
+launcher `~/.local/bin/docdev` when present. If neither exists, agents should
+ask the user to run the native installer or repair the install. They should not
+guess local paths or wrappers. `DOCDEV_PROJECT_DIR` + `PYTHONPATH` is reserved
+for explicit source checkout development, not cross-machine agent use.
 
 | Command | Purpose | Side effects |
 |---|---|---|
@@ -285,10 +292,10 @@ then regenerate wrappers. This prevents stale files from remaining inside the
 current target skill directory. It does not clean a different old target path if
 the configured skill directory changed between installs.
 
-Synced skill copies must include skill-local `bin/docdev`, `bin/docdev.ps1`,
-and `bin/docdev.cmd` wrappers that point back to the source checkout. This lets
-agents invoke deterministic CLI behavior from arbitrary project directories
-even when `docdev` is not on shell `PATH` and `DOCDEV_PROJECT_DIR` is unset.
+Source checkout sync may include skill-local `bin/docdev`, `bin/docdev.ps1`,
+and `bin/docdev.cmd` wrappers for developer maintenance and compatibility.
+Native cross-machine use should not depend on those wrappers or any source
+checkout path; it should use the native launcher instead.
 
 ## 4. Default Handling
 
@@ -297,9 +304,10 @@ even when `docdev` is not on shell `PATH` and `DOCDEV_PROJECT_DIR` is unset.
 | No `.docdev.toml` | Use `docs/` |
 | Audit report requested | Write `audit.json` under `<docs_dir>/_generated/docdev/` |
 | Audit quality issue found | Report a warning unless required source structure is missing or invalid |
-| Missing `docdev` wrapper | Use `DOCDEV_PROJECT_DIR` + `PYTHONPATH` fallback |
-| Skill invoked in another project with no `docdev` on `PATH` | Use the installed skill-local `bin/docdev` wrapper |
-| Human terminal cannot find `docdev` after install | Use the source `.venv` wrapper or add a PATH entry manually |
+| Missing `docdev` on `PATH` after native install | Use `~/.local/bin/docdev` directly on Unix-like systems |
+| Skill invoked in another project with no `docdev` on `PATH` | Use `~/.local/bin/docdev` when present; otherwise ask the user to run the native installer |
+| Explicit source checkout development | Source maintainers may use `.venv` wrappers or `DOCDEV_PROJECT_DIR` + `PYTHONPATH` locally |
+| Human terminal cannot find `docdev` after source checkout install | Use the source `.venv` wrapper or add a PATH entry manually |
 | Existing project needs a new feature or research packet | Use `docdev new-change "<slug>" <project>` |
 | Existing code project has no `docs/SPEC.md` | Run `docdev init <project>` first, then `docdev new-change "<slug>" <project>` |
 | Skill explicitly named for a small bug fix | Use Workflow B0: minimal adoption if needed, then a minimal change packet before code |

@@ -1,75 +1,113 @@
 # docs-driven-dev
 
-Portable skill and CLI for docs-driven development.
+用于 docs-driven development 的可移植 skill + CLI。
 
-The skill gives agents the workflow: keep SPEC, ARCHITECTURE, ROADMAP, and
-DECISIONS aligned before and after code changes. The CLI handles deterministic
-work such as scaffolding templates, auditing document structure, appending the
-next D-XXX skeleton, and syncing the skill to agent homes.
+这个项目把判断和执行分开：`docs-driven-dev` skill 负责工作流、取舍、边界和
+何时更新文档；`docdev` CLI 负责可重复的确定性动作，比如初始化模板、审计文档结构、
+追加下一个 `D-XXX` 决策骨架、打包 release、安装更新，以及同步 skill 到各个 agent
+目录。
 
-## Usage Model
+## 快速安装
 
-`docdev` does not have a single working directory. It operates on whichever
-project path the caller passes:
+macOS、Linux 或 WSL 上，普通使用者优先安装最新 GitHub Release：
+
+```bash
+curl -fsSL https://github.com/hongzhiyin/docs-driven-dev/releases/latest/download/install_remote.sh | sh
+```
+
+安装器会下载 release manifest 和 artifact，校验 checksum，安装到
+`~/.local/share/docdev`，写入 `~/.local/bin/docdev` launcher，并运行
+`docdev doctor`。
+
+如果 `~/.local/bin` 不在 `PATH` 里，可以直接运行 `~/.local/bin/docdev`，或自行把
+该目录加入 `PATH`。安装器不会自动修改 shell 启动文件。
+
+更新 native release 安装：
+
+```bash
+docdev update
+```
+
+只有在需要刷新已安装的 agent skill 目录时，才使用：
+
+```bash
+docdev update --sync-skill
+```
+
+Windows PowerShell 遵循同样的安装 / 更新合同，当前提供 `install_remote.ps1`
+框架和静态校验；真实 Windows live verification 仍是后续项。
+
+## Agent 如何使用
+
+正常使用时，用户不需要先学习 `docdev` 的每个命令。用户告诉支持 skill 的 agent
+使用 `docs-driven-dev`，agent 读取已安装的 skill 后，自己判断应该初始化项目文档、
+创建需求工作包、审计结构、追加决策，还是同步 skill。
+
+`docdev` 没有唯一工作目录。agent 应该把当前目标项目路径显式传给 CLI，而不是假设
+这个源码仓库就是目标项目。
+
+在 macOS / Linux / WSL 上，agent 解析 CLI 时应优先使用 `docdev`；如果它不在
+`PATH`，但 native install 已写入 `~/.local/bin/docdev`，就直接使用这个 launcher。
+该 launcher 指向 `~/.local/share/docdev/current`，因此 agent 执行确定性 CLI 操作时
+不需要访问 `/Users/chihoyo/Project/docs-driven-dev` 这类源码 checkout。
+
+如果 `docdev` 和 `~/.local/bin/docdev` 都不可用，agent 应提示用户先运行 native
+installer，而不是去猜某个源码 checkout 路径。已安装 skill 里的 `bin/docdev` wrapper
+只作为源码 checkout 维护留下的兼容物，不是跨机器分发的正常路径。若希望 skill 目录也从
+release 安装刷新，运行 `docdev update --sync-skill`。
+
+当用户明确点名 `docs-driven-dev` 时，agent 不应把它当成泛泛的参考方法。它应该遵循
+skill 中的某个工作流，并在改代码前创建或更新必要的 docs artifacts。窄范围 bug fix
+也不跳过文档；使用 small-fix path：缺根文档时先轻量初始化，创建 scoped change packet，
+写清一条期望行为、触及文件、验收检查和验证结果。若用户明确禁止改文档，agent 应先说明
+完整 docs-driven workflow 被阻塞，再询问是否脱离该 skill 继续。
+
+## 手动 CLI 参考
+
+这些命令主要给调试、本地 smoke test 和维护使用。日常场景里，agent 会通过已安装的
+skill 调用它们。
 
 ```bash
 docdev init /path/to/project
 docdev new-change "feature-slug" /path/to/project
 docdev audit /path/to/project --write-report
 docdev status /path/to/project
+docdev doctor
 ```
 
-In normal use, an agent loads the `docs-driven-dev` skill, resolves the CLI
-through `docdev` on `PATH` or the installed skill-local `bin/docdev` wrapper,
-then passes the current target project path explicitly.
+使用 `docdev init` 创建项目级四件套文档。已有项目要在实现前开 scoped requirement
+packet 时，使用 `docdev new-change`，生成类似
+`docs/changes/YYYY-MM-DD-slug/` 的工作包。
 
-Use `docdev init` for project-level docs. Use `docdev new-change` when an
-existing project needs a scoped requirement packet under
-`docs/changes/YYYY-MM-DD-slug/` before implementation.
-
-For an existing codebase that has no docs-driven four-pack yet, do both:
+如果一个已有代码库还没有 docs-driven 四件套，先做轻量 adoption，再开当前需求包：
 
 ```bash
 docdev init /path/to/project
 docdev new-change "feature-slug" /path/to/project
 ```
 
-Keep the initial root docs minimal and mark unknowns as pending. Do not create
-a standalone `docs/changes/...` packet as the only docs-driven artifact.
+初始根文档可以保持很薄，把未知项标成 pending。不要让 `docs/changes/...` 成为项目里
+唯一的 docs-driven artifact。
 
-When the user explicitly names `docs-driven-dev`, the agent should not treat it
-as a loose reference method. It should follow one of the skill workflows and
-create or update docs artifacts before code changes. For narrow bug fixes, use
-the small-fix path: minimal root docs if missing, a scoped change packet, one
-expected behavior rule, touched files, acceptance checks, and verification. If
-the user explicitly forbids doc files, the agent should state that the full
-docs-driven workflow is blocked before proceeding outside the skill.
+## Release Installer 细节
 
-## Native Release Install
+`scripts/package_release.sh` 用来准备 GitHub Release assets：
 
-The intended cross-machine user path is a GitHub Release style installer. It
-downloads a manifest and release artifact, verifies the artifact checksum,
-installs into the user's home directory, writes a launcher, and runs
-`docdev doctor`.
-
-After release assets are published, Unix shells use the remote installer:
-
-```bash
-curl -fsSL https://github.com/hongzhiyin/docs-driven-dev/releases/latest/download/install_remote.sh | sh
+```text
+docdev-<version>.tar.gz
+docdev-<version>.tar.gz.sha256
+manifest.json
+install_remote.sh
+install_remote.ps1
 ```
 
-`scripts/package_release.sh` prepares the release asset directory expected by
-that command: `docdev-<version>.tar.gz`, its `.sha256`, `manifest.json`,
-`install_remote.sh`, and `install_remote.ps1`.
-
-For local smoke tests or mirrors, point the installer at a release artifact
-directory:
+本地 smoke test 或镜像安装可以指定 release artifact 目录：
 
 ```bash
 DOCDEV_RELEASE_BASE_URL="file:///path/to/release-assets" ./scripts/install_remote.sh
 ```
 
-Default layout:
+默认 native install 布局：
 
 ```text
 ~/.local/share/docdev/releases/<version>/
@@ -77,154 +115,115 @@ Default layout:
 ~/.local/bin/docdev
 ```
 
-The launcher sets `DOCDEV_PROJECT_DIR` and `PYTHONPATH` to the current release;
-users do not need a source checkout or a manual `DOCDEV_PROJECT_DIR`. The
-installer does not edit shell startup files. If `~/.local/bin` is not on PATH,
-run `~/.local/bin/docdev` directly or add that directory yourself.
+生成的 launcher 会把 `DOCDEV_PROJECT_DIR` 和 `PYTHONPATH` 指向当前 release。用户不需要
+保留源码 checkout，也不需要手动设置 `DOCDEV_PROJECT_DIR`。
 
-Native installs update with:
+公开 GitHub Release 是默认分发路径。私有 GitHub Release 不能假设普通
+`github.com/.../releases/download/...` URL 可直接下载；GitHub 可能返回 404。私有测试时，
+先用 `gh release download` 或 GitHub API 把 release assets 下载到本地目录，再用
+`DOCDEV_RELEASE_BASE_URL=file:///path/to/assets` 安装。不要把 token 写入 launcher 或持久
+安装元数据。
 
-```bash
-docdev update
-```
+## 源码 Checkout 开发安装
 
-Use `docdev update --sync-skill` only when installed agent skill folders should
-also be refreshed. Private GitHub releases are more constrained than public
-release URLs: GitHub may return 404 for normal
-`github.com/.../releases/download/...` asset URLs on a private repository. For
-private testing, use `gh release download` or the GitHub API to fetch the
-release assets into a local directory, then install with
-`DOCDEV_RELEASE_BASE_URL=file:///path/to/assets`. Tokens should not be written
-into launchers or persistent install metadata.
+如果是为了开发或维护这个仓库，先 clone 源码，然后在源码 checkout 中运行：
 
-Windows PowerShell follows the same install/update contract through the
-PowerShell installer framework. Until it has live Windows verification, treat
-the script as a documented framework plus static contract.
-
-## Source Checkout Install
-
-After cloning this source repo for development, run one command from the source
-checkout:
-
-macOS, Linux, Git Bash, or WSL:
+macOS、Linux、Git Bash 或 WSL：
 
 ```bash
 ./scripts/install.sh
 ```
 
-Windows PowerShell:
+Windows PowerShell：
 
 ```powershell
 Unblock-File .\scripts\*.ps1
 .\scripts\install.ps1
 ```
 
-Windows terminals do not execute `.sh` files directly; they may ask which app
-should open the file. Use the PowerShell command above, or run
-`bash ./scripts/install.sh` from Git Bash / WSL.
+Windows 终端不会直接执行 `.sh` 文件；它可能会询问用哪个 app 打开。请使用上面的
+PowerShell 命令，或在 Git Bash / WSL 中运行 `bash ./scripts/install.sh`。
 
-If your PowerShell execution policy requires signed scripts, run the install in
-a process-scoped bypass shell instead:
+如果当前 PowerShell 执行策略要求脚本签名，可以只对本次进程使用 bypass：
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\install.ps1
 ```
 
-This installs the source wrapper, verifies the CLI, syncs the skill into agent
-homes, and generates each installed skill's local `bin/docdev` wrapper. It is
-the developer maintenance path, not the primary native release install path.
-It does not add `docdev` to the global shell `PATH`. Direct terminal use from
-the source checkout should use `./.venv/bin/docdev` on Unix shells or
-`.\.venv\Scripts\docdev.ps1` / `.\.venv\Scripts\docdev.cmd` on Windows, unless
-you add a PATH entry yourself.
-If Windows does not allow symlink creation, the Claude target is copied instead
-of linked so the install can still finish.
-If install stops, report the last line beginning with `[docdev install]` or
-`[docdev update]`; the numbered step shows where it stopped.
+这条开发安装路径会安装源码 wrapper、验证 CLI、把 skill 同步到 agent homes，并为每个
+已安装 skill 生成本地 `bin/docdev` wrapper。它是开发者维护路径，不是普通用户的首选
+native release install 路径。
 
-The default install uses force sync. For an existing marked
-`docs-driven-dev` skill target, sync performs a whole-directory replacement:
-the target skill directory is removed and recopied from this source checkout,
-then fresh wrappers are generated. Old files inside that target skill directory
-should not remain. If a previous install used a different target path, that old
-directory is outside the current sync target set and must be removed manually if
-you no longer want it.
-
-Prefer `git pull` in the source checkout or a clean `git clone` over manually
-copying downloaded files over an old source folder. A manual file overlay can
-leave stale untracked files in the source checkout; install syncs from whatever
-currently exists under this checkout's `skill/` directory.
-
-By default, sync targets are resolved under the current user's home directory.
-If an agent uses a non-default skill directory, set an environment variable
-before running install:
-
-```powershell
-# Current PowerShell session only.
-$env:DOCDEV_CURSOR_SKILL_DIR = "D:\AgentSkills\cursor\docs-driven-dev"
-$env:DOCDEV_AGENTS_HOME = "$env:USERPROFILE\.agents"
-.\scripts\install.ps1
-```
-
-`DOCDEV_<TARGET>_SKILL_DIR` points at the exact final skill folder.
-`DOCDEV_<TARGET>_HOME` points at the agent home that contains
-`skills\docs-driven-dev`. `<TARGET>` is `CODEX`, `CURSOR`, `AGENTS`, or
-`CLAUDE`. Windows user/system environment variables work too; reopen the
-terminal after changing persistent values.
-
-After that, any supported agent that loads the `docs-driven-dev` skill can use
-the CLI against arbitrary target projects:
-
-```bash
-docdev init /path/to/project
-docdev new-change "feature-slug" /path/to/project
-docdev audit /path/to/project --write-report
-docdev status /path/to/project
-```
-
-Direct terminal use after install:
+它不会把 `docdev` 加入全局 shell `PATH`。如果要从源码 checkout 直接在终端运行 CLI，
+Unix shell 使用：
 
 ```bash
 ./.venv/bin/docdev --version
 ./.venv/bin/docdev audit /path/to/project
 ```
 
+Windows PowerShell 使用：
+
 ```powershell
 .\.venv\Scripts\docdev.ps1 --version
 .\.venv\Scripts\docdev.ps1 audit C:\path\to\project
 ```
 
-## Source Checkout Setup
+如果 Windows 不允许创建 symlink，Claude 目标会 fallback 为复制，这样安装仍可完成。
+如果安装中断，把最后一行以 `[docdev install]` 或 `[docdev update]` 开头的输出拿来定位；
+编号 step 会指出停在哪个阶段。
 
-```bash
-./scripts/setup_project.sh /path/to/project
+默认安装会 force sync。对于已有 marker 的 `docs-driven-dev` skill 目标，sync 会做整个
+目录替换：先移除目标 skill 目录，再从当前源码 checkout 复制并生成新 wrapper。因此旧目标
+目录里的陈旧文件不应残留。如果过去使用过另一个目标路径，那是当前 sync 目标集合之外的目录，
+不再需要时需要手动清理。
+
+更新源码 checkout 时，优先使用 `git pull` 或干净的 `git clone`。不要把下载文件手动覆盖
+到旧源码目录上；手动覆盖可能留下 stale untracked files，而 install/sync 会复制当前 checkout
+里实际存在的 `skill/` 目录。
+
+如果某个 agent 的 skill 目录不在默认用户 home 下，可以在安装前设置环境变量：
+
+```powershell
+# 只影响当前 PowerShell session。
+$env:DOCDEV_CURSOR_SKILL_DIR = "D:\AgentSkills\cursor\docs-driven-dev"
+$env:DOCDEV_AGENTS_HOME = "$env:USERPROFILE\.agents"
+.\scripts\install.ps1
 ```
 
-Use this only when manually setting up a target project from this source
-checkout. It installs the local `docdev` wrapper, runs `doctor`, initializes the
-target project, and writes an audit report under the target docs directory.
+`DOCDEV_<TARGET>_SKILL_DIR` 指向最终 skill 文件夹；`DOCDEV_<TARGET>_HOME` 指向包含
+`skills\docs-driven-dev` 的 agent home。`<TARGET>` 是 `CODEX`、`CURSOR`、`AGENTS`
+或 `CLAUDE`。Windows 用户 / 系统环境变量也可以使用；修改持久环境变量后需要重新打开终端。
 
-Sync the skill after edits:
+同步 skill：
 
 ```bash
 ./scripts/sync_skill.sh --targets codex,cursor,agents,claude --force
 ```
 
-After changing this source checkout, use the update lifecycle command:
+修改源码 checkout 后，使用完整更新生命周期：
 
 ```bash
 ./scripts/update_cli.sh --targets codex,cursor,agents,claude --force
 ```
 
-## Documentation Map
+## 源码 Checkout 手动初始化目标项目
 
-This project's source of truth lives in `docs/`. Any code change must be
-consistent with these documents; conflicts get resolved by editing the docs
-first, then code.
+```bash
+./scripts/setup_project.sh /path/to/project
+```
 
-| File | Contents |
+只在需要从源码 checkout 手动初始化某个目标项目时使用它。该脚本会安装本地 `docdev`
+wrapper，运行 `doctor`，初始化目标项目，并把 audit report 写到目标项目的 docs 目录下。
+
+## Documentation Map（文档地图）
+
+本项目的 source of truth 位于 `docs/`。任何行为变更都必须和这些文档一致；若冲突，
+先改文档，再改代码。
+
+| 文件 | 内容 |
 |---|---|
-| [docs/SPEC.md](docs/SPEC.md) | Rules, invariants, command list, default behaviour |
-| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Layers, module table, data flow, config |
-| [docs/ROADMAP.md](docs/ROADMAP.md) | Step list, acceptance, current progress |
-| [docs/DECISIONS.md](docs/DECISIONS.md) | D-XXX trade-off log |
+| [docs/SPEC.md](docs/SPEC.md) | 规则、不变式、命令列表、默认行为 |
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | 分层、模块表、数据流、配置 |
+| [docs/ROADMAP.md](docs/ROADMAP.md) | Step 列表、验收标准、当前进度 |
+| [docs/DECISIONS.md](docs/DECISIONS.md) | `D-XXX` 取舍记录 |

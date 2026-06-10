@@ -475,47 +475,57 @@ class CliTests(unittest.TestCase):
 
     def test_skill_documents_existing_code_adoption(self) -> None:
         text = (ROOT / "skill" / "SKILL.md").read_text(encoding="utf-8")
-        self.assertIn("An existing codebase with no project-level four docs is an adoption case", text)
-        self.assertIn('docdev init <project>` first', text)
+        self.assertIn("已有代码库没有项目级四件套时，这是 adoption case", text)
+        self.assertIn("不是 blocked case", text)
+        self.assertIn("`docdev init <project>`", text)
         self.assertIn('docdev new-change "<slug>" <project>', text)
-        self.assertIn("Do not create a standalone `docs/changes/...` packet", text)
+        self.assertIn("不要让一个单独的", text)
+        self.assertIn("成为项目唯一的 docs-driven artifact", text)
 
     def test_skill_requires_workflow_when_explicitly_named(self) -> None:
         text = (ROOT / "skill" / "SKILL.md").read_text(encoding="utf-8")
 
-        self.assertIn("## Invocation Contract", text)
-        self.assertIn("When this skill is explicitly named in the user message", text)
-        self.assertIn("Reading this `SKILL.md` and then coding directly", text)
-        self.assertIn("is not sufficient", text)
-        self.assertIn("Do not silently downgrade explicit `docs-driven-dev` usage", text)
-        self.assertIn("Workflow B0 - Small Existing-Project Fix", text)
-        self.assertLess(text.index("Workflow B0 - Small Existing-Project Fix"), text.index("Workflow B - Existing Project Requirement"))
+        self.assertIn("description: >-", text)
+        self.assertIn("用 docs-driven development 维护项目", text)
+        self.assertIn("四件套文档", text)
+        self.assertIn("## Invocation Contract（调用合同）", text)
+        self.assertIn("只读一遍 `SKILL.md` 然后直接写代码是不够的", text)
+        self.assertIn("不要把明确的 `docs-driven-dev` 调用静默降级", text)
+        self.assertIn("不要改 docs", text)
+        self.assertIn("如果没有这种明确限制", text)
+        self.assertIn("Workflow B0 - Small Existing-Project Fix（小修复）", text)
+        self.assertLess(
+            text.index("Workflow B0 - Small Existing-Project Fix（小修复）"),
+            text.index("Workflow B - Existing Project Requirement（已有项目需求）"),
+        )
         self.assertIn('docdev new-change "<slug>" <project>', text)
         self.assertIn('Treat an explicit user request like "fix it", "补上吧", or "implement it"', text)
 
     def test_readme_documents_explicit_invocation_fast_path(self) -> None:
         text = (ROOT / "README.md").read_text(encoding="utf-8")
 
-        self.assertIn("should not treat it", text)
-        self.assertIn("as a loose reference method", text)
-        self.assertIn("For narrow bug fixes, use", text)
-        self.assertIn("the small-fix path", text)
-        self.assertIn("If", text)
-        self.assertIn("the user explicitly forbids doc files", text)
+        self.assertIn("不应把它当成泛泛的参考方法", text)
+        self.assertIn("small-fix path", text)
+        self.assertIn("窄范围 bug fix", text)
+        self.assertIn("明确禁止改文档", text)
 
     def test_docs_explain_path_and_replacement_contract(self) -> None:
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
         skill = (ROOT / "skill" / "SKILL.md").read_text(encoding="utf-8")
 
-        self.assertIn("does not add `docdev` to the global shell `PATH`", readme)
-        self.assertIn("Direct terminal use", readme)
-        self.assertIn("whole-directory replacement", readme)
-        self.assertIn("Old files inside that target skill directory", readme)
-        self.assertIn("should not remain", readme)
-        self.assertIn("manual file overlay", readme)
-        self.assertIn("stale untracked files in the source checkout", readme)
-        self.assertIn("does not mutate the user's global shell `PATH`", skill)
-        self.assertIn("replaces the installed skill directory", skill)
+        self.assertIn("不会把 `docdev` 加入全局 shell `PATH`", readme)
+        self.assertIn("直接在终端运行 CLI", readme)
+        self.assertIn("整个", readme)
+        self.assertIn("目录替换", readme)
+        self.assertIn("陈旧文件不应残留", readme)
+        self.assertIn("手动覆盖可能留下 stale untracked files", readme)
+        self.assertIn("~/.local/bin/docdev", readme)
+        self.assertIn("~/.local/bin/docdev", skill)
+        self.assertIn("先运行 native", readme)
+        self.assertIn("Do not guess", skill)
+        self.assertIn("local paths or wrappers", skill)
+        self.assertIn("安装器不会修改用户的全局 shell `PATH`", skill)
+        self.assertIn("替换整个 skill 目录", skill)
         self.assertIn("file overlays can leave stale untracked files", skill)
 
     def test_audit_warns_on_readme_documentation_map_drift(self) -> None:
