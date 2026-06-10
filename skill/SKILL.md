@@ -154,9 +154,12 @@ Native release installs update with `docdev update`. Use
 `docdev update --sync-skill` only when skill target directories should also be
 refreshed.
 
-Private GitHub Releases require explicit `gh auth` or a token passed to the
-installer process. Do not write tokens into launchers or persistent install
-metadata.
+Private GitHub Releases require explicit authentication and may not work through
+normal `github.com/.../releases/download/...` asset URLs; GitHub can return 404
+for private assets. For private testing, use `gh release download` or the
+GitHub API to fetch assets locally, then install with
+`DOCDEV_RELEASE_BASE_URL=file:///path/to/assets`. Do not write tokens into
+launchers or persistent install metadata.
 
 ## Source Checkout Install
 

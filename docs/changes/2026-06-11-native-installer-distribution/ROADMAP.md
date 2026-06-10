@@ -230,12 +230,18 @@
 | 项目 audit | `./.venv/bin/docdev audit /Users/chihoyo/Project/docs-driven-dev` | 通过 | No findings |
 | Git status | `git status --short` | 通过 | 无 `dist/` 或 release 临时产物；仅源码、文档、新脚本改动 |
 | Source update sync | `./scripts/update_cli.sh --targets codex,cursor,agents,claude --force` | 通过 | install wrapper、30 tests、doctor、sync、post-check 全部通过 |
+| Git commit | `git commit -m "Add native release installer workflow"` | 通过 | `48728ba` |
+| Git push | `git push origin main` and `git push origin v0.1.0` | 通过 | main and tag pushed to GitHub |
+| GitHub prerelease | `gh release create v0.1.0 ... --prerelease` | 通过 | https://github.com/hongzhiyin/docs-driven-dev/releases/tag/v0.1.0 |
+| Release asset inspection | `gh release view v0.1.0 --json ...` | 通过 | 非 draft prerelease，五个 assets uploaded |
+| Private direct URL smoke | `GITHUB_TOKEN="$(gh auth token)" ./scripts/install_remote.sh --release-base-url https://github.com/hongzhiyin/docs-driven-dev/releases/download/v0.1.0 ...` | 受限 | private repo 普通 download URL 返回 404；需公开仓库或使用 `gh release download` / API |
+| GitHub asset smoke | `gh release download v0.1.0 --dir /private/tmp/docdev-github-smoke.EtDbot/assets --clobber` then local file install | 通过 | 下载回来的 GitHub assets 可安装，launcher `--version` / `init` / `audit` 均通过 |
 
 ## 5. 风险与后续
 
 | ID | 风险 / 后续 | 影响 | 处理 |
 |---|---|---|---|
-| F-1 | GitHub release URL 未最终发布 | README 一行安装命令已有 `hongzhiyin/docs-driven-dev` 默认 repo，但真实 curl 安装要等 GitHub Release assets 发布 | 后续处理 |
+| F-1 | GitHub release URL 已发布但仓库仍是 private | 普通 `github.com/.../releases/download/...` URL 返回 404，不能验证无 token curl 一行安装 | 公开仓库后重测，或为 private repo 增加 `gh release download` / API installer 路径 |
 | F-2 | checksum-only 不等于签名验证 | 能发现传输/文件损坏，但不能提供完整发布者签名信任链 | 后续增强 manifest signature |
 | F-3 | Windows 未必能在当前机器 live test | PowerShell installer 可能需要真实 Windows 反馈 | 已加静态 contract，后续 live verify |
 | F-4 | `docdev update` 增加 CLI 命令面 | 可能让 source checkout update 和 native update 混淆 | help/README 明确区分 |

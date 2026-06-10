@@ -89,9 +89,13 @@ docdev update
 ```
 
 Use `docdev update --sync-skill` only when installed agent skill folders should
-also be refreshed. Private GitHub releases require explicit `gh auth` or a
-token for the installer process; tokens should not be written into launchers or
-persistent install metadata.
+also be refreshed. Private GitHub releases are more constrained than public
+release URLs: GitHub may return 404 for normal
+`github.com/.../releases/download/...` asset URLs on a private repository. For
+private testing, use `gh release download` or the GitHub API to fetch the
+release assets into a local directory, then install with
+`DOCDEV_RELEASE_BASE_URL=file:///path/to/assets`. Tokens should not be written
+into launchers or persistent install metadata.
 
 Windows PowerShell follows the same install/update contract through the
 PowerShell installer framework. Until it has live Windows verification, treat

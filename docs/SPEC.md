@@ -170,9 +170,10 @@ install_remote.ps1
 ```
 
 Public GitHub Releases are the default distribution target. Private repository
-installs require explicit authentication, such as `gh auth` or a token passed
-to the installer process. Tokens must not be written into generated launchers
-or persistent install metadata.
+installs require explicit authentication and may need `gh release download` or
+GitHub API asset fetching before running the installer from a local
+`file://` release asset directory. Tokens must not be written into generated
+launchers or persistent install metadata.
 
 ### 3.5 Source Checkout Lifecycle
 
