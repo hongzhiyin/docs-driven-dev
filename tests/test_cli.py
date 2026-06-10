@@ -334,6 +334,8 @@ class CliTests(unittest.TestCase):
 
         self.assertIn("DOCDEV_RELEASE_BASE_URL", install_sh)
         self.assertIn("GITHUB_TOKEN", install_sh)
+        self.assertIn("--retry 3", install_sh)
+        self.assertIn("--retry-all-errors", install_sh)
         self.assertIn("checksum mismatch", install_sh)
         self.assertIn("~/.local/share/docdev", install_sh)
         self.assertIn("Get-FileHash -Algorithm SHA256", install_ps)

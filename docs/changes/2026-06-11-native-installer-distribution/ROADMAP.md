@@ -242,6 +242,13 @@
 | v0.1.1 audit | `./.venv/bin/docdev audit /Users/chihoyo/Project/docs-driven-dev` | 通过 | No findings |
 | v0.1.1 package | `./scripts/package_release.sh --out /private/tmp/docdev-release-assets-0.1.1` | 通过 | 生成 `docdev-0.1.1.tar.gz`、checksum、manifest、installer assets |
 | v0.1.1 local smoke | `./scripts/install_remote.sh --release-base-url file:///private/tmp/docdev-release-assets-0.1.1 ...` | 通过 | launcher `docdev --version` returns `0.1.1` |
+| Public URL smoke attempt | `./scripts/install_remote.sh --version 0.1.1 --release-base-url https://github.com/hongzhiyin/docs-driven-dev/releases/download/v0.1.1 ...` | 网络受限 | GitHub public asset URL no longer returns 404, but current network hit LibreSSL SSL_ERROR_SYSCALL to release-assets/github.com |
+| Installer network hardening | Add curl retry flags to `scripts/install_remote.sh` | 完成 | `--retry 3 --retry-delay 1 --retry-all-errors --connect-timeout 20` |
+| Version bump for retry asset | Update `pyproject.toml`, `src/docs_driven_dev/__init__.py`, and CLI `VERSION` to `0.1.2` | 通过 | Avoids mutating already published v0.1.1 assets |
+| v0.1.2 tests | `PYTHONPATH=src python3 -m unittest discover -s tests` | 通过 | 30 tests |
+| v0.1.2 audit | `./.venv/bin/docdev audit /Users/chihoyo/Project/docs-driven-dev` | 通过 | No findings |
+| v0.1.2 package | `./scripts/package_release.sh --out /private/tmp/docdev-release-assets-0.1.2` | 通过 | 生成 `docdev-0.1.2.tar.gz`、checksum、manifest、installer assets |
+| v0.1.2 local smoke | `./scripts/install_remote.sh --release-base-url file:///private/tmp/docdev-release-assets-0.1.2 ...` | 通过 | launcher `docdev --version` returns `0.1.2` |
 
 ## 5. 风险与后续
 

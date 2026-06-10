@@ -94,9 +94,9 @@ download() {
         exit 1
       fi
       if [ -n "${GITHUB_TOKEN:-}" ]; then
-        curl -fsSL -H "Authorization: Bearer $GITHUB_TOKEN" "$url" -o "$dest"
+        curl --retry 3 --retry-delay 1 --retry-all-errors --connect-timeout 20 -fsSL -H "Authorization: Bearer $GITHUB_TOKEN" "$url" -o "$dest"
       else
-        curl -fsSL "$url" -o "$dest"
+        curl --retry 3 --retry-delay 1 --retry-all-errors --connect-timeout 20 -fsSL "$url" -o "$dest"
       fi
       ;;
     *)
