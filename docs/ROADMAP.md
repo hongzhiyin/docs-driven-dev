@@ -5,7 +5,7 @@
 ## Current Progress
 
 **Phase**: Phase 1 - portable skill + CLI bootstrap
-**Current Step**: Step 6 complete; public v0.1.3 latest installer smoke passed; ready for real local native install, Windows live verification, and signing follow-up
+**Current Step**: Step 6 complete; public v0.1.3 latest installer smoke and real local native install passed; ready for Windows live verification and signing follow-up
 
 ### Step Status
 

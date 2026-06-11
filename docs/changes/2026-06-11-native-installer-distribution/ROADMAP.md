@@ -5,7 +5,7 @@
 ## 0. 当前状态
 
 **阶段 / Phase**: 完成
-**当前 Step / Current Step**: Step 9 complete; public v0.1.3 latest installer smoke passed
+**当前 Step / Current Step**: Step 9 complete; public v0.1.3 latest installer smoke and real local native install passed
 **ARCHITECTURE 省略理由 / Architecture Omission Reason**: 不省略。该需求改变分发结构、安装数据流、launcher 契约、update 生命周期和 Windows 入口，已创建 `ARCHITECTURE.md`。
 
 ## 1. Gates
@@ -264,6 +264,8 @@
 | v0.1.3 GitHub release | `gh release create v0.1.3 ... --latest` and `gh release view v0.1.3 --json tagName,isDraft,isPrerelease,url,assets` | 通过 | https://github.com/hongzhiyin/docs-driven-dev/releases/tag/v0.1.3; non-draft, non-prerelease, five assets |
 | v0.1.3 public latest install smoke | `curl -fsSL https://github.com/hongzhiyin/docs-driven-dev/releases/latest/download/install_remote.sh \| sh` with temp install env overrides | 通过 | latest manifest resolved to `docdev-0.1.3.tar.gz`; checksum, install, launcher, doctor passed |
 | v0.1.3 public launcher init/audit | `/private/tmp/docdev-latest-013-smoke.VC94IV/bin/docdev --version`, `init`, and `audit` | 通过 | `docdev 0.1.3`; temp project audit No findings |
+| Real local native install | `curl -fsSL https://github.com/hongzhiyin/docs-driven-dev/releases/latest/download/install_remote.sh \| sh` | 通过 | Installed `0.1.3` under `/Users/chihoyo/.local/share/docdev/releases/0.1.3`; launcher at `/Users/chihoyo/.local/bin/docdev`; PATH warning expected |
+| Real local launcher verification | `/Users/chihoyo/.local/bin/docdev --version`, `doctor`, `init`, and `audit` | 通过 | `docdev 0.1.3`; `current` symlink points to release `0.1.3`; temp project audit No findings |
 
 ## 5. 风险与后续
 
