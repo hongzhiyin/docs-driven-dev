@@ -5,7 +5,7 @@
 ## Current Progress
 
 **Phase**: Phase 1 - portable skill + CLI bootstrap
-**Current Step**: Step 6 complete; public v0.1.3 latest installer smoke and real local native install passed; ready for Windows live verification and signing follow-up
+**Current Step**: Step 6a complete; native-install migration debris cleaned; ready for Windows live verification and signing follow-up
 
 ### Step Status
 
@@ -31,6 +31,7 @@
 | 5g | Clarify terminal PATH, CLI version, and sync replacement semantics | Done |
 | 5h | Make explicit skill invocation mandatory and add small-fix fast path | Done |
 | 6 | Add GitHub Releases / native installer distribution | Done |
+| 6a | Clean native-install migration debris | Done |
 
 ---
 
@@ -467,6 +468,29 @@ artifacts without cloning the source checkout or configuring
 4. README / SPEC / ARCHITECTURE / SKILL distinguish native user install from
    source checkout developer maintenance.
 5. Unit tests and `docdev audit /Users/chihoyo/Project/docs-driven-dev` pass.
+
+---
+
+## Step 6a - Native install debris cleanup
+
+**Goal**: Remove old scratch/reference material and clarify that source
+checkout wrappers are developer maintenance compatibility, not the normal
+cross-machine agent path.
+
+**Tasks**:
+- [x] Create `docs/changes/2026-06-12-cleanup-native-install-debris/`.
+- [x] Record D-024 for deleting old scratch while keeping source maintenance
+  scripts.
+- [x] Delete tracked `temp/` reference material and Python cache directories.
+- [x] Update README, SPEC, ARCHITECTURE, and template wording to keep native
+  launcher first.
+- [x] Run tests, doctor, audit, and commit cleanup.
+
+**Acceptance**:
+1. `temp/` and Python cache directories no longer remain in the source tree.
+2. Current docs/templates do not present source checkout wrappers as the normal
+   cross-machine fallback.
+3. Unit tests, `docdev doctor`, and `docdev audit` pass.
 
 ---
 

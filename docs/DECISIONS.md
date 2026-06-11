@@ -994,3 +994,54 @@ benefit from stable English keywords.
 - `skill/SKILL.md`
 - `README.md`
 - `tests/test_cli.py`
+
+---
+
+## D-024 - Post-native cleanup keeps source maintenance but removes legacy scratch
+
+**Date**: 2026-06-12
+
+**Context**:
+Native v0.1.3 is now installable through the public GitHub Release path and
+the local machine has a working `~/.local/bin/docdev` launcher. The source
+checkout still contains tracked `temp/` reference material from the older pure
+skill era, plus cache directories and current docs that still make some
+compatibility wrappers look like normal cross-machine entrypoints.
+
+**Options**:
+- A. Remove every source checkout wrapper and sync path - cleanest surface, but
+  breaks the developer maintenance lifecycle and existing tests.
+- B. Keep all historical material and only remove runtime caches - safest
+  mechanically, but leaves stale reference sources and confusing wording after
+  native install becomes the normal user path.
+- C. Remove `temp/` and runtime caches, update current docs/templates to make
+  native launchers primary, and keep source checkout wrappers only as
+  maintainer compatibility paths.
+
+**Chosen**: C
+
+**Rationale**:
+- D-021 and D-022 already define the native release installer and native
+  launcher as the cross-machine distribution contract.
+- D-012 migrated the useful older pure-skill workflow ideas into
+  `docs/changes/` packets, so keeping `temp/` tracked creates a second, stale
+  reference source.
+- Source checkout install/update/sync scripts are still the maintainer path and
+  continue to exercise wrapper behavior in tests, so deleting them would be a
+  behavior change rather than cleanup.
+
+**Risks**:
+- Historical docs still mention source checkout wrappers. Mitigation: leave
+  historical D-XXX entries intact and update current SPEC/ARCHITECTURE/README
+  plus the cleanup change packet.
+- Removing `temp/` makes old comparison notes available only through git
+  history. Mitigation: D-012 and the cleanup packet preserve why the useful
+  pieces were adopted.
+
+**Related code / docs**:
+- SPEC §2 H, §3.3, §3.5
+- `docs/changes/2026-06-12-cleanup-native-install-debris/`
+- `docs/ARCHITECTURE.md`
+- `README.md`
+- `skill/templates/SPEC.md`
+- `temp/`

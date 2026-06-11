@@ -23,14 +23,14 @@ Claude, and shared agent skill homes.
 | I | Update lifecycle | Source updates should use a project-local install, test, check, sync, check sequence | See D-007 |
 | J | Quick start | A source-checkout setup script combines install, doctor, init, and audit report for a target project | See D-008 |
 | K | Target project model | `docdev` commands operate on explicit target project paths; source checkout scripts are maintenance conveniences | See D-009 |
-| L | Fresh machine onboarding | `scripts/install.sh` installs, verifies, syncs, and enables agent-mediated CLI use from a cloned source checkout | See D-010 |
+| L | Source checkout developer onboarding | `scripts/install.sh` installs, verifies, syncs, and enables maintenance from a cloned source checkout | See D-010, D-021, D-024 |
 | M | Requirement granularity | Project-level four docs stay required; per-requirement change packets are optional under `docs/changes/` | See D-012 |
 | N | Windows onboarding | PowerShell install scripts mirror the Unix install lifecycle | See D-013 |
 | O | Windows sync resilience | Claude uses a shared-agents symlink when possible, with a copy fallback when the platform refuses symlinks | See D-015 |
 | P | Install diagnostics | Install and update scripts emit prefixed, numbered lifecycle logs so failures can be localized from user output | See D-016 |
 | Q | Skill target overrides | Each sync target supports environment-variable overrides for non-default Windows or agent skill directories | See D-017 |
 | R | Existing code adoption | Existing code projects without four docs should be lightly initialized before opening a requirement change packet | See D-018 |
-| S | Terminal PATH contract | Install prepares source and skill-local wrappers but does not mutate the user's global shell `PATH` | See D-019 |
+| S | Source maintenance PATH contract | Source install prepares source and skill-local compatibility wrappers but does not mutate the user's global shell `PATH` | See D-019, D-024 |
 | T | Sync replacement contract | Force sync and marked-target refreshes replace the target skill directory instead of merging files | See D-019 |
 | U | Explicit invocation | When the skill is explicitly named, agents must follow one workflow and create/update required docs before code | See D-020 |
 | V | Small-fix path | Narrow bug fixes use a minimal B0 packet rather than skipping docs or forcing a heavy packet | See D-020 |
@@ -228,9 +228,9 @@ The lifecycle installs the source wrapper, runs tests, checks the local install,
 syncs installed skills, then checks again.
 
 The update lifecycle prepares the local wrapper and installed skill-local
-wrappers so agents can later run `docdev` against arbitrary target project
-paths. `scripts/install.sh` is the shorter fresh-machine entrypoint over this
-same lifecycle. It does not add `docdev` to the user's global shell `PATH`.
+compatibility wrappers for source checkout maintenance. `scripts/install.sh`
+is the shorter cloned-checkout developer entrypoint over this same lifecycle.
+It does not add `docdev` to the user's global shell `PATH`.
 Direct terminal use from the source checkout should use `./.venv/bin/docdev`
 on Unix shells or `.\.venv\Scripts\docdev.ps1` / `.\.venv\Scripts\docdev.cmd`
 on Windows unless the user has explicitly configured PATH.

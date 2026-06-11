@@ -19,8 +19,8 @@ User / Agent
 
 The skill explains when and why to use the method. The CLI performs repeatable
 filesystem operations. Scripts provide release packaging, remote installation,
-local wrappers for project bootstrap, install, sync, checks, and source
-updates.
+local source-checkout wrappers for project bootstrap, install, sync, checks,
+and maintainer updates.
 
 The source checkout is the implementation home, not the operational working
 directory. `docdev` commands run against whichever target project path the
@@ -32,7 +32,7 @@ caller passes.
 |---|---|---|---|
 | CLI package | `src/docs_driven_dev/` | Argument parsing, scaffolding, audit, status, decision skeletons, skill sync, native update dispatch | external packages |
 | Skill source | `skill/SKILL.md` | Agent workflow and boundaries | local install paths |
-| Installed skill wrappers | `<skill-target>/bin/docdev`, `bin/docdev.ps1`, `bin/docdev.cmd` | Cross-project CLI entrypoints generated during sync | package index |
+| Installed skill wrappers | `<skill-target>/bin/docdev`, `bin/docdev.ps1`, `bin/docdev.cmd` | Source checkout maintenance compatibility entrypoints generated during sync | package index |
 | Native launcher | `~/.local/bin/docdev` | User-facing release launcher pointing at `~/.local/share/docdev/current` | source checkout |
 | Release install root | `~/.local/share/docdev/releases/<version>` and `current` | Versioned release installs and active version pointer | unverified artifacts |
 | Templates | `skill/templates/` | Four source-doc skeletons copied by `docdev init` | target project state |
@@ -102,7 +102,7 @@ docdev sync-skill
   -> resolve target paths from DOCDEV_<TARGET>_SKILL_DIR / DOCDEV_<TARGET>_HOME / defaults
   -> print resolved sync target paths
   -> replace marked or forced Codex / Cursor / shared agents target directories
-  -> write each copied target's bin/docdev wrapper back to the source checkout
+  -> write each copied target's compatibility bin/docdev wrapper back to the source checkout
   -> link Claude target to shared agents target when possible
   -> copy Claude target as fallback when symlink creation is unavailable
   -> require --force for unmarked existing target dirs
@@ -143,13 +143,14 @@ scripts/update_cli.ps1
   -> python -m docs_driven_dev.cli status <source checkout>
 ```
 
-`scripts/install.sh` is the fresh-machine install path after cloning the source
+`scripts/install.sh` is the developer install path after cloning the source
 repo on Unix shells. `scripts/install.ps1` is the equivalent Windows
-PowerShell install path. Both call an update lifecycle with default targets so
-agents can discover the skill and call their skill-local wrappers from
-unrelated target projects. They do not modify the user's global shell `PATH`;
-direct terminal use from the source checkout goes through the source `.venv`
-wrappers unless the user adds another PATH entry manually. Logs are
+PowerShell maintenance path. Both call an update lifecycle with default targets
+so source-synced skill copies and their compatibility wrappers stay aligned
+with the checkout. They do not modify the user's global shell `PATH`; direct
+terminal use from the source checkout goes through the source `.venv` wrappers
+unless the user adds another PATH entry manually. Normal cross-machine agent
+resolution uses the native `docdev` launcher instead of these wrappers. Logs are
 intentionally written to stdout with stable
 `[docdev install]` and `[docdev update]` prefixes so a user can report the last
 visible step when a remote machine fails.
@@ -247,7 +248,7 @@ separate from project-level D-XXX numbering.
 | Field / Env | Default | Meaning | Required |
 |---|---|---|---|
 | `.docdev.toml` `docs_dir` | `docs` | Project source-doc folder | no |
-| `DOCDEV_PROJECT_DIR` | auto-detected | Source checkout for CLI fallback and templates | no |
+| `DOCDEV_PROJECT_DIR` | auto-detected | Release/source root set by launchers and source checkout wrappers for template discovery | no |
 | `DOCDEV_TEMPLATE_DIR` | source skill templates | Explicit template directory | no |
 | `DOCDEV_INSTALL_ROOT` | `~/.local/share/docdev` | Native release install root; useful for tests and custom user layouts | no |
 | `DOCDEV_BIN_DIR` | `~/.local/bin` | Native launcher directory | no |
@@ -259,10 +260,10 @@ separate from project-level D-XXX numbering.
 
 ## 6. Process Model
 
-- Entry: native release `~/.local/bin/docdev` launcher, `docdev` console script,
-  source `.venv/bin/docdev` wrapper, or
+- Entry: normal cross-machine use enters through `docdev` on `PATH` or the
+  native release `~/.local/bin/docdev` launcher. Source `.venv/bin/docdev` and
   installed skill-local `bin/docdev`, `bin/docdev.ps1`, or `bin/docdev.cmd`
-  wrapper.
+  wrappers remain developer-maintenance compatibility entries.
 - Version: `docdev -v` and `docdev --version` print the CLI version.
 - Target selection: explicit project path argument; current working directory
   is only a default when the caller intentionally runs from the target project.
@@ -299,8 +300,8 @@ separate from project-level D-XXX numbering.
   uses a symlink when possible and falls back to a copied skill directory when
   the platform refuses symlink creation; platform-specific metadata may need
   future adapters.
-- Template lookup assumes a source checkout or synced skill directory is
-  available.
+- Template lookup assumes a native release root, source checkout, synced skill
+  directory, or explicit `DOCDEV_TEMPLATE_DIR` is available.
 - Windows PowerShell scripts use `python`; if a Windows machine only exposes
   Python as `py`, the wrapper may need a future fallback after real-machine
   testing.
