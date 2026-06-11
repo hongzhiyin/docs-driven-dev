@@ -253,6 +253,13 @@
 | v0.1.2 latest release | `gh release edit v0.1.2 --prerelease=false --latest` and `gh release view v0.1.2 --json tagName,isDraft,isPrerelease,url,assets` | 通过 | Release is not draft, not prerelease, and has five assets |
 | Public latest install smoke | `curl -fsSL https://github.com/hongzhiyin/docs-driven-dev/releases/latest/download/install_remote.sh \| sh` with temp install env overrides | 通过 | latest manifest resolved to `docdev-0.1.2.tar.gz`; checksum, install, launcher, doctor passed |
 | Public launcher init/audit | `/private/tmp/docdev-latest-smoke.VYO6KQ/bin/docdev --version`, `init`, and `audit` | 通过 | `docdev 0.1.2`; temp project audit No findings |
+| v0.1.3 version bump | Update `pyproject.toml`, `src/docs_driven_dev/__init__.py`, and CLI `VERSION` to `0.1.3` | 通过 | Publishes README/skill Chinese guidance and tightened CLI resolution |
+| v0.1.3 tests | `PYTHONPATH=src python3 -m unittest discover -s tests` | 通过 | 30 tests |
+| v0.1.3 audit | `./.venv/bin/docdev audit /Users/chihoyo/Project/docs-driven-dev` | 通过 | No findings |
+| v0.1.3 package | `./scripts/package_release.sh --out /private/tmp/docdev-release-assets-0.1.3` | 通过 | 生成 `docdev-0.1.3.tar.gz`、checksum、manifest、installer assets |
+| v0.1.3 artifact excludes | `tar -tzf /private/tmp/docdev-release-assets-0.1.3/docdev-0.1.3.tar.gz \| rg '(__pycache__|\\.pyc|(^|/)\\.git|(^|/)\\.venv|docs/_generated/docdev/.+)'` | 通过 | 命令返回 1，未匹配污染项 |
+| v0.1.3 local smoke | `./scripts/install_remote.sh --release-base-url file:///private/tmp/docdev-release-assets-0.1.3 ...` | 通过 | checksum、install、launcher、doctor 均通过 |
+| v0.1.3 launcher init/audit | `/private/tmp/docdev-013-smoke.XqgRzf/bin/docdev --version`, `init`, and `audit` | 通过 | `docdev 0.1.3`; temp project audit No findings |
 
 ## 5. 风险与后续
 
