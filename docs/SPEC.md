@@ -37,6 +37,7 @@ Claude, and shared agent skill homes.
 | W | Release packaging | `scripts/package_release.sh` emits `docdev-<version>.tar.gz`, a SHA256 file, `manifest.json`, and installer script assets for GitHub Releases | See D-021 |
 | X | Native update | `docdev update` updates release installs through manifest/artifact download, checksum verification, current-pointer switch, and doctor | See D-021 |
 | Y | Private repository installs | Public GitHub Releases are the default; private releases require explicit `gh auth` or token handling | See D-021 |
+| Z | CLI internal boundary | `docs_driven_dev.cli` remains the public entrypoint; deterministic logic is split into lightweight internal modules by responsibility | See D-026 |
 
 ## 3. Derived Rules
 
@@ -336,6 +337,12 @@ def main(argv: Iterable[str] | None = None) -> int:
     """Run a docdev command and return a process exit code."""
 ```
 
+`docs_driven_dev.cli` is the stable executable module for native launchers,
+source checkout wrappers, and `python -m docs_driven_dev.cli`. It may re-export
+selected helpers for compatibility, but feature implementation should live in
+responsibility-focused internal modules such as `commands.py`, `templates.py`,
+`audit.py`, `sync.py`, and `release.py`.
+
 Constraints:
 - Input domain: project paths, optional docs dir override, change slug/date/lang, sync target list.
 - Output domain: console summaries, markdown scaffolds, optional JSON audit.
@@ -371,3 +378,4 @@ Constraints:
 7. **#7**: Requirement-level work packets must not weaken the project-level four-doc contract; they add scoped working memory under `<docs_dir>/changes/`.
 8. **#8**: Explicit `docs-driven-dev` invocation must not be silently downgraded into direct coding; docs artifacts come first for code changes.
 9. **#9**: Native release installers and updates must verify artifact checksums before switching the active `current` release.
+10. **#10**: `docs_driven_dev.cli` remains the stable executable entrypoint even when internal CLI implementation is split across lightweight modules.

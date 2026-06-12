@@ -30,7 +30,14 @@ caller passes.
 
 | Module | Path | Responsibility | Does not depend on |
 |---|---|---|---|
-| CLI package | `src/docs_driven_dev/` | Argument parsing, scaffolding, audit, status, decision skeletons, skill sync, native update dispatch | external packages |
+| CLI entrypoint | `src/docs_driven_dev/cli.py` | Stable `python -m docs_driven_dev.cli` entrypoint plus compatibility re-exports | feature implementation details |
+| CLI command dispatch | `src/docs_driven_dev/commands.py` | Argument parsing and subcommand dispatch | filesystem business logic |
+| CLI path/config helpers | `src/docs_driven_dev/paths.py` | Constants, source root detection, docs/config/template path resolution | argparse and command side effects |
+| CLI shared models | `src/docs_driven_dev/models.py` | Shared data objects such as `Finding` | command dispatch |
+| CLI template/change module | `src/docs_driven_dev/templates.py` | `init`, `new-change`, template copy, README/AGENTS pointers | audit, sync, release update |
+| CLI audit/status module | `src/docs_driven_dev/audit.py` | Project and change-packet audit, status, decision skeletons | skill target writes, native update |
+| CLI sync/doctor module | `src/docs_driven_dev/sync.py` | Skill target resolution, copy/link sync, doctor output | release download/update dispatch |
+| CLI release module | `src/docs_driven_dev/release.py` | `docdev update` dispatch to native installer | audit/template internals |
 | Skill source | `skill/SKILL.md` | Agent workflow and boundaries | local install paths |
 | Installed skill targets | `<skill-target>/` | Synced skill content plus `.docdev-skill-source` marker; no CLI wrappers | package index |
 | Native launcher | `~/.local/bin/docdev` | User-facing release launcher pointing at `~/.local/share/docdev/current` | source checkout |
@@ -42,6 +49,21 @@ caller passes.
 | Project docs | `docs/` | Source of truth for this project | generated audit output |
 
 ## 3. Data Flow
+
+### 3.0 CLI Dispatch
+
+```text
+docdev / python -m docs_driven_dev.cli
+  -> cli.py
+      -> commands.main()
+          -> templates / audit / sync / release command handlers
+          -> paths.py and models.py shared helpers
+```
+
+`cli.py` remains the executable module used by launchers and wrappers. It is
+also a compatibility re-export layer for existing tests and local imports;
+new feature logic should be added to the focused internal module that owns the
+behavior.
 
 ### 3.1 Bootstrap
 

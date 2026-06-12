@@ -5,7 +5,7 @@
 ## Current Progress
 
 **Phase**: Phase 1 - portable skill + CLI bootstrap
-**Current Step**: Step 6c complete; v0.1.4 native release published and installed locally
+**Current Step**: Step 6d complete; CLI internals split into lightweight modules
 
 ### Step Status
 
@@ -34,6 +34,7 @@
 | 6a | Clean native-install migration debris | Done |
 | 6b | Remove skill-local CLI wrappers from sync | Done |
 | 6c | Publish v0.1.4 native release | Done |
+| 6d | Split CLI internals into lightweight modules | Done |
 
 ---
 
@@ -540,6 +541,27 @@ so native installs no longer generate skill-local `bin/docdev*` wrappers.
 3. `docdev update --sync-skill` on v0.1.4 keeps installed skill targets free of
    `bin/docdev*` wrappers.
 4. Unit tests, `docdev doctor`, and project audit pass.
+
+---
+
+## Step 6d - CLI module split
+
+**Goal**: Keep the `docdev` command surface stable while moving the 940-line
+`cli.py` internals into responsibility-focused modules.
+
+**Tasks**:
+- [x] Create `docs/changes/2026-06-13-split-cli-modules/` with architecture.
+- [x] Record D-026 for keeping a thin `cli.py` compatibility entrypoint.
+- [x] Split path/model, template/change, audit/status/decision, sync/doctor,
+  release update, and argparse dispatch into lightweight modules.
+- [x] Update tests for the new internal patch points.
+- [x] Run unit tests, entrypoint smoke, and project audit.
+
+**Acceptance**:
+1. `python -m docs_driven_dev.cli` and native/source launchers keep working.
+2. `cli.py` is a thin entrypoint/re-export layer; core logic lives in smaller
+   modules.
+3. Unit tests and `docdev audit` pass.
 
 ---
 

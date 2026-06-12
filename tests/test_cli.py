@@ -45,8 +45,8 @@ class CliTests(unittest.TestCase):
 
     def test_update_dispatches_to_native_installer(self) -> None:
         completed = subprocess.CompletedProcess(args=["install_remote"], returncode=7)
-        with mock.patch("docs_driven_dev.cli.find_source_root", return_value=ROOT):
-            with mock.patch("docs_driven_dev.cli.subprocess.run", return_value=completed) as run:
+        with mock.patch("docs_driven_dev.release.find_source_root", return_value=ROOT):
+            with mock.patch("docs_driven_dev.release.subprocess.run", return_value=completed) as run:
                 code = cli.main(
                     [
                         "update",
@@ -234,7 +234,7 @@ class CliTests(unittest.TestCase):
                     return claude_target
                 raise ValueError(target)
 
-            with mock.patch("docs_driven_dev.cli.target_path_for", side_effect=fake_target_path_for):
+            with mock.patch("docs_driven_dev.sync.target_path_for", side_effect=fake_target_path_for):
                 with mock.patch.object(Path, "symlink_to", side_effect=OSError("symlink denied")):
                     status = cli.link_claude_to_agents(force=True, source=ROOT / "skill")
 
@@ -382,6 +382,11 @@ class CliTests(unittest.TestCase):
                 names = archive.getnames()
 
             self.assertIn(f"docdev-{cli.VERSION}/src/docs_driven_dev/cli.py", names)
+            self.assertIn(f"docdev-{cli.VERSION}/src/docs_driven_dev/audit.py", names)
+            self.assertIn(f"docdev-{cli.VERSION}/src/docs_driven_dev/commands.py", names)
+            self.assertIn(f"docdev-{cli.VERSION}/src/docs_driven_dev/release.py", names)
+            self.assertIn(f"docdev-{cli.VERSION}/src/docs_driven_dev/sync.py", names)
+            self.assertIn(f"docdev-{cli.VERSION}/src/docs_driven_dev/templates.py", names)
             self.assertIn(f"docdev-{cli.VERSION}/skill/SKILL.md", names)
             self.assertFalse(any("__pycache__" in name for name in names))
             self.assertFalse(any(name.endswith(".pyc") for name in names))

@@ -1091,3 +1091,48 @@ The user wants normal usage to be the `docdev` CLI/native launcher path.
 - `src/docs_driven_dev/cli.py`
 - `tests/test_cli.py`
 - `skill/SKILL.md`
+
+## D-026 - Step 6d - Split CLI internals into lightweight modules
+
+**Date**: 2026-06-13
+
+**Context**:
+`src/docs_driven_dev/cli.py` has reached roughly 940 lines and combines
+config/path resolution, templates, change packets, audit, status, decision
+skeletons, skill sync, doctor, native update dispatch, and argparse. That was
+appropriate for the v0.1 bootstrap, but release/update/audit work is now the
+active growth area and needs clearer module boundaries.
+
+**Options**:
+- A. Keep a single `cli.py` - minimal churn, but future Windows, signing, JSON
+  status/doctor, and release features keep accumulating in one file.
+- B. Introduce a larger command framework - more extensible, but too much
+  architecture for the current stdlib-only CLI and likely to disturb behavior.
+- C. Keep `docs_driven_dev.cli` as the public entrypoint and compatibility
+  layer, while moving existing responsibilities into lightweight internal
+  modules.
+
+**Chosen**: C
+
+**Rationale**:
+- The native launcher and source wrappers can keep invoking
+  `python -m docs_driven_dev.cli`.
+- Internal modules make future work easier to place without adding dependencies
+  or changing the command surface.
+- A compatibility layer lets existing tests and local helper imports keep
+  working while more precise tests patch the real implementation module.
+
+**Risks**:
+- Re-exported helpers from `cli.py` may look like a supported public API.
+  Mitigation: document `cli.py` as a compatibility entrypoint; design a formal
+  public Python API separately if it becomes necessary.
+- Moving functions can introduce circular imports. Mitigation: keep shared
+  constants/path helpers and data models in dependency-light modules.
+
+**Related code / docs**:
+- SPEC §2 Z, §5.1, §7 #10
+- ARCHITECTURE §2, §3.0
+- ROADMAP Step 6d
+- `docs/changes/2026-06-13-split-cli-modules/`
+- `src/docs_driven_dev/`
+- `tests/test_cli.py`
