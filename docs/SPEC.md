@@ -30,7 +30,7 @@ Claude, and shared agent skill homes.
 | P | Install diagnostics | Install and update scripts emit prefixed, numbered lifecycle logs so failures can be localized from user output | See D-016 |
 | Q | Skill target overrides | Each sync target supports environment-variable overrides for non-default Windows or agent skill directories | See D-017 |
 | R | Existing code adoption | Existing code projects without four docs should be lightly initialized before opening a requirement change packet | See D-018 |
-| S | Source maintenance PATH contract | Source install prepares source and skill-local compatibility wrappers but does not mutate the user's global shell `PATH` | See D-019, D-024 |
+| S | Source maintenance PATH contract | Source install prepares a source-local wrapper but does not mutate the user's global shell `PATH` or skill target CLI entries | See D-019, D-024, D-025 |
 | T | Sync replacement contract | Force sync and marked-target refreshes replace the target skill directory instead of merging files | See D-019 |
 | U | Explicit invocation | When the skill is explicitly named, agents must follow one workflow and create/update required docs before code | See D-020 |
 | V | Small-fix path | Narrow bug fixes use a minimal B0 packet rather than skipping docs or forcing a heavy packet | See D-020 |
@@ -227,10 +227,11 @@ After changing this source checkout, run:
 The lifecycle installs the source wrapper, runs tests, checks the local install,
 syncs installed skills, then checks again.
 
-The update lifecycle prepares the local wrapper and installed skill-local
-compatibility wrappers for source checkout maintenance. `scripts/install.sh`
-is the shorter cloned-checkout developer entrypoint over this same lifecycle.
-It does not add `docdev` to the user's global shell `PATH`.
+The update lifecycle prepares the source-local wrapper and refreshes installed
+skill content for source checkout maintenance. `scripts/install.sh` is the
+shorter cloned-checkout developer entrypoint over this same lifecycle. It does
+not add `docdev` to the user's global shell `PATH` and does not create
+skill-local CLI wrappers.
 Direct terminal use from the source checkout should use `./.venv/bin/docdev`
 on Unix shells or `.\.venv\Scripts\docdev.ps1` / `.\.venv\Scripts\docdev.cmd`
 on Windows unless the user has explicitly configured PATH.
@@ -268,8 +269,8 @@ For each change packet under `<docs_dir>/changes/`, `docdev audit` also checks:
 `docdev sync-skill` may copy the skill to Codex, Cursor, and shared agents
 targets. Claude should use a symlink to `~/.agents/skills/docs-driven-dev` when
 possible, matching the existing shared Lark skill pattern. If the platform
-refuses symlink creation, Claude may receive a copied skill directory with the
-same generated wrappers instead of blocking the whole sync lifecycle.
+refuses symlink creation, Claude may receive a copied skill directory instead
+of blocking the whole sync lifecycle.
 
 Sync target paths resolve in this order:
 1. exact target override `DOCDEV_<TARGET>_SKILL_DIR`;
@@ -287,15 +288,15 @@ Existing target directories without a `.docdev-skill-source` marker require
 
 Existing target directories with a `.docdev-skill-source` marker, or any target
 when `--force` is passed, are refreshed by whole-directory replacement: delete
-the target skill directory, copy the current source skill, write the marker,
-then regenerate wrappers. This prevents stale files from remaining inside the
-current target skill directory. It does not clean a different old target path if
-the configured skill directory changed between installs.
+the target skill directory, copy the current source skill, and write the marker.
+This prevents stale files from remaining inside the current target skill
+directory, including old `bin/docdev*` wrappers from pre-D-025 syncs. It does
+not clean a different old target path if the configured skill directory changed
+between installs.
 
-Source checkout sync may include skill-local `bin/docdev`, `bin/docdev.ps1`,
-and `bin/docdev.cmd` wrappers for developer maintenance and compatibility.
-Native cross-machine use should not depend on those wrappers or any source
-checkout path; it should use the native launcher instead.
+Source checkout sync must not generate skill-local `bin/docdev`,
+`bin/docdev.ps1`, or `bin/docdev.cmd` wrappers. Native cross-machine use should
+use the native launcher instead.
 
 ## 4. Default Handling
 

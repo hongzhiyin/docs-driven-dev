@@ -166,28 +166,17 @@ class CliTests(unittest.TestCase):
     def test_sync_dry_run(self) -> None:
         self.assertEqual(cli.main(["sync-skill", "--dry-run", "--targets", "codex,cursor"]), 0)
 
-    def test_copy_skill_writes_installed_wrapper(self) -> None:
+    def test_copy_skill_does_not_write_installed_wrapper(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             target = Path(tmp) / "installed-skill"
             status = cli.copy_skill(ROOT / "skill", target, force=False)
 
             self.assertEqual(status, "copied")
-            wrapper = target / "bin" / "docdev"
-            ps_wrapper = target / "bin" / "docdev.ps1"
-            cmd_wrapper = target / "bin" / "docdev.cmd"
-            self.assertTrue(wrapper.exists())
-            self.assertTrue(os.access(wrapper, os.X_OK))
-            self.assertTrue(ps_wrapper.exists())
-            self.assertTrue(cmd_wrapper.exists())
-            text = wrapper.read_text(encoding="utf-8")
-            self.assertIn(f'DOCDEV_PROJECT_DIR="{ROOT}"', text)
-            self.assertIn(f'PYTHONPATH="{ROOT / "src"}"', text)
-            ps_text = ps_wrapper.read_text(encoding="utf-8")
-            self.assertIn(f"$env:DOCDEV_PROJECT_DIR = '{ROOT}'", ps_text)
-            self.assertIn("python -m docs_driven_dev.cli @args", ps_text)
-            cmd_text = cmd_wrapper.read_text(encoding="utf-8")
-            self.assertIn(f'set "DOCDEV_PROJECT_DIR={ROOT}"', cmd_text)
-            self.assertIn("python -m docs_driven_dev.cli %*", cmd_text)
+            self.assertTrue((target / "SKILL.md").exists())
+            self.assertTrue((target / ".docdev-skill-source").exists())
+            self.assertFalse((target / "bin" / "docdev").exists())
+            self.assertFalse((target / "bin" / "docdev.ps1").exists())
+            self.assertFalse((target / "bin" / "docdev.cmd").exists())
 
     def test_copy_skill_replaces_marked_target_without_stale_files(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -200,7 +189,21 @@ class CliTests(unittest.TestCase):
 
             self.assertFalse(stale.exists())
             self.assertTrue((target / "SKILL.md").exists())
-            self.assertTrue((target / "bin" / "docdev").exists())
+            self.assertFalse((target / "bin" / "docdev").exists())
+
+    def test_copy_skill_replacement_removes_old_installed_wrapper(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            target = Path(tmp) / "installed-skill"
+            self.assertEqual(cli.copy_skill(ROOT / "skill", target, force=False), "copied")
+            old_bin = target / "bin"
+            old_bin.mkdir()
+            old_wrapper = old_bin / "docdev"
+            old_wrapper.write_text("old wrapper", encoding="utf-8")
+
+            self.assertEqual(cli.copy_skill(ROOT / "skill", target, force=False), "copied")
+
+            self.assertFalse(old_wrapper.exists())
+            self.assertFalse(old_bin.exists())
 
     def test_target_path_env_overrides(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -238,9 +241,10 @@ class CliTests(unittest.TestCase):
             self.assertIn("symlink failed", status)
             self.assertIn("copied fallback", status)
             self.assertTrue((claude_target / "SKILL.md").exists())
-            self.assertTrue((claude_target / "bin" / "docdev").exists())
-            self.assertTrue((claude_target / "bin" / "docdev.ps1").exists())
-            self.assertTrue((claude_target / "bin" / "docdev.cmd").exists())
+            self.assertTrue((claude_target / ".docdev-skill-source").exists())
+            self.assertFalse((claude_target / "bin" / "docdev").exists())
+            self.assertFalse((claude_target / "bin" / "docdev.ps1").exists())
+            self.assertFalse((claude_target / "bin" / "docdev.cmd").exists())
 
     @unittest.skipIf(os.name == "nt", "setup_project.sh is a Unix shell script")
     def test_setup_project_script_creates_audit_report(self) -> None:
@@ -517,7 +521,7 @@ class CliTests(unittest.TestCase):
         self.assertIn("直接在终端运行 CLI", readme)
         self.assertIn("整个", readme)
         self.assertIn("目录替换", readme)
-        self.assertIn("陈旧文件不应残留", readme)
+        self.assertIn("旧版本生成的 `bin/docdev*` wrapper，不应残留", readme)
         self.assertIn("手动覆盖可能留下 stale untracked files", readme)
         self.assertIn("~/.local/bin/docdev", readme)
         self.assertIn("~/.local/bin/docdev", skill)

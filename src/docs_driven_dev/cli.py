@@ -739,53 +739,6 @@ def target_path_for(target: str) -> Path:
     raise ValueError(f"Unknown target {target}")
 
 
-def source_root_for_skill_source(source: Path) -> Path:
-    marker = source / ".docdev-skill-source"
-    if marker.exists():
-        marked = Path(marker.read_text(encoding="utf-8").strip()).expanduser()
-        source = marked.resolve()
-    if source.name == "skill" and (source.parent / "src" / "docs_driven_dev").exists():
-        return source.parent
-    if (source / "src" / "docs_driven_dev").exists():
-        return source
-    return find_source_root()
-
-
-def write_installed_skill_wrapper(target: Path, source: Path) -> None:
-    source_root = source_root_for_skill_source(source)
-    source_src = source_root / "src"
-    bin_dir = target / "bin"
-    wrapper = bin_dir / "docdev"
-    ps_wrapper = bin_dir / "docdev.ps1"
-    cmd_wrapper = bin_dir / "docdev.cmd"
-    bin_dir.mkdir(parents=True, exist_ok=True)
-    wrapper.write_text(
-        "#!/usr/bin/env sh\n"
-        f'DOCDEV_PROJECT_DIR="{source_root}" '
-        f'PYTHONPATH="{source_src}" '
-        'exec python3 -m docs_driven_dev.cli "$@"\n',
-        encoding="utf-8",
-    )
-    wrapper.chmod(0o755)
-    ps_source = str(source_root).replace("'", "''")
-    ps_source_src = str(source_src).replace("'", "''")
-    ps_wrapper.write_text(
-        "$ErrorActionPreference = 'Stop'\n"
-        f"$env:DOCDEV_PROJECT_DIR = '{ps_source}'\n"
-        f"$env:PYTHONPATH = '{ps_source_src}'\n"
-        "python -m docs_driven_dev.cli @args\n"
-        "exit $LASTEXITCODE\n",
-        encoding="utf-8",
-    )
-    cmd_wrapper.write_text(
-        "@echo off\r\n"
-        f'set "DOCDEV_PROJECT_DIR={source_root}"\r\n'
-        f'set "PYTHONPATH={source_src}"\r\n'
-        "python -m docs_driven_dev.cli %*\r\n",
-        encoding="utf-8",
-    )
-
-
 def copy_skill(source: Path, target: Path, force: bool) -> str:
     if target.exists() or target.is_symlink():
         marker = target / ".docdev-skill-source" if not target.is_symlink() else None
@@ -798,7 +751,6 @@ def copy_skill(source: Path, target: Path, force: bool) -> str:
     target.parent.mkdir(parents=True, exist_ok=True)
     shutil.copytree(source, target)
     (target / ".docdev-skill-source").write_text(str(source) + "\n", encoding="utf-8")
-    write_installed_skill_wrapper(target, source)
     return "copied"
 
 

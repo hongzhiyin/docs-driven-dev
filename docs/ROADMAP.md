@@ -5,7 +5,7 @@
 ## Current Progress
 
 **Phase**: Phase 1 - portable skill + CLI bootstrap
-**Current Step**: Step 6a complete; native-install migration debris cleaned; ready for Windows live verification and signing follow-up
+**Current Step**: Step 6b complete; skill sync is CLI-first with no skill-local wrappers; next release should publish the behavior to native installs
 
 ### Step Status
 
@@ -32,6 +32,7 @@
 | 5h | Make explicit skill invocation mandatory and add small-fix fast path | Done |
 | 6 | Add GitHub Releases / native installer distribution | Done |
 | 6a | Clean native-install migration debris | Done |
+| 6b | Remove skill-local CLI wrappers from sync | Done |
 
 ---
 
@@ -190,8 +191,9 @@ working directory.
 ## Step 4d - Fresh-machine install path
 
 **Goal**: Make it explicit that a cloned source repo can be installed and synced
-with one lifecycle command, after which agents can use the installed skill-local
-CLI wrapper against arbitrary target projects.
+with one lifecycle command. Historical note: the original Step 4d skill-local
+CLI wrapper outcome was superseded by D-022 and D-025; agents now use `docdev`
+or the native launcher.
 
 **Tasks**:
 - [x] Document `update_cli.sh` as the fresh-machine install command.
@@ -202,7 +204,8 @@ CLI wrapper against arbitrary target projects.
 **Acceptance**:
 1. README shows the new-machine install command separately from source checkout
    target setup.
-2. Skill docs tell agents to use installed `bin/docdev` wrappers when needed.
+2. Historical acceptance was installed `bin/docdev` wrappers; superseded by
+   D-022 / D-025 in favor of `docdev` or the native launcher.
 3. `docdev audit` reports no findings.
 
 ---
@@ -490,6 +493,27 @@ cross-machine agent path.
 1. `temp/` and Python cache directories no longer remain in the source tree.
 2. Current docs/templates do not present source checkout wrappers as the normal
    cross-machine fallback.
+3. Unit tests, `docdev doctor`, and `docdev audit` pass.
+
+---
+
+## Step 6b - CLI-first skill sync
+
+**Goal**: Make `docdev sync-skill` synchronize only skill content, leaving CLI
+execution to `docdev` on `PATH` or the native launcher.
+
+**Tasks**:
+- [x] Create `docs/changes/2026-06-12-sync-skill-without-local-wrappers/`.
+- [x] Record D-025 for removing skill-local CLI wrapper generation.
+- [x] Remove skill-local wrapper generation from `copy_skill()`.
+- [x] Update tests and docs to match CLI-first sync behavior.
+- [x] Run source update/sync so installed skill targets drop old `bin/docdev*`.
+- [x] Run tests, doctor, audit, and commit cleanup.
+
+**Acceptance**:
+1. New or refreshed skill targets do not contain `bin/docdev`,
+   `bin/docdev.ps1`, or `bin/docdev.cmd`.
+2. Source checkout local wrappers and native launcher remain available.
 3. Unit tests, `docdev doctor`, and `docdev audit` pass.
 
 ---

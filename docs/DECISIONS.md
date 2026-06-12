@@ -1045,3 +1045,49 @@ compatibility wrappers look like normal cross-machine entrypoints.
 - `README.md`
 - `skill/templates/SPEC.md`
 - `temp/`
+
+---
+
+## D-025 - Stop generating skill-local CLI wrappers during sync
+
+**Date**: 2026-06-12
+
+**Context**:
+After the native installer became the normal distribution path, `sync-skill`
+still generated `bin/docdev`, `bin/docdev.ps1`, and `bin/docdev.cmd` inside
+installed skill directories. Those wrappers came from the older source-checkout
+distribution model and made the skill directory look like another CLI entry.
+The user wants normal usage to be the `docdev` CLI/native launcher path.
+
+**Options**:
+- A. Keep generating skill-local wrappers - maximally compatible with older
+  source-sync installs, but keeps the confusing second CLI entrypoint.
+- B. Add an opt-in compatibility flag - preserves an escape hatch, but keeps the
+  third wrapper category in the product surface.
+- C. Stop generating skill-local wrappers entirely; keep only native launchers
+  and source-checkout local wrappers.
+
+**Chosen**: C
+
+**Rationale**:
+- D-022 already defines `docdev` on `PATH` and `~/.local/bin/docdev` as the
+  cross-machine agent CLI resolution contract.
+- Removing skill-local wrapper generation makes `sync-skill` a pure skill
+  content sync and prevents installed skill directories from becoming command
+  dispatch surfaces.
+- Source-checkout local wrappers remain useful for maintainers running
+  unreleased source; native release launchers remain the user-facing CLI entry.
+
+**Risks**:
+- Old installed skill directories may still contain `bin/docdev*` until they are
+  force-synced or refreshed through `docdev update --sync-skill`. Mitigation:
+  the replacement sync path deletes marked targets before copying the skill.
+- Historical decisions and roadmap steps still mention skill-local wrappers.
+  Mitigation: preserve history and update current docs plus this decision.
+
+**Related code / docs**:
+- SPEC §2 H, §3.3, §3.5, §3.7
+- `docs/changes/2026-06-12-sync-skill-without-local-wrappers/`
+- `src/docs_driven_dev/cli.py`
+- `tests/test_cli.py`
+- `skill/SKILL.md`

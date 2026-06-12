@@ -32,7 +32,7 @@ caller passes.
 |---|---|---|---|
 | CLI package | `src/docs_driven_dev/` | Argument parsing, scaffolding, audit, status, decision skeletons, skill sync, native update dispatch | external packages |
 | Skill source | `skill/SKILL.md` | Agent workflow and boundaries | local install paths |
-| Installed skill wrappers | `<skill-target>/bin/docdev`, `bin/docdev.ps1`, `bin/docdev.cmd` | Source checkout maintenance compatibility entrypoints generated during sync | package index |
+| Installed skill targets | `<skill-target>/` | Synced skill content plus `.docdev-skill-source` marker; no CLI wrappers | package index |
 | Native launcher | `~/.local/bin/docdev` | User-facing release launcher pointing at `~/.local/share/docdev/current` | source checkout |
 | Release install root | `~/.local/share/docdev/releases/<version>` and `current` | Versioned release installs and active version pointer | unverified artifacts |
 | Templates | `skill/templates/` | Four source-doc skeletons copied by `docdev init` | target project state |
@@ -102,7 +102,6 @@ docdev sync-skill
   -> resolve target paths from DOCDEV_<TARGET>_SKILL_DIR / DOCDEV_<TARGET>_HOME / defaults
   -> print resolved sync target paths
   -> replace marked or forced Codex / Cursor / shared agents target directories
-  -> write each copied target's compatibility bin/docdev wrapper back to the source checkout
   -> link Claude target to shared agents target when possible
   -> copy Claude target as fallback when symlink creation is unavailable
   -> require --force for unmarked existing target dirs
@@ -110,8 +109,9 @@ docdev sync-skill
 
 Replacement is not an incremental merge. `copy_skill` removes the current
 target directory when it is force-synced or already marked with
-`.docdev-skill-source`, then copies the current source skill and regenerates
-wrappers. This avoids stale files inside the active target path.
+`.docdev-skill-source`, then copies the current source skill and writes the
+marker. This avoids stale files inside the active target path, including
+pre-D-025 `bin/docdev*` wrappers.
 
 ### 3.6 Update Lifecycle
 
@@ -146,11 +146,11 @@ scripts/update_cli.ps1
 `scripts/install.sh` is the developer install path after cloning the source
 repo on Unix shells. `scripts/install.ps1` is the equivalent Windows
 PowerShell maintenance path. Both call an update lifecycle with default targets
-so source-synced skill copies and their compatibility wrappers stay aligned
-with the checkout. They do not modify the user's global shell `PATH`; direct
+so source-synced skill copies stay aligned with the checkout. They do not
+modify the user's global shell `PATH`; direct
 terminal use from the source checkout goes through the source `.venv` wrappers
 unless the user adds another PATH entry manually. Normal cross-machine agent
-resolution uses the native `docdev` launcher instead of these wrappers. Logs are
+resolution uses the native `docdev` launcher instead of skill-local wrappers. Logs are
 intentionally written to stdout with stable
 `[docdev install]` and `[docdev update]` prefixes so a user can report the last
 visible step when a remote machine fails.
@@ -261,9 +261,8 @@ separate from project-level D-XXX numbering.
 ## 6. Process Model
 
 - Entry: normal cross-machine use enters through `docdev` on `PATH` or the
-  native release `~/.local/bin/docdev` launcher. Source `.venv/bin/docdev` and
-  installed skill-local `bin/docdev`, `bin/docdev.ps1`, or `bin/docdev.cmd`
-  wrappers remain developer-maintenance compatibility entries.
+  native release `~/.local/bin/docdev` launcher. Source `.venv/bin/docdev`
+  remains a developer-maintenance entry for unreleased checkout code.
 - Version: `docdev -v` and `docdev --version` print the CLI version.
 - Target selection: explicit project path argument; current working directory
   is only a default when the caller intentionally runs from the target project.

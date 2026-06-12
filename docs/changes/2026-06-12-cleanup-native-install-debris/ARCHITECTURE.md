@@ -17,7 +17,7 @@
 | `~/.local/bin/docdev` | native release launcher，指向 `~/.local/share/docdev/current` | 当前普通用户 / agent 入口，不依赖源码 checkout |
 | `scripts/install_remote.sh` / `scripts/install_remote.ps1` | release installer，下载 manifest/artifact、校验 checksum、写 launcher | 保持不变 |
 | `scripts/install_cli.*` / `scripts/update_cli.*` / `scripts/sync_skill.sh` | 源码 checkout 维护生命周期和 skill sync | 保留，不作为普通跨机器入口 |
-| `src/docs_driven_dev/cli.py` `write_installed_skill_wrapper` | 为已同步 skill 写兼容 wrapper | 保留为维护兼容逻辑 |
+| `src/docs_driven_dev/cli.py` `write_installed_skill_wrapper` | 为已同步 skill 写兼容 wrapper | 当时保留为维护兼容逻辑；已被 D-025 / `2026-06-12-sync-skill-without-local-wrappers` superseded |
 | `temp/` | 旧纯 skill 参考材料 | 删除，当前流程由 `docs/changes/`、skill 和 templates 承接 |
 | `docs/ARCHITECTURE.md` / `README.md` / `skill/templates/SPEC.md` | 当前文档和模板 | 更新措辞，明确 native-first 和 source maintenance 分层 |
 

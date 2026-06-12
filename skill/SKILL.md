@@ -159,9 +159,10 @@ powershell -ExecutionPolicy Bypass -File .\scripts\install.ps1
 ```
 
 这是 source checkout maintenance path，不是普通用户的 native release install 路径。
-它会安装源码 wrapper、运行验证、同步 skill target，并生成兼容 wrapper。默认安装会
-force sync。对带 `.docdev-skill-source` marker 的目标，sync 会替换整个 skill 目录，
-避免旧文件残留；如果以前用过另一个目标路径，那个旧路径不会被自动清理。
+它会安装源码 wrapper、运行验证，并同步 skill target。默认安装会 force sync。对带
+`.docdev-skill-source` marker 的目标，sync 会替换整个 skill 目录，避免旧文件残留，
+包括旧版本生成的 `bin/docdev*` wrapper；如果以前用过另一个目标路径，那个旧路径不会被
+自动清理。
 
 更新源码 checkout 时，优先用 `git pull` 或干净 clone。不要把下载文件手动覆盖到旧目录；
 manual file overlays can leave stale untracked files in the source checkout，sync 会复制
