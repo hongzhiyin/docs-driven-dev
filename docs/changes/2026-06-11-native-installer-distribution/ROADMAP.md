@@ -5,7 +5,7 @@
 ## 0. 当前状态
 
 **阶段 / Phase**: 完成
-**当前 Step / Current Step**: Step 9 complete; public v0.1.3 latest installer smoke and real local native install passed
+**当前 Step / Current Step**: Step 10 in progress; v0.1.4 local package and smoke passed, publishing next
 **ARCHITECTURE 省略理由 / Architecture Omission Reason**: 不省略。该需求改变分发结构、安装数据流、launcher 契约、update 生命周期和 Windows 入口，已创建 `ARCHITECTURE.md`。
 
 ## 1. Gates
@@ -266,6 +266,14 @@
 | v0.1.3 public launcher init/audit | `/private/tmp/docdev-latest-013-smoke.VC94IV/bin/docdev --version`, `init`, and `audit` | 通过 | `docdev 0.1.3`; temp project audit No findings |
 | Real local native install | `curl -fsSL https://github.com/hongzhiyin/docs-driven-dev/releases/latest/download/install_remote.sh \| sh` | 通过 | Installed `0.1.3` under `/Users/chihoyo/.local/share/docdev/releases/0.1.3`; launcher at `/Users/chihoyo/.local/bin/docdev`; PATH warning expected |
 | Real local launcher verification | `/Users/chihoyo/.local/bin/docdev --version`, `doctor`, `init`, and `audit` | 通过 | `docdev 0.1.3`; `current` symlink points to release `0.1.3`; temp project audit No findings |
+| v0.1.4 version bump | Update `pyproject.toml`, `src/docs_driven_dev/__init__.py`, and CLI `VERSION` to `0.1.4` | 通过 | Publishes D-025: `sync-skill` no longer generates skill-local `bin/docdev*` wrappers |
+| v0.1.4 tests | `PYTHONPATH=src python3 -m unittest discover -s tests` | 通过 | 31 tests |
+| v0.1.4 audit | `./.venv/bin/docdev audit /Users/chihoyo/Project/docs-driven-dev` | 通过 | No findings |
+| v0.1.4 package | `./scripts/package_release.sh --out /private/tmp/docdev-release-assets-0.1.4` | 通过 | 生成 `docdev-0.1.4.tar.gz`、checksum、manifest、installer assets |
+| v0.1.4 artifact excludes | `tar -tzf /private/tmp/docdev-release-assets-0.1.4/docdev-0.1.4.tar.gz \| rg '(__pycache__|\\.pyc|(^|/)\\.git|(^|/)\\.venv|docs/_generated/docdev/.+)'` | 通过 | 命令返回 1，未匹配污染项 |
+| v0.1.4 local smoke | `./scripts/install_remote.sh --release-base-url file:///private/tmp/docdev-release-assets-0.1.4 ...` | 通过 | checksum、install、launcher、doctor 均通过 |
+| v0.1.4 launcher init/audit | `/private/tmp/docdev-014-smoke.9pbUDa/bin/docdev --version`, `init`, and `audit` | 通过 | `docdev 0.1.4`; temp project audit No findings |
+| v0.1.4 temp sync-skill | `DOCDEV_*_HOME=/private/tmp/docdev-014-skillhomes.4X7lVC/... /private/tmp/docdev-014-smoke.9pbUDa/bin/docdev sync-skill --force` | 通过 | temp Codex/Cursor/agents targets copied; Claude linked; `find .../bin/docdev*` 无输出 |
 
 ## 5. 风险与后续
 

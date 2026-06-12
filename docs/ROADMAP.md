@@ -5,7 +5,7 @@
 ## Current Progress
 
 **Phase**: Phase 1 - portable skill + CLI bootstrap
-**Current Step**: Step 6b complete; skill sync is CLI-first with no skill-local wrappers; next release should publish the behavior to native installs
+**Current Step**: Step 6c in progress; publishing v0.1.4 so native installs receive CLI-first skill sync
 
 ### Step Status
 
@@ -33,6 +33,7 @@
 | 6 | Add GitHub Releases / native installer distribution | Done |
 | 6a | Clean native-install migration debris | Done |
 | 6b | Remove skill-local CLI wrappers from sync | Done |
+| 6c | Publish v0.1.4 native release | In progress |
 
 ---
 
@@ -515,6 +516,30 @@ execution to `docdev` on `PATH` or the native launcher.
    `bin/docdev.ps1`, or `bin/docdev.cmd`.
 2. Source checkout local wrappers and native launcher remain available.
 3. Unit tests, `docdev doctor`, and `docdev audit` pass.
+
+---
+
+## Step 6c - v0.1.4 native release
+
+**Goal**: Publish the CLI-first `sync-skill` behavior through GitHub Releases
+so native installs no longer generate skill-local `bin/docdev*` wrappers.
+
+**Tasks**:
+- [x] Bump `pyproject.toml`, `src/docs_driven_dev/__init__.py`, and CLI
+  `VERSION` to `0.1.4`.
+- [x] Run tests and project audit.
+- [x] Package release assets.
+- [x] Run local simulated install smoke.
+- [ ] Tag and publish GitHub Release `v0.1.4`.
+- [ ] Run public latest install/update smoke.
+- [ ] Update real local native install to `0.1.4`.
+
+**Acceptance**:
+1. Release assets include artifact, checksum, manifest, and installer scripts.
+2. Local and public smoke launchers report `docdev 0.1.4`.
+3. `docdev update --sync-skill` on v0.1.4 keeps installed skill targets free of
+   `bin/docdev*` wrappers.
+4. Unit tests, `docdev doctor`, and project audit pass.
 
 ---
 
