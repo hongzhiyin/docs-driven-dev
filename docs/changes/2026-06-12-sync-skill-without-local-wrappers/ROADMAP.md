@@ -123,7 +123,7 @@
 |---|---|---|---|
 | SPEC-1 | `PYTHONPATH=src python3 -m unittest discover -s tests` | 通过 | 31 tests OK |
 | SPEC-2 | `./scripts/update_cli.sh --targets codex,cursor,agents,claude --force` | 通过 | 安装源码 wrapper、测试、doctor/audit、sync、post-check 全部通过 |
-| SPEC-3 | `/Users/chihoyo/.local/bin/docdev doctor` | 通过 | native 0.1.3 doctor OK；新源码行为需下次 release 才进入 native install |
+| SPEC-3 | `/Users/chihoyo/.local/bin/docdev doctor` | 通过 | native 0.1.4 doctor OK |
 | SPEC-4 | `/Users/chihoyo/.local/bin/docdev audit /Users/chihoyo/Project/docs-driven-dev` | 通过 | No findings |
 | SPEC-5 | `test ! -e ~/.codex/skills/docs-driven-dev/bin/docdev` 等 installed target 检查 | 通过 | Codex/Cursor/agents 目标旧 wrapper 均不存在；Claude 继续 symlink 到 agents |
 
@@ -133,4 +133,4 @@
 |---|---|---|---|
 | F-1 | 旧文档历史仍提到 skill-local wrappers | 搜索会看到历史记录 | 接受；新增 D-025 和当前 docs 标明 supersede |
 | F-2 | 某些已安装 skill target 如果不重 sync，旧 `bin/` 可能残留 | 其他机器可见旧入口 | 缓解：本机已运行 force sync；其他机器在下个 release 后用 `docdev update --sync-skill` |
-| F-3 | 当前 native install 仍是 v0.1.3 | 运行旧 native `docdev update --sync-skill` 仍可能用旧 release 逻辑 | 后续发布 v0.1.4 后消除 |
+| F-3 | v0.1.4 发布前 native install 曾停留在 v0.1.3 | 旧 native `docdev update --sync-skill` 可能用旧 release 逻辑 | 已通过 v0.1.4 release 和 real local `docdev update --sync-skill` 消除 |

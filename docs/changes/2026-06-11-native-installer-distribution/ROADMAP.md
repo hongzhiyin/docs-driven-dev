@@ -5,7 +5,7 @@
 ## 0. 当前状态
 
 **阶段 / Phase**: 完成
-**当前 Step / Current Step**: Step 10 in progress; v0.1.4 local package and smoke passed, publishing next
+**当前 Step / Current Step**: Step 10 complete; v0.1.4 public latest and real local native update passed
 **ARCHITECTURE 省略理由 / Architecture Omission Reason**: 不省略。该需求改变分发结构、安装数据流、launcher 契约、update 生命周期和 Windows 入口，已创建 `ARCHITECTURE.md`。
 
 ## 1. Gates
@@ -274,6 +274,12 @@
 | v0.1.4 local smoke | `./scripts/install_remote.sh --release-base-url file:///private/tmp/docdev-release-assets-0.1.4 ...` | 通过 | checksum、install、launcher、doctor 均通过 |
 | v0.1.4 launcher init/audit | `/private/tmp/docdev-014-smoke.9pbUDa/bin/docdev --version`, `init`, and `audit` | 通过 | `docdev 0.1.4`; temp project audit No findings |
 | v0.1.4 temp sync-skill | `DOCDEV_*_HOME=/private/tmp/docdev-014-skillhomes.4X7lVC/... /private/tmp/docdev-014-smoke.9pbUDa/bin/docdev sync-skill --force` | 通过 | temp Codex/Cursor/agents targets copied; Claude linked; `find .../bin/docdev*` 无输出 |
+| v0.1.4 git tag | `git tag v0.1.4` and `git push origin v0.1.4` | 通过 | tag pushed |
+| v0.1.4 GitHub release | `gh release create v0.1.4 ... --latest` and `gh release view v0.1.4 --json tagName,isDraft,isPrerelease,url,assets` | 通过 | https://github.com/hongzhiyin/docs-driven-dev/releases/tag/v0.1.4; non-draft, non-prerelease, five assets |
+| v0.1.4 public latest install smoke | `./scripts/install_remote.sh` with temp install env overrides | 通过 | latest manifest resolved to `docdev-0.1.4.tar.gz`; checksum, install, launcher, doctor passed after rerunning with network permission |
+| v0.1.4 public launcher init/audit | `/private/tmp/docdev-latest-014-smoke.n7UNuK/bin/docdev --version`, `init`, and `audit` | 通过 | `docdev 0.1.4`; temp project audit No findings |
+| Real local native update | `/Users/chihoyo/.local/bin/docdev update` | 通过 | Installed `0.1.4` under `/Users/chihoyo/.local/share/docdev/releases/0.1.4`; `current` symlink points to release `0.1.4` |
+| Real local release sync | `/Users/chihoyo/.local/bin/docdev update --sync-skill` | 通过 | Release v0.1.4 sync refreshed Codex/Cursor/agents targets and left `bin/docdev*` absent |
 
 ## 5. 风险与后续
 

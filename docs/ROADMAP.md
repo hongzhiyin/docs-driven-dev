@@ -5,7 +5,7 @@
 ## Current Progress
 
 **Phase**: Phase 1 - portable skill + CLI bootstrap
-**Current Step**: Step 6c in progress; publishing v0.1.4 so native installs receive CLI-first skill sync
+**Current Step**: Step 6c complete; v0.1.4 native release published and installed locally
 
 ### Step Status
 
@@ -33,7 +33,7 @@
 | 6 | Add GitHub Releases / native installer distribution | Done |
 | 6a | Clean native-install migration debris | Done |
 | 6b | Remove skill-local CLI wrappers from sync | Done |
-| 6c | Publish v0.1.4 native release | In progress |
+| 6c | Publish v0.1.4 native release | Done |
 
 ---
 
@@ -530,9 +530,9 @@ so native installs no longer generate skill-local `bin/docdev*` wrappers.
 - [x] Run tests and project audit.
 - [x] Package release assets.
 - [x] Run local simulated install smoke.
-- [ ] Tag and publish GitHub Release `v0.1.4`.
-- [ ] Run public latest install/update smoke.
-- [ ] Update real local native install to `0.1.4`.
+- [x] Tag and publish GitHub Release `v0.1.4`.
+- [x] Run public latest install/update smoke.
+- [x] Update real local native install to `0.1.4`.
 
 **Acceptance**:
 1. Release assets include artifact, checksum, manifest, and installer scripts.
