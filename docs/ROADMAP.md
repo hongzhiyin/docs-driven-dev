@@ -5,7 +5,7 @@
 ## Current Progress
 
 **Phase**: Phase 1 - portable skill + CLI bootstrap
-**Current Step**: Step 6g complete; native uninstall command added
+**Current Step**: Step 6h in progress; publish v0.1.6 native release
 
 ### Step Status
 
@@ -38,6 +38,7 @@
 | 6e | Sync skill by default during native install/update | Done |
 | 6f | Publish v0.1.5 native release | Done |
 | 6g | Add native uninstall command | Done |
+| 6h | Publish v0.1.6 native release | In Progress |
 
 ---
 
@@ -628,6 +629,28 @@ skill targets so new-machine install smoke tests can be repeated.
 2. `docdev uninstall --yes` removes temp native install root, launcher, and marked/symlink skill targets.
 3. Unmarked skill directories are skipped by default.
 4. Unit tests and `docdev audit` pass.
+
+---
+
+## Step 6h - v0.1.6 native release
+
+**Goal**: Publish the native uninstall command through GitHub Releases so
+fresh machines can install, update, and uninstall through the release path.
+
+**Tasks**:
+- [x] Bump `pyproject.toml` and `src/docs_driven_dev/__init__.py` to `0.1.6`.
+- [x] Run tests, entrypoint smoke, project audit, and diff check.
+- [x] Package release assets outside source-of-truth docs.
+- [x] Run local simulated install/uninstall smoke with temp install, bin, and skill homes.
+- [ ] Tag and publish GitHub Release `v0.1.6`.
+- [ ] Run public latest install/uninstall smoke.
+- [ ] Record release verification in the native uninstall change packet.
+
+**Acceptance**:
+1. Release assets include artifact, checksum, manifest, and installer scripts.
+2. Local and public smoke launchers report `docdev 0.1.6`.
+3. Release launcher supports `docdev uninstall --dry-run` and `docdev uninstall --yes`.
+4. Unit tests, project audit, and diff check pass.
 
 ---
 

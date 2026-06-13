@@ -4,8 +4,8 @@
 
 ## 0. 当前状态
 
-**阶段 / Phase**: 已完成
-**当前 Step / Current Step**: Step 5 - 验证与收尾完成
+**阶段 / Phase**: 发布中
+**当前 Step / Current Step**: Step 6 - 发布 v0.1.6 release
 **ARCHITECTURE 省略理由 / Architecture Omission Reason**: 不省略。本次新增 CLI 命令面、native lifecycle 数据流和删除路径安全契约。
 
 ## 1. Gates
@@ -48,6 +48,7 @@
 | 3 | 形成并确认方案 | 完成 |
 | 4 | 实施代码与测试 | 完成 |
 | 5 | 验证与收尾 | 完成 |
+| 6 | 发布 v0.1.6 release | 进行中 |
 
 ---
 
@@ -130,6 +131,12 @@
 | SPEC-3 | `PYTHONPATH=src python3 -m docs_driven_dev.cli audit /Users/chihoyo/Project/docs-driven-dev` | 通过 | No findings |
 | SPEC-4 | `PYTHONPATH=src python3 -m docs_driven_dev.cli uninstall --dry-run ...` | 通过 | nonexistent temp root/bin; real skill targets only planned, not deleted |
 | SPEC-5 | local package + install + `docdev uninstall --dry-run` + `docdev uninstall --yes` | 通过 | temp root/bin/skill homes under `/private/tmp/docdev-uninstall-smoke.bgbus0`; confirmed paths removed |
+| REL-1 | `python3 -m unittest discover -s tests` | 通过 | 36 tests OK |
+| REL-2 | `PYTHONPATH=src python3 -m docs_driven_dev.cli --version` | 通过 | `docdev 0.1.6` |
+| REL-3 | `PYTHONPATH=src python3 -m docs_driven_dev.cli audit /Users/chihoyo/Project/docs-driven-dev` | 通过 | No findings |
+| REL-4 | `./scripts/package_release.sh --out /private/tmp/docdev-release-assets-0.1.6` | 通过 | artifact, checksum, manifest, installers; tar exclude check clean |
+| REL-5 | local `file://` install/uninstall smoke | 通过 | `/private/tmp/docdev-016-local-smoke.FsWa1f`; launcher `docdev 0.1.6`; uninstall removed temp root/bin/skill targets |
+| REL-6 | public latest install/uninstall smoke | 待验证 | after GitHub Release publish |
 
 ## Step 5 - 验证与收尾
 
@@ -145,6 +152,23 @@
 **Acceptance**:
 1. tests、entrypoint smoke、uninstall smoke 和 audit 均通过。
 2. 本次 change packet 记录剩余 Windows live verification 风险。
+
+## Step 6 - 发布 v0.1.6 release
+
+**Goal**: 把 `docdev uninstall` 纳入 GitHub Release / native installer 分发路径。
+
+**Tasks**:
+- [x] bump package version to `0.1.6`
+- [x] run tests, entrypoint smoke, audit, and diff check
+- [x] package release assets
+- [x] run local native install/uninstall smoke
+- [ ] tag and publish `v0.1.6`
+- [ ] run public latest install/uninstall smoke
+
+**Acceptance**:
+1. release launcher prints `docdev 0.1.6`.
+2. local and public latest smoke can run `docdev uninstall --dry-run` and `docdev uninstall --yes`.
+3. verification table records package, test, audit, and smoke evidence.
 
 ## 5. 风险与后续
 
