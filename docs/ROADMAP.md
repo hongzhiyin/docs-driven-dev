@@ -5,7 +5,7 @@
 ## Current Progress
 
 **Phase**: Phase 1 - portable skill + CLI bootstrap
-**Current Step**: Step 6f complete; v0.1.5 native release published
+**Current Step**: Step 6g complete; native uninstall command added
 
 ### Step Status
 
@@ -37,6 +37,7 @@
 | 6d | Split CLI internals into lightweight modules | Done |
 | 6e | Sync skill by default during native install/update | Done |
 | 6f | Publish v0.1.5 native release | Done |
+| 6g | Add native uninstall command | Done |
 
 ---
 
@@ -606,6 +607,27 @@ Releases.
 2. Local and public smoke launchers report `docdev 0.1.5`.
 3. Default native install/update syncs skill targets unless `--no-sync-skill` is used.
 4. Unit tests and project audit pass.
+
+---
+
+## Step 6g - Native uninstall command
+
+**Goal**: Let users safely remove docdev-owned native install files and synced
+skill targets so new-machine install smoke tests can be repeated.
+
+**Tasks**:
+- [x] Create `docs/changes/2026-06-13-native-uninstall-command/` with architecture.
+- [x] Record D-028 for confirmed CLI uninstall.
+- [x] Add `docdev uninstall` with `--dry-run`, `--yes`, and `--keep-skills`.
+- [x] Harden `setup_project.sh` to invoke the source wrapper through `sh`.
+- [x] Update README, SPEC, ARCHITECTURE, ROADMAP, SKILL, and tests.
+- [x] Run unit tests, entrypoint smoke, uninstall smoke, and project audit.
+
+**Acceptance**:
+1. `docdev uninstall --dry-run` previews install root, launcher, and skill target actions without deleting.
+2. `docdev uninstall --yes` removes temp native install root, launcher, and marked/symlink skill targets.
+3. Unmarked skill directories are skipped by default.
+4. Unit tests and `docdev audit` pass.
 
 ---
 

@@ -36,11 +36,11 @@ for arg in "$@"; do
 done
 
 "$PROJECT_DIR/scripts/install_cli.sh"
-"$DOCDEV" doctor
-"$DOCDEV" init "$PROJECT" "$@"
+sh "$DOCDEV" doctor
+sh "$DOCDEV" init "$PROJECT" "$@"
 
 if [ -n "$DOCS_DIR" ]; then
-  "$DOCDEV" audit "$PROJECT" --docs-dir "$DOCS_DIR" --write-report
+  sh "$DOCDEV" audit "$PROJECT" --docs-dir "$DOCS_DIR" --write-report
 else
-  "$DOCDEV" audit "$PROJECT" --write-report
+  sh "$DOCDEV" audit "$PROJECT" --write-report
 fi

@@ -37,7 +37,7 @@ caller passes.
 | CLI template/change module | `src/docs_driven_dev/templates.py` | `init`, `new-change`, template copy, README/AGENTS pointers | audit, sync, release update |
 | CLI audit/status module | `src/docs_driven_dev/audit.py` | Project and change-packet audit, status, decision skeletons | skill target writes, native update |
 | CLI sync/doctor module | `src/docs_driven_dev/sync.py` | Skill target resolution, copy/link sync, doctor output | release download/update dispatch |
-| CLI release module | `src/docs_driven_dev/release.py` | `docdev update` dispatch to native installer | audit/template internals |
+| CLI release module | `src/docs_driven_dev/release.py` | Native update dispatch and native uninstall planning/execution | audit/template internals |
 | Skill source | `skill/SKILL.md` | Agent workflow and boundaries | local install paths |
 | Installed skill targets | `<skill-target>/` | Synced skill content plus `.docdev-skill-source` marker; no CLI wrappers | package index |
 | Native launcher | `~/.local/bin/docdev` | User-facing release launcher pointing at `~/.local/share/docdev/current` | source checkout |
@@ -81,9 +81,9 @@ docdev init <project>
 ```text
 scripts/setup_project.sh <project> [docdev init options]
   -> scripts/install_cli.sh
-  -> .venv/bin/docdev doctor
-  -> .venv/bin/docdev init <project> [options]
-  -> .venv/bin/docdev audit <project> --write-report
+  -> sh .venv/bin/docdev doctor
+  -> sh .venv/bin/docdev init <project> [options]
+  -> sh .venv/bin/docdev audit <project> --write-report
 ```
 
 ### 3.3 Requirement Change Packet
@@ -230,6 +230,26 @@ Source checkout maintenance continues to use `scripts/update_cli.*`; that path
 runs tests and sync checks for maintainers and is intentionally separate from a
 normal user's release update.
 
+### 3.10 Native Uninstall
+
+```text
+docdev uninstall [--dry-run | --yes] [--keep-skills]
+  -> resolve install root from --install-root / DOCDEV_INSTALL_ROOT / ~/.local/share/docdev
+  -> resolve launcher from --bin-dir / DOCDEV_BIN_DIR / ~/.local/bin/docdev
+  -> resolve skill targets with DOCDEV_<TARGET>_SKILL_DIR / DOCDEV_<TARGET>_HOME / defaults
+  -> plan delete / skip actions
+  -> require --yes before destructive removal
+  -> delete install root
+  -> delete launcher only when it looks like the generated docdev launcher
+  -> delete skill symlinks and marked skill directories
+  -> skip unmarked skill directories
+```
+
+Uninstall does not remove parent directories such as `~/.local/bin`,
+`~/.local/share`, `~/.codex`, `~/.cursor`, `~/.agents`, or `~/.claude`.
+Claude symlink cleanup unlinks the symlink itself; it does not recursively
+delete the symlink target.
+
 ## 4. Data Model
 
 ### 4.1 Finding
@@ -300,6 +320,9 @@ separate from project-level D-XXX numbering.
   `~/.local/bin`.
 - Native update: `docdev update` updates release installs, runs doctor, and
   syncs skill targets by default; `--no-sync-skill` skips that write.
+- Native uninstall: `docdev uninstall --dry-run` previews removal, and
+  `docdev uninstall --yes` removes docdev-owned native install paths and marked
+  skill targets.
 - Source update: `scripts/update_cli.sh --targets codex,cursor,agents,claude
   --force`, or `.\scripts\update_cli.ps1 -Targets codex,cursor,agents,claude
   -Force` on Windows PowerShell.

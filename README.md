@@ -35,6 +35,28 @@ docdev update
 docdev update --no-sync-skill
 ```
 
+卸载 native release 安装，便于在新机器上反复验证安装流程：
+
+```bash
+docdev uninstall --dry-run
+docdev uninstall --yes
+```
+
+如果 `docdev` 不在 `PATH` 里，使用完整 launcher 路径：
+
+```bash
+~/.local/bin/docdev uninstall --yes
+```
+
+`uninstall` 只删除 docdev native install root、docdev launcher，以及带
+`.docdev-skill-source` marker 或 symlink 的 `docs-driven-dev` skill target。它不会删除
+`~/.local/bin`、`~/.local/share`、agent home 父目录、源码 checkout，或未标记的同名
+skill 目录。只想移除 CLI release、不动 agent skill 时使用：
+
+```bash
+docdev uninstall --yes --keep-skills
+```
+
 Windows PowerShell 遵循同样的安装 / 更新合同，当前提供 `install_remote.ps1`
 框架和静态校验；真实 Windows live verification 仍是后续项。
 
@@ -74,6 +96,7 @@ docdev new-change "feature-slug" /path/to/project
 docdev audit /path/to/project --write-report
 docdev status /path/to/project
 docdev doctor
+docdev uninstall --dry-run
 ```
 
 使用 `docdev init` 创建项目级四件套文档。已有项目要在实现前开 scoped requirement

@@ -49,7 +49,13 @@ from .paths import (
     read_config,
     skill_source_dir,
 )
-from .release import cmd_update
+from .release import (
+    UninstallAction,
+    cmd_uninstall,
+    cmd_update,
+    launcher_is_docdev_owned,
+    plan_native_uninstall,
+)
 from .sync import (
     cmd_doctor,
     cmd_sync_skill,
@@ -83,6 +89,7 @@ __all__ = [
     "Finding",
     "GENERATED_SUBDIR",
     "SKILL_NAME",
+    "UninstallAction",
     "VERSION",
     "architecture_omission_reason_exists",
     "audit_change_packet",
@@ -103,6 +110,7 @@ __all__ = [
     "cmd_new_decision",
     "cmd_status",
     "cmd_sync_skill",
+    "cmd_uninstall",
     "cmd_update",
     "copy_skill",
     "copy_template",
@@ -120,6 +128,7 @@ __all__ = [
     "generated_dir_for",
     "labeled_block_body",
     "link_claude_to_agents",
+    "launcher_is_docdev_owned",
     "main",
     "markdown_cells",
     "markdown_section",
@@ -128,6 +137,7 @@ __all__ = [
     "parse_current_status",
     "parse_targets",
     "path_from_env",
+    "plan_native_uninstall",
     "project_root_from_module",
     "read_config",
     "roadmap_step_sections",

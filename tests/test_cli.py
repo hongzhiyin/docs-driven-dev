@@ -82,6 +82,135 @@ class CliTests(unittest.TestCase):
         self.assertIn("--no-sync-skill", command)
         self.assertNotIn("--sync-skill", command)
 
+    def write_generated_launcher(self, bin_dir: Path) -> Path:
+        bin_dir.mkdir(parents=True, exist_ok=True)
+        launcher = bin_dir / "docdev"
+        launcher.write_text(
+            '#!/bin/sh\nDOCDEV_PROJECT_DIR="/tmp/docdev" PYTHONPATH="/tmp/docdev/src" exec python3 -m docs_driven_dev.cli "$@"\n',
+            encoding="utf-8",
+        )
+        return launcher
+
+    def uninstall_env(self, root: Path) -> dict[str, str]:
+        return {
+            "DOCDEV_CODEX_HOME": str(root / "homes" / ".codex"),
+            "DOCDEV_CURSOR_HOME": str(root / "homes" / ".cursor"),
+            "DOCDEV_AGENTS_HOME": str(root / "homes" / ".agents"),
+            "DOCDEV_CLAUDE_HOME": str(root / "homes" / ".claude"),
+        }
+
+    def test_uninstall_requires_confirmation(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            install_root = root / "share" / "docdev"
+            bin_dir = root / "bin"
+            install_root.mkdir(parents=True)
+            launcher = self.write_generated_launcher(bin_dir)
+
+            with mock.patch.dict(os.environ, self.uninstall_env(root), clear=False):
+                stderr = io.StringIO()
+                with contextlib.redirect_stderr(stderr):
+                    code = cli.main(["uninstall", "--install-root", str(install_root), "--bin-dir", str(bin_dir)])
+
+            self.assertEqual(code, 2)
+            self.assertIn("Refusing to uninstall without --yes", stderr.getvalue())
+            self.assertTrue(install_root.exists())
+            self.assertTrue(launcher.exists())
+
+    def test_uninstall_dry_run_does_not_delete(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            install_root = root / "share" / "docdev"
+            bin_dir = root / "bin"
+            install_root.mkdir(parents=True)
+            launcher = self.write_generated_launcher(bin_dir)
+            codex_target = root / "homes" / ".codex" / "skills" / "docs-driven-dev"
+            codex_target.mkdir(parents=True)
+            (codex_target / ".docdev-skill-source").write_text("test\n", encoding="utf-8")
+
+            stdout = io.StringIO()
+            with mock.patch.dict(os.environ, self.uninstall_env(root), clear=False):
+                with contextlib.redirect_stdout(stdout):
+                    code = cli.main(
+                        [
+                            "uninstall",
+                            "--dry-run",
+                            "--install-root",
+                            str(install_root),
+                            "--bin-dir",
+                            str(bin_dir),
+                        ]
+                    )
+
+            self.assertEqual(code, 0)
+            self.assertIn("remove: install root", stdout.getvalue())
+            self.assertTrue(install_root.exists())
+            self.assertTrue(launcher.exists())
+            self.assertTrue(codex_target.exists())
+
+    def test_uninstall_removes_owned_paths_and_skips_unmarked_skill(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            install_root = root / "share" / "docdev"
+            bin_dir = root / "bin"
+            install_root.mkdir(parents=True)
+            launcher = self.write_generated_launcher(bin_dir)
+            env = self.uninstall_env(root)
+            codex_target = Path(env["DOCDEV_CODEX_HOME"]) / "skills" / "docs-driven-dev"
+            cursor_target = Path(env["DOCDEV_CURSOR_HOME"]) / "skills" / "docs-driven-dev"
+            agents_target = Path(env["DOCDEV_AGENTS_HOME"]) / "skills" / "docs-driven-dev"
+            claude_target = Path(env["DOCDEV_CLAUDE_HOME"]) / "skills" / "docs-driven-dev"
+            for target in (codex_target, cursor_target, agents_target):
+                target.mkdir(parents=True)
+            (codex_target / ".docdev-skill-source").write_text("test\n", encoding="utf-8")
+            (agents_target / ".docdev-skill-source").write_text("test\n", encoding="utf-8")
+            claude_symlink_created = False
+            if os.name != "nt":
+                claude_target.parent.mkdir(parents=True)
+                claude_target.symlink_to(Path("..") / ".." / ".agents" / "skills" / "docs-driven-dev")
+                claude_symlink_created = True
+
+            with mock.patch.dict(os.environ, env, clear=False):
+                code = cli.main(["uninstall", "--yes", "--install-root", str(install_root), "--bin-dir", str(bin_dir)])
+
+            self.assertEqual(code, 0)
+            self.assertFalse(install_root.exists())
+            self.assertFalse(launcher.exists())
+            self.assertFalse(codex_target.exists())
+            self.assertTrue(cursor_target.exists())
+            self.assertFalse(agents_target.exists())
+            if claude_symlink_created:
+                self.assertFalse(claude_target.is_symlink())
+
+    def test_uninstall_keep_skills(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            install_root = root / "share" / "docdev"
+            bin_dir = root / "bin"
+            install_root.mkdir(parents=True)
+            launcher = self.write_generated_launcher(bin_dir)
+            codex_target = root / "homes" / ".codex" / "skills" / "docs-driven-dev"
+            codex_target.mkdir(parents=True)
+            (codex_target / ".docdev-skill-source").write_text("test\n", encoding="utf-8")
+
+            with mock.patch.dict(os.environ, self.uninstall_env(root), clear=False):
+                code = cli.main(
+                    [
+                        "uninstall",
+                        "--yes",
+                        "--keep-skills",
+                        "--install-root",
+                        str(install_root),
+                        "--bin-dir",
+                        str(bin_dir),
+                    ]
+                )
+
+            self.assertEqual(code, 0)
+            self.assertFalse(install_root.exists())
+            self.assertFalse(launcher.exists())
+            self.assertTrue(codex_target.exists())
+
     def test_init_and_audit(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             self.assertEqual(cli.main(["init", tmp]), 0)
@@ -545,6 +674,11 @@ class CliTests(unittest.TestCase):
         self.assertIn("手动覆盖可能留下 stale untracked files", readme)
         self.assertIn("~/.local/bin/docdev", readme)
         self.assertIn("~/.local/bin/docdev", skill)
+        self.assertIn("docdev uninstall --dry-run", readme)
+        self.assertIn("docdev uninstall --yes", readme)
+        self.assertIn("docdev uninstall --yes --keep-skills", readme)
+        self.assertIn("docdev uninstall --dry-run", skill)
+        self.assertIn("docdev uninstall --yes --keep-skills", skill)
         self.assertIn("先运行 native", readme)
         self.assertIn("Do not guess", skill)
         self.assertIn("local paths or wrappers", skill)

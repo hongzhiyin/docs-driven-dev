@@ -5,7 +5,7 @@ from typing import Iterable
 
 from .audit import cmd_audit, cmd_new_decision, cmd_status
 from .paths import VERSION
-from .release import cmd_update
+from .release import cmd_uninstall, cmd_update
 from .sync import cmd_doctor, cmd_sync_skill
 from .templates import cmd_init, cmd_new_change
 
@@ -74,6 +74,14 @@ def build_parser() -> argparse.ArgumentParser:
     update.add_argument("--no-sync-skill", dest="sync_skill", action="store_false", help="Update the release only; skip refreshing skill targets.")
     update.set_defaults(sync_skill=True)
     update.set_defaults(func=cmd_update)
+
+    uninstall = sub.add_parser("uninstall", help="Remove a native release install and owned skill targets.")
+    uninstall.add_argument("--install-root", default=None, help="Override DOCDEV_INSTALL_ROOT.")
+    uninstall.add_argument("--bin-dir", default=None, help="Override DOCDEV_BIN_DIR.")
+    uninstall.add_argument("--keep-skills", action="store_true", help="Remove only the native CLI install; keep agent skill targets.")
+    uninstall.add_argument("--dry-run", action="store_true", help="Preview planned removals without deleting files.")
+    uninstall.add_argument("--yes", action="store_true", help="Confirm destructive uninstall.")
+    uninstall.set_defaults(func=cmd_uninstall)
     return parser
 
 

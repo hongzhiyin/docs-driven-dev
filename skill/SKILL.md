@@ -80,6 +80,7 @@ docdev audit /path/to/project --write-report
 docdev status /path/to/project
 docdev new-decision "Step N - trade-off title" /path/to/project
 docdev sync-skill --targets codex,cursor,agents,claude --force
+docdev uninstall --dry-run
 docdev doctor
 ```
 
@@ -126,6 +127,19 @@ DOCDEV_RELEASE_BASE_URL="file:///path/to/release-assets" ./scripts/install_remot
 native release install 使用 `docdev update` 更新。更新默认会刷新 skill target
 directories，让 agent 读取到的 workflow 和当前 CLI release 保持一致。只有在明确不想写
 agent homes 时，才使用 `docdev update --no-sync-skill`。
+
+需要在新机器上卸载后重测安装流程时，先预览再确认：
+
+```bash
+docdev uninstall --dry-run
+docdev uninstall --yes
+```
+
+如果 `docdev` 不在 `PATH` 上但 native launcher 存在，使用
+`~/.local/bin/docdev uninstall --yes`。卸载只删除 docdev native install root、生成的
+launcher，以及 symlink 或带 `.docdev-skill-source` marker 的 docs-driven-dev skill target。
+未标记 skill 目录会被跳过；只想移除 CLI release 时使用
+`docdev uninstall --yes --keep-skills`。
 
 Private GitHub Releases 需要显式认证，而且普通
 `github.com/.../releases/download/...` asset URL 可能返回 404。私有测试时，用

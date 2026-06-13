@@ -1181,3 +1181,48 @@ skills remain old, agents may keep following stale workflow instructions.
 - `src/docs_driven_dev/release.py`
 - `scripts/install_remote.sh`
 - `scripts/install_remote.ps1`
+
+---
+
+## D-028 - Step 6g - Add a confirmed native uninstall command
+
+**Date**: 2026-06-13
+
+**Context**:
+Native install/update is now the normal cross-machine distribution path, and
+v0.1.5 syncs skill targets by default. Users who validate install behavior on a
+fresh machine need a repeatable way to remove only docdev-owned files before
+installing again.
+
+**Options**:
+- A. Document manual `rm` commands only - smallest implementation, but easy to
+  mistype and cannot encode marker/symlink safety checks.
+- B. Add standalone uninstall shell scripts - familiar for install flows, but
+  duplicates path logic and would need Unix/Windows variants.
+- C. Add `docdev uninstall` with `--dry-run`, required `--yes`, and ownership
+  checks for synced skill targets.
+
+**Chosen**: C
+
+**Rationale**:
+- Uninstall is deterministic filesystem work, so it belongs in the CLI rather
+  than the skill.
+- A built-in command can reuse `DOCDEV_INSTALL_ROOT`, `DOCDEV_BIN_DIR`, and
+  `DOCDEV_<TARGET>_*` path contracts already used by install/update/sync.
+- Requiring `--yes` for deletion and skipping unmarked skill directories keeps
+  the new command useful for smoke tests without making broad deletes easy.
+
+**Risks**:
+- Some manually copied `docs-driven-dev` skill directories may remain if they
+  lack `.docdev-skill-source`. Mitigation: skip by default and report the path.
+- Windows deletion of files from the currently running release may need real
+  machine validation. Mitigation: keep the first implementation stdlib-only and
+  document Windows as an install/update framework until verified.
+
+**Related code / docs**:
+- SPEC §2, §3.3, §3.4, §4, §7
+- ARCHITECTURE §2, §3.10, §6
+- ROADMAP Step 6g
+- `docs/changes/2026-06-13-native-uninstall-command/`
+- `src/docs_driven_dev/commands.py`
+- `src/docs_driven_dev/release.py`

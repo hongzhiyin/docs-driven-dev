@@ -38,6 +38,7 @@ Claude, and shared agent skill homes.
 | X | Native update | `docdev update` updates release installs through manifest/artifact download, checksum verification, current-pointer switch, doctor, and default skill sync; `--no-sync-skill` opts out | See D-021, D-027 |
 | Y | Private repository installs | Public GitHub Releases are the default; private releases require explicit `gh auth` or token handling | See D-021 |
 | Z | CLI internal boundary | `docs_driven_dev.cli` remains the public entrypoint; deterministic logic is split into lightweight internal modules by responsibility | See D-026 |
+| AA | Native uninstall | `docdev uninstall` removes docdev-owned native install files and marked skill targets only after explicit confirmation; `--dry-run` previews | See D-028 |
 
 ## 3. Derived Rules
 
@@ -130,6 +131,7 @@ for explicit source checkout development, not cross-machine agent use.
 | `docdev new-decision "<title>" <project>` | Append next D-XXX skeleton | Writes DECISIONS.md |
 | `docdev sync-skill` | Copy/link skill into agent homes | Writes skill target dirs |
 | `docdev update` | Update a native release install from a release manifest and artifact | Writes user install dirs; syncs skill target dirs by default |
+| `docdev uninstall` | Remove a native release install and owned skill targets | Deletes docdev install dirs, launcher, and marked/symlink skill targets after `--yes` |
 | `docdev doctor` | Show local install and sync state | Read-only |
 | `docdev --version` / `docdev -v` | Show CLI version | Read-only |
 
@@ -160,6 +162,13 @@ latest or requested version, downloads and verifies the release, switches
 agents read the same workflow version as the active CLI release. Use
 `--no-sync-skill` only when the caller explicitly wants to update the release
 without writing agent homes.
+
+`docdev uninstall --yes` removes the native install root, the generated
+launcher, and owned skill targets so a machine can repeat install smoke tests
+from a clean state. Use `docdev uninstall --dry-run` first to preview planned
+deletions. Owned skill targets are symlinks or directories containing
+`.docdev-skill-source`; unmarked directories are skipped. `--keep-skills`
+removes only the native CLI install and leaves agent skill targets in place.
 
 Release artifacts are built by:
 
@@ -321,6 +330,7 @@ use the native launcher instead.
 | Source has just been updated | Run `./scripts/update_cli.sh --targets codex,cursor,agents,claude --force` |
 | User wants release-style install from GitHub Releases | Run the native remote installer and verify manifest/checksum before activation |
 | Native release install has been updated | Run `docdev update`; use `--no-sync-skill` only when skill targets should not be refreshed |
+| User wants to remove native install before retesting | Run `docdev uninstall --dry-run`, then `docdev uninstall --yes` |
 | Source repo has just been cloned for development | Run `./scripts/install.sh` |
 | Source repo has just been cloned for development in Windows PowerShell | Run `.\scripts\install.ps1` |
 | Source checkout was manually overwritten | Prefer replacing it with a clean git checkout before install |
@@ -382,3 +392,4 @@ Constraints:
 9. **#9**: Native release installers and updates must verify artifact checksums before switching the active `current` release.
 10. **#10**: `docs_driven_dev.cli` remains the stable executable entrypoint even when internal CLI implementation is split across lightweight modules.
 11. **#11**: Native install/update refreshes skill targets by default after checksum verification and activation, with an explicit no-sync opt-out.
+12. **#12**: Native uninstall must require explicit destructive confirmation and only delete docdev-owned install paths or owned skill targets.
