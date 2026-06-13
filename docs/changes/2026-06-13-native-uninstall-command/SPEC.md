@@ -6,7 +6,7 @@
 
 | 字段 | 内容 |
 |---|---|
-| 状态 | 发布中 |
+| 状态 | 完成 |
 | 需求来源 | 用户请求：新机器上需要可重复卸载 docdev 以验证安装过程 |
 | 工作包目录 | `docs/changes/2026-06-13-native-uninstall-command/` |
 | 最后更新 | 2026-06-13 |
@@ -68,7 +68,7 @@ docs-driven-dev skill target，用于新机器重复验证 install/update 流程
 | R5 | 未标记的 skill target 被跳过，不被删除 | 单元测试 | 完成 |
 | R6 | `--keep-skills` 跳过 skill target 删除 | 单元测试 | 完成 |
 | R7 | README / SKILL 给出新机器验证时的卸载命令 | 文档检查 / tests | 完成 |
-| R8 | GitHub Release `v0.1.6` 发布包含 `docdev uninstall` 的 native install/update/uninstall 路径 | release smoke | 待验证 |
+| R8 | GitHub Release `v0.1.6` 发布包含 `docdev uninstall` 的 native install/update/uninstall 路径 | release smoke | 完成 |
 
 ## 6. 约束与不变式
 

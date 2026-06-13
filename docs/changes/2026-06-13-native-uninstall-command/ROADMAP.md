@@ -4,8 +4,8 @@
 
 ## 0. 当前状态
 
-**阶段 / Phase**: 发布中
-**当前 Step / Current Step**: Step 6 - 发布 v0.1.6 release
+**阶段 / Phase**: 已完成
+**当前 Step / Current Step**: Step 6 - 发布 v0.1.6 release 完成
 **ARCHITECTURE 省略理由 / Architecture Omission Reason**: 不省略。本次新增 CLI 命令面、native lifecycle 数据流和删除路径安全契约。
 
 ## 1. Gates
@@ -48,7 +48,7 @@
 | 3 | 形成并确认方案 | 完成 |
 | 4 | 实施代码与测试 | 完成 |
 | 5 | 验证与收尾 | 完成 |
-| 6 | 发布 v0.1.6 release | 进行中 |
+| 6 | 发布 v0.1.6 release | 完成 |
 
 ---
 
@@ -136,7 +136,7 @@
 | REL-3 | `PYTHONPATH=src python3 -m docs_driven_dev.cli audit /Users/chihoyo/Project/docs-driven-dev` | 通过 | No findings |
 | REL-4 | `./scripts/package_release.sh --out /private/tmp/docdev-release-assets-0.1.6` | 通过 | artifact, checksum, manifest, installers; tar exclude check clean |
 | REL-5 | local `file://` install/uninstall smoke | 通过 | `/private/tmp/docdev-016-local-smoke.FsWa1f`; launcher `docdev 0.1.6`; uninstall removed temp root/bin/skill targets |
-| REL-6 | public latest install/uninstall smoke | 待验证 | after GitHub Release publish |
+| REL-6 | public latest install/uninstall smoke | 通过 | `/private/tmp/docdev-016-public-smoke.jroWX7`; GitHub latest installed `0.1.6`; launcher `docdev 0.1.6`; uninstall removed temp root/bin/skill targets |
 
 ## Step 5 - 验证与收尾
 
@@ -162,8 +162,8 @@
 - [x] run tests, entrypoint smoke, audit, and diff check
 - [x] package release assets
 - [x] run local native install/uninstall smoke
-- [ ] tag and publish `v0.1.6`
-- [ ] run public latest install/uninstall smoke
+- [x] tag and publish `v0.1.6`
+- [x] run public latest install/uninstall smoke
 
 **Acceptance**:
 1. release launcher prints `docdev 0.1.6`.

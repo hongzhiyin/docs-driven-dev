@@ -5,7 +5,7 @@
 ## Current Progress
 
 **Phase**: Phase 1 - portable skill + CLI bootstrap
-**Current Step**: Step 6h in progress; publish v0.1.6 native release
+**Current Step**: Step 6h complete; v0.1.6 native release published
 
 ### Step Status
 
@@ -38,7 +38,7 @@
 | 6e | Sync skill by default during native install/update | Done |
 | 6f | Publish v0.1.5 native release | Done |
 | 6g | Add native uninstall command | Done |
-| 6h | Publish v0.1.6 native release | In Progress |
+| 6h | Publish v0.1.6 native release | Done |
 
 ---
 
@@ -642,9 +642,9 @@ fresh machines can install, update, and uninstall through the release path.
 - [x] Run tests, entrypoint smoke, project audit, and diff check.
 - [x] Package release assets outside source-of-truth docs.
 - [x] Run local simulated install/uninstall smoke with temp install, bin, and skill homes.
-- [ ] Tag and publish GitHub Release `v0.1.6`.
-- [ ] Run public latest install/uninstall smoke.
-- [ ] Record release verification in the native uninstall change packet.
+- [x] Tag and publish GitHub Release `v0.1.6`.
+- [x] Run public latest install/uninstall smoke.
+- [x] Record release verification in the native uninstall change packet.
 
 **Acceptance**:
 1. Release assets include artifact, checksum, manifest, and installer scripts.
