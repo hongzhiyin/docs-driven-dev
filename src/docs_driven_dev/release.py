@@ -24,6 +24,8 @@ def cmd_update(args: argparse.Namespace) -> int:
         command.extend(["--bin-dir", args.bin_dir])
     if args.sync_skill:
         command.append("--sync-skill")
+    else:
+        command.append("--no-sync-skill")
 
     env = os.environ.copy()
     env.setdefault("DOCDEV_INSTALL_LOG_PREFIX", "[docdev update]")

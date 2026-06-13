@@ -203,9 +203,10 @@ scripts/install_remote.sh
   -> unpack into ~/.local/share/docdev/releases/<version>
   -> switch ~/.local/share/docdev/current
   -> write ~/.local/bin/docdev launcher
-  -> run docdev doctor
+  -> run docdev doctor through sh "$LAUNCHER"
 
 ~/.local/bin/docdev
+  -> /bin/sh launcher
   -> DOCDEV_PROJECT_DIR=~/.local/share/docdev/current
   -> PYTHONPATH=~/.local/share/docdev/current/src
   -> python3 -m docs_driven_dev.cli "$@"
@@ -217,11 +218,12 @@ it prints a warning and the direct launcher path.
 ### 3.9 Native Update
 
 ```text
-docdev update [--version <version>] [--release-base-url <url>] [--sync-skill]
+docdev update [--version <version>] [--release-base-url <url>] [--no-sync-skill]
   -> use the same manifest/artifact/checksum/install logic as remote install
   -> switch current only after verification succeeds
-  -> run doctor
-  -> optionally run sync-skill when requested
+  -> run doctor through the generated launcher
+  -> run sync-skill by default after activation
+  -> skip sync-skill only when --no-sync-skill is requested
 ```
 
 Source checkout maintenance continues to use `scripts/update_cli.*`; that path
@@ -296,8 +298,8 @@ separate from project-level D-XXX numbering.
   verifies checksum, installs under `DOCDEV_INSTALL_ROOT` or
   `~/.local/share/docdev`, and writes a launcher under `DOCDEV_BIN_DIR` or
   `~/.local/bin`.
-- Native update: `docdev update` updates release installs and runs doctor; skill
-  sync is explicit.
+- Native update: `docdev update` updates release installs, runs doctor, and
+  syncs skill targets by default; `--no-sync-skill` skips that write.
 - Source update: `scripts/update_cli.sh --targets codex,cursor,agents,claude
   --force`, or `.\scripts\update_cli.ps1 -Targets codex,cursor,agents,claude
   -Force` on Windows PowerShell.

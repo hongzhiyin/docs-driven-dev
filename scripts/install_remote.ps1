@@ -3,7 +3,8 @@ param(
     [string]$ReleaseBaseUrl = $env:DOCDEV_RELEASE_BASE_URL,
     [string]$InstallRoot = $(if ($env:DOCDEV_INSTALL_ROOT) { $env:DOCDEV_INSTALL_ROOT } else { Join-Path $HOME ".local\share\docdev" }),
     [string]$BinDir = $(if ($env:DOCDEV_BIN_DIR) { $env:DOCDEV_BIN_DIR } else { Join-Path $HOME ".local\bin" }),
-    [switch]$SyncSkill
+    [switch]$SyncSkill,
+    [switch]$NoSyncSkill
 )
 
 $ErrorActionPreference = "Stop"
@@ -94,7 +95,7 @@ exit `$LASTEXITCODE
     Write-DocdevInstallLog "installed version $($Manifest.version) at $TargetDir"
     Write-DocdevInstallLog "launcher: $Launcher"
     & $Launcher doctor
-    if ($SyncSkill) {
+    if (-not $NoSyncSkill) {
         & $Launcher sync-skill --targets codex,cursor,agents,claude --force
     }
 } finally {

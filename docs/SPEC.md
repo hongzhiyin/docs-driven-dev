@@ -35,7 +35,7 @@ Claude, and shared agent skill homes.
 | U | Explicit invocation | When the skill is explicitly named, agents must follow one workflow and create/update required docs before code | See D-020 |
 | V | Small-fix path | Narrow bug fixes use a minimal B0 packet rather than skipping docs or forcing a heavy packet | See D-020 |
 | W | Release packaging | `scripts/package_release.sh` emits `docdev-<version>.tar.gz`, a SHA256 file, `manifest.json`, and installer script assets for GitHub Releases | See D-021 |
-| X | Native update | `docdev update` updates release installs through manifest/artifact download, checksum verification, current-pointer switch, and doctor | See D-021 |
+| X | Native update | `docdev update` updates release installs through manifest/artifact download, checksum verification, current-pointer switch, doctor, and default skill sync; `--no-sync-skill` opts out | See D-021, D-027 |
 | Y | Private repository installs | Public GitHub Releases are the default; private releases require explicit `gh auth` or token handling | See D-021 |
 | Z | CLI internal boundary | `docs_driven_dev.cli` remains the public entrypoint; deterministic logic is split into lightweight internal modules by responsibility | See D-026 |
 
@@ -129,7 +129,7 @@ for explicit source checkout development, not cross-machine agent use.
 | `docdev status <project>` | Show Phase, Step, next D id | Read-only |
 | `docdev new-decision "<title>" <project>` | Append next D-XXX skeleton | Writes DECISIONS.md |
 | `docdev sync-skill` | Copy/link skill into agent homes | Writes skill target dirs |
-| `docdev update` | Update a native release install from a release manifest and artifact | Writes user install dirs; optionally syncs skill target dirs |
+| `docdev update` | Update a native release install from a release manifest and artifact | Writes user install dirs; syncs skill target dirs by default |
 | `docdev doctor` | Show local install and sync state | Read-only |
 | `docdev --version` / `docdev -v` | Show CLI version | Read-only |
 
@@ -156,8 +156,10 @@ mutate shell startup files automatically.
 
 `docdev update` is the preferred native update entrypoint. It resolves the
 latest or requested version, downloads and verifies the release, switches
-`current`, runs doctor, and performs skill sync only when the caller explicitly
-requests that side effect.
+`current`, runs doctor, and refreshes skill target directories by default so
+agents read the same workflow version as the active CLI release. Use
+`--no-sync-skill` only when the caller explicitly wants to update the release
+without writing agent homes.
 
 Release artifacts are built by:
 
@@ -318,7 +320,7 @@ use the native launcher instead.
 | User wants one-command source checkout setup | Use `./scripts/setup_project.sh /path/to/project` |
 | Source has just been updated | Run `./scripts/update_cli.sh --targets codex,cursor,agents,claude --force` |
 | User wants release-style install from GitHub Releases | Run the native remote installer and verify manifest/checksum before activation |
-| Native release install has been updated | Run `docdev update`; use `--sync-skill` only when skill targets should be refreshed |
+| Native release install has been updated | Run `docdev update`; use `--no-sync-skill` only when skill targets should not be refreshed |
 | Source repo has just been cloned for development | Run `./scripts/install.sh` |
 | Source repo has just been cloned for development in Windows PowerShell | Run `.\scripts\install.ps1` |
 | Source checkout was manually overwritten | Prefer replacing it with a clean git checkout before install |
@@ -379,3 +381,4 @@ Constraints:
 8. **#8**: Explicit `docs-driven-dev` invocation must not be silently downgraded into direct coding; docs artifacts come first for code changes.
 9. **#9**: Native release installers and updates must verify artifact checksums before switching the active `current` release.
 10. **#10**: `docs_driven_dev.cli` remains the stable executable entrypoint even when internal CLI implementation is split across lightweight modules.
+11. **#11**: Native install/update refreshes skill targets by default after checksum verification and activation, with an explicit no-sync opt-out.

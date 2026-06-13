@@ -28,10 +28,11 @@ curl -fsSL https://github.com/hongzhiyin/docs-driven-dev/releases/latest/downloa
 docdev update
 ```
 
-只有在需要刷新已安装的 agent skill 目录时，才使用：
+`docdev update` 会同时刷新已安装的 agent skill 目录，让 agent 读取到的 workflow 和
+当前 CLI release 保持一致。只有在明确不想写入 agent skill 目录时，才使用：
 
 ```bash
-docdev update --sync-skill
+docdev update --no-sync-skill
 ```
 
 Windows PowerShell 遵循同样的安装 / 更新合同，当前提供 `install_remote.ps1`
@@ -53,8 +54,8 @@ Windows PowerShell 遵循同样的安装 / 更新合同，当前提供 `install_
 
 如果 `docdev` 和 `~/.local/bin/docdev` 都不可用，agent 应提示用户先运行 native
 installer，而不是去猜某个源码 checkout 路径或 skill 目录里的 wrapper。`sync-skill`
-只同步 skill 内容；若希望 skill 目录也从 release 安装刷新，运行
-`docdev update --sync-skill`。
+只同步 skill 内容；release install/update 默认会刷新 skill 目录，若要跳过则运行
+`docdev update --no-sync-skill`。
 
 当用户明确点名 `docs-driven-dev` 时，agent 不应把它当成泛泛的参考方法。它应该遵循
 skill 中的某个工作流，并在改代码前创建或更新必要的 docs artifacts。窄范围 bug fix

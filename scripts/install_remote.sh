@@ -7,7 +7,7 @@ RELEASE_BASE_URL=${DOCDEV_RELEASE_BASE_URL:-}
 INSTALL_ROOT=${DOCDEV_INSTALL_ROOT:-"$HOME/.local/share/docdev"}
 BIN_DIR=${DOCDEV_BIN_DIR:-"$HOME/.local/bin"}
 LOG_PREFIX=${DOCDEV_INSTALL_LOG_PREFIX:-"[docdev install]"}
-SYNC_SKILL=0
+SYNC_SKILL=1
 
 usage() {
   cat <<'EOF'
@@ -18,7 +18,8 @@ Options:
   --release-base-url URL     Base URL or file:// directory containing manifest.json
   --install-root DIR         Install root. Default: ~/.local/share/docdev
   --bin-dir DIR              Launcher directory. Default: ~/.local/bin
-  --sync-skill               Run docdev sync-skill after install
+  --sync-skill               Run docdev sync-skill after install. Default.
+  --no-sync-skill            Skip skill sync after install
 
 Environment:
   DOCDEV_RELEASE_REPO        GitHub repo, owner/name. Default: hongzhiyin/docs-driven-dev
@@ -53,6 +54,10 @@ while [ "$#" -gt 0 ]; do
       ;;
     --sync-skill)
       SYNC_SKILL=1
+      shift
+      ;;
+    --no-sync-skill)
+      SYNC_SKILL=0
       shift
       ;;
     -h|--help)
@@ -183,7 +188,7 @@ ln -s "$TARGET_DIR" "$CURRENT"
 
 LAUNCHER="$BIN_DIR/docdev"
 cat > "$LAUNCHER" <<EOF
-#!/usr/bin/env sh
+#!/bin/sh
 DOCDEV_PROJECT_DIR="$CURRENT" PYTHONPATH="$CURRENT/src\${PYTHONPATH:+:\$PYTHONPATH}" exec python3 -m docs_driven_dev.cli "\$@"
 EOF
 chmod +x "$LAUNCHER"
@@ -191,7 +196,7 @@ chmod +x "$LAUNCHER"
 log "installed version $MANIFEST_VERSION at $TARGET_DIR"
 log "launcher: $LAUNCHER"
 
-"$LAUNCHER" doctor
+sh "$LAUNCHER" doctor
 
 case ":${PATH:-}:" in
   *":$BIN_DIR:"*) ;;
@@ -199,5 +204,5 @@ case ":${PATH:-}:" in
 esac
 
 if [ "$SYNC_SKILL" -eq 1 ]; then
-  "$LAUNCHER" sync-skill --targets codex,cursor,agents,claude --force
+  sh "$LAUNCHER" sync-skill --targets codex,cursor,agents,claude --force
 fi

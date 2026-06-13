@@ -1136,3 +1136,48 @@ active growth area and needs clearer module boundaries.
 - `docs/changes/2026-06-13-split-cli-modules/`
 - `src/docs_driven_dev/`
 - `tests/test_cli.py`
+
+## D-027 - Step 6e - Sync skill by default during native update
+
+**Date**: 2026-06-13
+
+**Context**:
+The original native update design made skill sync an explicit `--sync-skill`
+opt-in to avoid hidden writes to multiple agent homes. In practice, a release
+can update CLI behavior, `skill/SKILL.md`, templates, and references together.
+If `docdev update` refreshes only the launcher/current release while installed
+skills remain old, agents may keep following stale workflow instructions.
+
+**Options**:
+- A. Keep `--sync-skill` as opt-in - smallest default side effect, but makes
+  normal updates prone to CLI/skill drift.
+- B. Sync skill targets by default during native install/update, with
+  `--no-sync-skill` as the explicit opt-out.
+- C. Sync only when the installed manifest version changes - more precise, but
+  requires additional local state and edge-case handling.
+
+**Chosen**: B
+
+**Rationale**:
+- The common user intent for `docdev update` is to update the whole release
+  experience, including the skill an agent reads before calling the CLI.
+- `--no-sync-skill` keeps a low-side-effect path for restricted environments,
+  CI, or manual diagnostics.
+- The existing D-025 sync contract still prevents skill-local wrappers from
+  returning; default sync only copies skill content and marker files.
+
+**Risks**:
+- Default update now writes to configured Codex/Cursor/agents/Claude skill
+  homes. Mitigation: document `--no-sync-skill` and keep sync target overrides.
+- Already published releases keep the old default until a new version is
+  published. Mitigation: record Step 6e and release in the next bump.
+
+**Related code / docs**:
+- SPEC §2 X, §3.4, §4, §7 #11
+- ARCHITECTURE §3.9, §6
+- ROADMAP Step 6e
+- `docs/changes/2026-06-13-sync-skill-on-native-update/`
+- `src/docs_driven_dev/commands.py`
+- `src/docs_driven_dev/release.py`
+- `scripts/install_remote.sh`
+- `scripts/install_remote.ps1`

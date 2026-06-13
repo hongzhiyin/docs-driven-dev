@@ -58,7 +58,6 @@ class CliTests(unittest.TestCase):
                         "/tmp/install-root",
                         "--bin-dir",
                         "/tmp/bin",
-                        "--sync-skill",
                     ]
                 )
 
@@ -69,7 +68,19 @@ class CliTests(unittest.TestCase):
         self.assertIn("--version", command)
         self.assertIn("0.1.0", command)
         self.assertIn("--sync-skill", command)
+        self.assertNotIn("--no-sync-skill", command)
         self.assertEqual(env["DOCDEV_INSTALL_LOG_PREFIX"], "[docdev update]")
+
+    def test_update_can_skip_skill_sync(self) -> None:
+        completed = subprocess.CompletedProcess(args=["install_remote"], returncode=0)
+        with mock.patch("docs_driven_dev.release.find_source_root", return_value=ROOT):
+            with mock.patch("docs_driven_dev.release.subprocess.run", return_value=completed) as run:
+                code = cli.main(["update", "--no-sync-skill"])
+
+        self.assertEqual(code, 0)
+        command = run.call_args.args[0]
+        self.assertIn("--no-sync-skill", command)
+        self.assertNotIn("--sync-skill", command)
 
     def test_init_and_audit(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -342,8 +353,11 @@ class CliTests(unittest.TestCase):
         self.assertIn("--retry-all-errors", install_sh)
         self.assertIn("checksum mismatch", install_sh)
         self.assertIn("~/.local/share/docdev", install_sh)
+        self.assertIn("SYNC_SKILL=1", install_sh)
+        self.assertIn("--no-sync-skill", install_sh)
         self.assertIn("Get-FileHash -Algorithm SHA256", install_ps)
         self.assertIn("New-Item -ItemType Junction", install_ps)
+        self.assertIn("[switch]$NoSyncSkill", install_ps)
 
     def test_package_release_script_emits_manifest_and_excludes_local_artifacts(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -420,6 +434,7 @@ class CliTests(unittest.TestCase):
                     str(install_root),
                     "--bin-dir",
                     str(bin_dir),
+                    "--no-sync-skill",
                 ],
                 cwd=ROOT,
                 text=True,

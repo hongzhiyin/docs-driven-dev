@@ -7,7 +7,7 @@ BIN="$BIN_DIR/docdev"
 
 mkdir -p "$BIN_DIR"
 cat > "$BIN" <<EOF
-#!/usr/bin/env sh
+#!/bin/sh
 DOCDEV_PROJECT_DIR="$PROJECT_DIR" PYTHONPATH="$PROJECT_DIR/src" exec python3 -m docs_driven_dev.cli "\$@"
 EOF
 chmod +x "$BIN"

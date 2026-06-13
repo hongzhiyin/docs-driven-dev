@@ -123,8 +123,9 @@ DOCDEV_RELEASE_BASE_URL="file:///path/to/release-assets" ./scripts/install_remot
 不会编辑 shell 启动文件；如果 `~/.local/bin` 不在 `PATH` 上，使用完整 launcher 路径，
 或由用户自己添加 PATH。
 
-native release install 使用 `docdev update` 更新。只有当 skill target directories 也要
-从 release install 刷新时，才使用 `docdev update --sync-skill`。
+native release install 使用 `docdev update` 更新。更新默认会刷新 skill target
+directories，让 agent 读取到的 workflow 和当前 CLI release 保持一致。只有在明确不想写
+agent homes 时，才使用 `docdev update --no-sync-skill`。
 
 Private GitHub Releases 需要显式认证，而且普通
 `github.com/.../releases/download/...` asset URL 可能返回 404。私有测试时，用

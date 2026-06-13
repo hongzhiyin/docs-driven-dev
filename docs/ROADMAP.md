@@ -5,7 +5,7 @@
 ## Current Progress
 
 **Phase**: Phase 1 - portable skill + CLI bootstrap
-**Current Step**: Step 6d complete; CLI internals split into lightweight modules
+**Current Step**: Step 6f in progress; publish v0.1.5 native release
 
 ### Step Status
 
@@ -35,6 +35,8 @@
 | 6b | Remove skill-local CLI wrappers from sync | Done |
 | 6c | Publish v0.1.4 native release | Done |
 | 6d | Split CLI internals into lightweight modules | Done |
+| 6e | Sync skill by default during native install/update | Done |
+| 6f | Publish v0.1.5 native release | In Progress |
 
 ---
 
@@ -562,6 +564,48 @@ so native installs no longer generate skill-local `bin/docdev*` wrappers.
 2. `cli.py` is a thin entrypoint/re-export layer; core logic lives in smaller
    modules.
 3. Unit tests and `docdev audit` pass.
+
+---
+
+## Step 6e - Native update skill sync default
+
+**Goal**: Make native install/update refresh skill targets by default so agent
+workflow instructions stay aligned with the active CLI release.
+
+**Tasks**:
+- [x] Create `docs/changes/2026-06-13-sync-skill-on-native-update/` with
+  architecture.
+- [x] Record D-027 for default sync plus explicit no-sync opt-out.
+- [x] Update `docdev update`, Unix installer, and PowerShell installer.
+- [x] Update README, SPEC, ARCHITECTURE, ROADMAP, SKILL, and tests.
+- [x] Run tests, entrypoint smoke, and project audit.
+
+**Acceptance**:
+1. `docdev update` defaults to skill sync and supports `--no-sync-skill`.
+2. Remote installer defaults to skill sync and supports no-sync opt-out.
+3. Unit tests and `docdev audit` pass.
+
+---
+
+## Step 6f - v0.1.5 native release
+
+**Goal**: Publish the default skill-sync native update behavior through GitHub
+Releases.
+
+**Tasks**:
+- [x] Bump `pyproject.toml` and `src/docs_driven_dev/__init__.py` to `0.1.5`.
+- [x] Harden generated Unix launchers to use a direct `/bin/sh` shebang.
+- [x] Run tests and project audit.
+- [x] Package release assets.
+- [x] Run local simulated install smoke, including default skill sync with temp homes.
+- [ ] Tag and publish GitHub Release `v0.1.5`.
+- [ ] Run public latest install/update smoke.
+
+**Acceptance**:
+1. Release assets include artifact, checksum, manifest, and installer scripts.
+2. Local and public smoke launchers report `docdev 0.1.5`.
+3. Default native install/update syncs skill targets unless `--no-sync-skill` is used.
+4. Unit tests and project audit pass.
 
 ---
 

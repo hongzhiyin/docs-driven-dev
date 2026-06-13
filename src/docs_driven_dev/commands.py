@@ -70,7 +70,9 @@ def build_parser() -> argparse.ArgumentParser:
     update.add_argument("--release-base-url", default=None, help="Manifest/artifact base URL.")
     update.add_argument("--install-root", default=None, help="Override DOCDEV_INSTALL_ROOT.")
     update.add_argument("--bin-dir", default=None, help="Override DOCDEV_BIN_DIR.")
-    update.add_argument("--sync-skill", action="store_true", help="Refresh skill targets after update.")
+    update.add_argument("--sync-skill", dest="sync_skill", action="store_true", help="Refresh skill targets after update. Default.")
+    update.add_argument("--no-sync-skill", dest="sync_skill", action="store_false", help="Update the release only; skip refreshing skill targets.")
+    update.set_defaults(sync_skill=True)
     update.set_defaults(func=cmd_update)
     return parser
 
