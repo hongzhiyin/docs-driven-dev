@@ -56,7 +56,7 @@
 | R3 | remote Unix installer 默认 sync skill，并支持 `--no-sync-skill` | 静态测试检查默认和 opt-out；local release smoke 走 no-sync 路径 | 完成 |
 | R4 | PowerShell installer 暴露同等 `-NoSyncSkill` opt-out | 静态测试检查脚本参数和 sync 条件 | 完成 |
 | R5 | README / SPEC / ARCHITECTURE / SKILL 不再把 `--sync-skill` 描述为普通更新必需项 | 文档检查 / tests | 完成 |
-| R6 | `v0.1.5` release 发布默认 sync skill 的 native update 行为 | package / smoke / GitHub release verification | 本地验证完成；发布待验证 |
+| R6 | `v0.1.5` release 发布默认 sync skill 的 native update 行为 | package / smoke / GitHub release verification | 完成 |
 
 ## 6. 约束与不变式
 

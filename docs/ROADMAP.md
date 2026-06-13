@@ -5,7 +5,7 @@
 ## Current Progress
 
 **Phase**: Phase 1 - portable skill + CLI bootstrap
-**Current Step**: Step 6f in progress; publish v0.1.5 native release
+**Current Step**: Step 6f complete; v0.1.5 native release published
 
 ### Step Status
 
@@ -36,7 +36,7 @@
 | 6c | Publish v0.1.4 native release | Done |
 | 6d | Split CLI internals into lightweight modules | Done |
 | 6e | Sync skill by default during native install/update | Done |
-| 6f | Publish v0.1.5 native release | In Progress |
+| 6f | Publish v0.1.5 native release | Done |
 
 ---
 
@@ -598,8 +598,8 @@ Releases.
 - [x] Run tests and project audit.
 - [x] Package release assets.
 - [x] Run local simulated install smoke, including default skill sync with temp homes.
-- [ ] Tag and publish GitHub Release `v0.1.5`.
-- [ ] Run public latest install/update smoke.
+- [x] Tag and publish GitHub Release `v0.1.5`.
+- [x] Run public latest install/update smoke.
 
 **Acceptance**:
 1. Release assets include artifact, checksum, manifest, and installer scripts.

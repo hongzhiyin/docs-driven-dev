@@ -132,6 +132,11 @@
 | SPEC-7 | `/private/tmp/docdev-015-smoke.13FF0t/bin/docdev --version`, `init`, `audit` | 通过 | `docdev 0.1.5`; temp project audit No findings |
 | SPEC-8 | `find /private/tmp/docdev-015-smoke.13FF0t/skill-homes -path '*/bin/docdev*' -print` | 通过 | no output，默认 sync 未恢复 skill-local wrappers |
 | SPEC-9 | `tar -tzf /private/tmp/docdev-release-assets-0.1.5/docdev-0.1.5.tar.gz \| rg '(__pycache__|\\.pyc|(^|/)\\.git|(^|/)\\.venv|docs/_generated/docdev/.+)'` | 通过 | rg exit 1，未匹配污染项 |
+| SPEC-10 | `git tag v0.1.5`, `git push`, `git push origin v0.1.5` | 通过 | main `d3e5075` and tag pushed |
+| SPEC-11 | `gh release create v0.1.5 ... --latest` and `gh release view v0.1.5 --json ...` | 通过 | https://github.com/hongzhiyin/docs-driven-dev/releases/tag/v0.1.5; non-draft, non-prerelease, 5 assets |
+| SPEC-12 | `./scripts/install_remote.sh` with temp install env overrides | 通过 | latest manifest resolved to `docdev-0.1.5.tar.gz`; checksum, install, launcher doctor, default temp skill sync passed after network approval |
+| SPEC-13 | `/private/tmp/docdev-latest-015-smoke.sczSEf/bin/docdev --version`, `init`, `audit` | 通过 | `docdev 0.1.5`; temp project audit No findings |
+| SPEC-14 | `find /private/tmp/docdev-latest-015-smoke.sczSEf/skill-homes -path '*/bin/docdev*' -print` | 通过 | no output，public latest sync 未恢复 skill-local wrappers |
 
 ## Step 5 - 验证与收尾
 
@@ -152,4 +157,4 @@
 | ID | 风险 / 后续 | 影响 | 处理 |
 |---|---|---|---|
 | F-1 | 默认 sync 会写多个 agent homes | 比旧行为副作用更大 | 缓解：提供 `--no-sync-skill` / `-NoSyncSkill` |
-| F-2 | 当前发布版仍是旧行为 | 用户安装 latest release 前不会看到新默认 | 本次发布 `v0.1.5` 后消除 |
+| F-2 | 当前发布版仍是旧行为 | 用户安装 latest release 前不会看到新默认 | 已通过 `v0.1.5` release 和 public latest smoke 消除 |
