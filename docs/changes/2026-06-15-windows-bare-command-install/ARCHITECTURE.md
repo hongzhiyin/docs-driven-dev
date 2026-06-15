@@ -6,7 +6,7 @@
 
 | 字段 | 内容 |
 |---|---|
-| 状态 | 实现完成，待 Windows live smoke |
+| 状态 | 实现完成，Windows live smoke 已补充；发现 post-install sync 参数引用缺陷 |
 | 创建原因 | Windows native installer 的 launcher、PATH 配置契约和 update 调用链会变化 |
 | 最后更新 | 2026-06-15 |
 
@@ -71,6 +71,16 @@ docdev update
   -> same install/update flow as above
 ```
 
+2026-06-15 Windows live smoke refinement:
+- PowerShell treats an unquoted `codex,cursor,agents,claude` argument list as
+  multiple native arguments in this installer context. The generated launcher
+  must call `sync-skill --targets "codex,cursor,agents,claude" --force`.
+- The installer should verify User PATH after writing it and print a targeted
+  diagnostic if the persisted user environment still does not contain `BinDir`.
+  Updating `$env:Path` inside a child PowerShell process cannot refresh the
+  parent process, so diagnostics must distinguish parent-session staleness from
+  persistent PATH write failure.
+
 ## 4. 模块与接口契约
 
 | 模块 / 文件 | 新增 / 修改 | 职责 | 不应依赖 |
@@ -104,7 +114,9 @@ docdev update
   - package release still emits `install_remote.ps1`.
   - existing Unix install/update tests still pass.
 - Windows live smoke:
-  - install latest from GitHub in PowerShell.
-  - open a new PowerShell and run `docdev -v`.
-  - open CMD and run `docdev -v`.
-  - run `docdev update` and re-check `docdev -v`.
+  - install latest from GitHub in PowerShell. Completed for `0.1.7`.
+  - open a new PowerShell and run `docdev -v`. Completed by user confirmation.
+  - open CMD and run `docdev -v`. Still useful for coverage.
+  - run `docdev update` and re-check `docdev -v`. Still useful for coverage.
+  - verify default sync writes Codex/Cursor/Agents/Claude skill targets without
+    manual `sync-skill` repair. Source fixed; release pending.

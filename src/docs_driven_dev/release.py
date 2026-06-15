@@ -87,7 +87,10 @@ def launcher_candidates(bin_dir: Path) -> list[Path]:
 
 def dangerous_removal_path(path: Path) -> bool:
     resolved = path.expanduser().resolve(strict=False)
-    home = Path.home().resolve(strict=False)
+    try:
+        home = Path.home().resolve(strict=False)
+    except OSError:
+        home = Path.home()
     return resolved in {
         Path("/"),
         home,

@@ -6,7 +6,7 @@
 
 | 字段 | 内容 |
 |---|---|
-| 状态 | 已发布 v0.1.7；Windows live smoke 待真机验证 |
+| 状态 | 已发布 v0.1.7；Windows live smoke 已在 Windows PowerShell 验证，发现 post-install sync 参数引用缺陷 |
 | 需求来源 | 用户请求：Windows 安装后希望能直接在终端运行 `docdev -v`，并参考 `lark-cli` 的 GitHub latest 安装 / 更新体验 |
 | 工作包目录 | `docs/changes/2026-06-15-windows-bare-command-install/` |
 | 最后更新 | 2026-06-15 |
@@ -48,13 +48,14 @@
 | S2 | 用户用 `irm ...install_remote.ps1 \| iex` 在当前 PowerShell session 安装 | installer 尽量让当前 session 也能立即运行 `docdev -v` |
 | S3 | 用户不希望 installer 修改 PATH | 用户可传入 opt-out 参数，之后仍可用完整 launcher 路径运行 |
 | S4 | 已安装用户运行 `docdev update` | Windows 上走 PowerShell installer 更新到 latest，并继续刷新 skill target，除非传入 `--no-sync-skill` |
+| S5 | Windows 安装器自动运行默认 skill sync | `sync-skill --targets "codex,cursor,agents,claude" --force` 必须把 targets 作为单个逗号分隔参数传给 CLI |
 
 ## 5. 功能需求
 
 | ID | 需求 | 验收方式 | 状态 |
 |---|---|---|---|
-| R1 | Windows native install 必须生成 `docdev.cmd`，使 `docdev` 可被 PowerShell / CMD 通过 PATH 解析 | 脚本静态测试；Windows 真机 smoke：`docdev -v` | 静态完成，live 待真机验证 |
-| R2 | Windows native install 默认添加 bin 目录到用户 PATH，且不重复追加同一路径 | PowerShell 脚本静态测试；手工检查 User PATH | 静态完成，live 待真机验证 |
+| R1 | Windows native install 必须生成 `docdev.cmd`，使 `docdev` 可被 PowerShell / CMD 通过 PATH 解析 | 脚本静态测试；Windows 真机 smoke：`docdev -v` | live 通过：新终端可直接运行 `docdev` |
+| R2 | Windows native install 默认添加 bin 目录到用户 PATH，且不重复追加同一路径 | PowerShell 脚本静态测试；手工检查 User PATH | 部分通过：安装器打印已添加，但本次 Codex 执行路径中需手动补写后新终端确认可用；需要后续加硬化验证 |
 | R3 | Windows native install 必须支持 `-NoModifyPath` 或等价 opt-out | 脚本静态测试 | 完成 |
 | R4 | `docdev update` 在 Windows 上必须调用 `install_remote.ps1`，在 Unix 上继续调用 `install_remote.sh` | 单元测试 mock `os.name` / platform 分支 | 完成 |
 | R5 | `docdev update --no-sync-skill` 在 Windows 上仍传递到 PowerShell installer | 单元测试检查命令参数 | 完成 |

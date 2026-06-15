@@ -1327,3 +1327,56 @@ with publishing after accepting the GitHub-first, no-npm plan.
 - `scripts/install_remote.ps1`
 - `src/docs_driven_dev/release.py`
 - `tests/test_cli.py`
+
+---
+
+## D-031 - Step 6j - Patch Windows installer follow-up before larger packaging changes
+
+**Date**: 2026-06-15
+
+**Context**:
+The first Windows live smoke of the published `v0.1.7` remote installer
+confirmed the core bare-command goal: after install and terminal refresh,
+`docdev` is usable from Windows. The same smoke found two narrower defects:
+the installer passed `sync-skill --targets codex,cursor,agents,claude` without
+quoting the comma-separated target value, causing PowerShell to forward extra
+arguments; and the PATH write path needs clearer write-after-read diagnostics
+because this Codex execution path did not observe the persisted PATH entry
+until it was repaired manually.
+
+**Options**:
+- A. Treat the smoke as fully successful because the user can now run `docdev` -
+  acknowledges the main outcome, but leaves the default skill sync failure in
+  the published installer.
+- B. Patch the PowerShell installer and diagnostics in a small follow-up
+  release - fixes the real Windows feedback while preserving the current
+  GitHub Release model.
+- C. Stop and replace the Windows installer with npm shims or a `docdev.exe`
+  binary immediately - may improve command ergonomics later, but expands a
+  small live-smoke fix into a new distribution project.
+
+**Chosen**: B
+
+**Rationale**:
+- The failure is localized to installer invocation and diagnostics, not the
+  release artifact, CLI command surface, or native launcher model.
+- Quoting `--targets "codex,cursor,agents,claude"` matches the CLI contract and
+  the Unix installer behavior.
+- A small patch release can make the published Windows path honest before
+  considering larger binary packaging work.
+
+**Risks**:
+- PATH persistence may be affected by the Codex process model rather than only
+  the script. Mitigation: add explicit post-write verification and diagnostic
+  output instead of assuming the parent terminal can be refreshed.
+- Users who installed `v0.1.7` may still need to run
+  `docdev sync-skill --targets all --force` manually until the follow-up is
+  released. Mitigation: document the workaround in the Step 6i packet and
+  publish the patch promptly.
+
+**Related code / docs**:
+- ROADMAP Step 6j
+- `docs/changes/2026-06-15-windows-bare-command-install/`
+- `scripts/install_remote.ps1`
+- `src/docs_driven_dev/release.py`
+- `tests/test_cli.py`

@@ -5,7 +5,7 @@
 ## Current Progress
 
 **Phase**: Phase 1 - portable skill + CLI bootstrap
-**Current Step**: Step 6i complete; v0.1.7 Windows native release published
+**Current Step**: Step 6i Windows live smoke recorded; Step 6j follow-up installer patch pending release
 
 ### Step Status
 
@@ -40,6 +40,7 @@
 | 6g | Add native uninstall command | Done |
 | 6h | Publish v0.1.6 native release | Done |
 | 6i | Add Windows bare command native install contract | Done |
+| 6j | Patch Windows installer live-smoke follow-up findings | In Progress |
 
 ---
 
@@ -688,6 +689,45 @@ PowerShell or CMD terminal without manually creating aliases.
    smoke, and project audit pass; missing Windows live smoke is recorded as a
    post-release real-machine verification item because no Windows environment
    was available.
+
+Post-release Windows live smoke on 2026-06-15 confirmed that `docdev` can be
+used directly from a new Windows terminal after remote install, and that the
+installed launcher can run `-v`, `doctor`, `status`, and `audit`. It also found
+two follow-up items: the published PowerShell installer passed default
+`sync-skill` targets as unquoted comma arguments, and PATH persistence needs a
+stronger write-after-read diagnostic. The source installer now quotes the
+targets argument; a follow-up release is needed to publish that fix.
+
+---
+
+## Step 6j - Windows installer live-smoke follow-up
+
+**Goal**: Publish a small follow-up that incorporates Windows live-smoke
+findings from the `v0.1.7` release path.
+
+**Tasks**:
+- [x] Record Windows `v0.1.7` live install results in the Step 6i packet.
+- [x] Quote the PowerShell installer's default `sync-skill --targets` value.
+- [x] Add regression coverage for the quoted targets contract.
+- [x] Fix Windows unit-test baseline issues found while verifying the patch:
+  Unix update dispatch tests now mock `posix`, Unix shell package smoke is
+  skipped on Windows, and uninstall safety checks tolerate restricted home
+  directory resolution.
+- [x] Bump release metadata to `0.1.8`.
+- [x] Harden User PATH write-after-read diagnostics in the Windows installer.
+- [x] Run unit tests and project audit.
+- [x] Package `0.1.8` release assets.
+- [x] Run local Windows installer smoke from packaged `0.1.8` assets, including
+  default sync with temporary skill homes.
+- [ ] Publish the `v0.1.8` patch release.
+- [ ] Re-run Windows remote install/update smoke from the published release.
+
+**Acceptance**:
+1. Remote Windows install no longer prints `unrecognized arguments: cursor agents claude`.
+2. Installer output clearly distinguishes successful User PATH persistence,
+   current-process PATH refresh, and parent-terminal staleness.
+3. New PowerShell and CMD sessions can run `docdev -v` after install/update.
+4. Unit tests and `docdev audit` pass.
 
 ---
 

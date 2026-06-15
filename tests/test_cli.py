@@ -45,21 +45,22 @@ class CliTests(unittest.TestCase):
 
     def test_update_dispatches_to_native_installer(self) -> None:
         completed = subprocess.CompletedProcess(args=["install_remote"], returncode=7)
-        with mock.patch("docs_driven_dev.release.find_source_root", return_value=ROOT):
-            with mock.patch("docs_driven_dev.release.subprocess.run", return_value=completed) as run:
-                code = cli.main(
-                    [
-                        "update",
-                        "--version",
-                        "0.1.0",
-                        "--release-base-url",
-                        "file:///tmp/assets",
-                        "--install-root",
-                        "/tmp/install-root",
-                        "--bin-dir",
-                        "/tmp/bin",
-                    ]
-                )
+        with mock.patch("docs_driven_dev.release.os.name", "posix"):
+            with mock.patch("docs_driven_dev.release.find_source_root", return_value=ROOT):
+                with mock.patch("docs_driven_dev.release.subprocess.run", return_value=completed) as run:
+                    code = cli.main(
+                        [
+                            "update",
+                            "--version",
+                            "0.1.0",
+                            "--release-base-url",
+                            "file:///tmp/assets",
+                            "--install-root",
+                            "/tmp/install-root",
+                            "--bin-dir",
+                            "/tmp/bin",
+                        ]
+                    )
 
         self.assertEqual(code, 7)
         command = run.call_args.args[0]
@@ -119,9 +120,10 @@ class CliTests(unittest.TestCase):
 
     def test_update_can_skip_skill_sync(self) -> None:
         completed = subprocess.CompletedProcess(args=["install_remote"], returncode=0)
-        with mock.patch("docs_driven_dev.release.find_source_root", return_value=ROOT):
-            with mock.patch("docs_driven_dev.release.subprocess.run", return_value=completed) as run:
-                code = cli.main(["update", "--no-sync-skill"])
+        with mock.patch("docs_driven_dev.release.os.name", "posix"):
+            with mock.patch("docs_driven_dev.release.find_source_root", return_value=ROOT):
+                with mock.patch("docs_driven_dev.release.subprocess.run", return_value=completed) as run:
+                    code = cli.main(["update", "--no-sync-skill"])
 
         self.assertEqual(code, 0)
         command = run.call_args.args[0]
@@ -537,9 +539,14 @@ class CliTests(unittest.TestCase):
         self.assertIn('Join-Path $BinDir "docdev.cmd"', install_ps)
         self.assertIn("Set-Content -Encoding ASCII -Path $CmdLauncher", install_ps)
         self.assertIn('[Environment]::SetEnvironmentVariable("Path"', install_ps)
+        self.assertIn("attempted to add to user PATH but could not verify persistence", install_ps)
+        self.assertIn("attempted to add to current process PATH but could not verify it", install_ps)
         self.assertIn("Enable-DocdevCommandOnPath -Directory $BinDir", install_ps)
         self.assertIn("skipped PATH update because -NoModifyPath was set", install_ps)
+        self.assertIn('--targets "codex,cursor,agents,claude"', install_ps)
+        self.assertNotIn("--targets codex,cursor,agents,claude", install_ps)
 
+    @unittest.skipIf(os.name == "nt", "package_release.sh is exercised by Unix shell test environments")
     def test_package_release_script_emits_manifest_and_excludes_local_artifacts(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             result = subprocess.run(

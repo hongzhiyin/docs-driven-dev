@@ -5,7 +5,7 @@
 ## 0. 当前状态
 
 **阶段 / Phase**: 发布验证完成
-**当前 Step / Current Step**: Step 5 - 验证与收尾完成；Windows live smoke 留作后续真机验证
+**当前 Step / Current Step**: Step 5 - Windows live smoke 已补充；post-install sync 参数引用缺陷已在源码修复，待下一版发布
 **ARCHITECTURE 省略理由 / Architecture Omission Reason**: 不省略。本需求改变 Windows native install 的 launcher / PATH / update 调用链，属于配置契约和安装数据流变化。
 
 ## 1. Gates
@@ -40,6 +40,9 @@
 | R-7 | lark-cli release artifact | latest GitHub Release `v1.0.53` 包含 `lark-cli-1.0.53-windows-amd64.zip`、`windows-arm64.zip` 和 `checksums.txt` | GitHub API `https://api.github.com/repos/larksuite/cli/releases/latest` | lark-cli 的严格无 wrapper 体验来自 `.exe` 二进制；docdev 若要同级体验需后续二进制打包 |
 | R-8 | lark-cli download/update model | `npx @larksuite/cli@latest install` 是 README 推荐安装；postinstall 下载 GitHub Release 二进制并 checksum；`lark-cli update` 自动识别 npm install 或提示 GitHub Release URL | `https://github.com/larksuite/cli`、本机 `lark-cli update --help` | docdev 可保留 GitHub-first，同时借鉴 checksum、platform asset、update 语义 |
 | R-9 | Windows PATH 机制 | 环境变量不会让不存在的命令可用；需要 PATH 目录中有 `docdev.exe`、`docdev.cmd` 等可执行入口。持久 User PATH 修改通常只影响新终端；当前 PowerShell session 需同步 `$env:Path` | Windows command model / PowerShell env behavior | 本次应写 `docdev.cmd`，并默认添加 User PATH + current session PATH |
+| R-10 | Windows v0.1.7 live install smoke | `irm ...install_remote.ps1 \| iex` 成功下载 manifest / artifact、写入 `docdev.ps1` 和 `docdev.cmd`，完整 launcher 可输出 `docdev 0.1.7`，`doctor/status/audit` 可运行；新终端已确认可直接使用 `docdev` | Windows PowerShell on `E:\Project\docs-driven-dev` | 裸命令目标达成，但安装器末尾自动 `sync-skill` 因 PowerShell 逗号参数拆分失败 |
+| R-11 | Windows default sync invocation | 发布版安装器调用 `& $Launcher sync-skill --targets codex,cursor,agents,claude --force`，PowerShell 将逗号表达式拆成多个 native args，CLI 报 `unrecognized arguments: cursor agents claude` | `scripts/install_remote.ps1` live output | 需要把 targets 参数引用为单个字符串：`--targets "codex,cursor,agents,claude"` |
+| R-12 | Windows User PATH persistence | 安装器打印 `added to user PATH`，但 Codex 执行路径中的后续进程读取 User PATH 时未看到 `$HOME\.local\bin`；手动补写后新终端裸命令可用 | `[Environment]::GetEnvironmentVariable('Path','User')` before/after manual repair | 需要后续增强安装器的 PATH 写入后验证/诊断，确认是否为 Codex 子进程隔离或脚本写入缺陷 |
 
 ## 3. Step 状态总览
 
@@ -50,7 +53,7 @@
 | 2 | 调研既有实现 | 完成 |
 | 3 | 形成并确认方案 | 完成 |
 | 4 | 实施代码与测试 | 完成 |
-| 5 | 验证与收尾 | 完成，Windows live smoke 待真机验证 |
+| 5 | 验证与收尾 | 完成，Windows live smoke 已补充；发现 follow-up 修复 |
 
 ---
 
@@ -142,6 +145,9 @@
 - [x] 更新本机 native install 和已同步 skill target 到 `0.1.7`。
 - [x] 记录 Windows 真机 latest install/update smoke 为后续验证项。
 - [x] 把 verification 写回本文件。
+- [x] 2026-06-15 Windows PowerShell live smoke：远程安装 `0.1.7`、完整 launcher、`doctor`、`status`、`audit` 和新终端裸命令验证通过。
+- [x] 记录安装器自动 sync 参数引用缺陷，并在源码中修复为 quoted targets。
+- [x] 记录 User PATH 持久写入在 Codex 执行路径中需要手动补强的现象，作为后续硬化项。
 
 **Acceptance**:
 1. Windows 新终端里 `docdev -v` 可用。
@@ -158,13 +164,17 @@
 | SPEC-4 | `python3 -m unittest discover -s tests` | 通过 | 37 tests OK |
 | SPEC-5 | `./scripts/package_release.sh --out /private/tmp/docdev-windows-command-package-smoke` | 通过 | 生成 artifact、checksum、manifest、install_remote.sh、install_remote.ps1 |
 | SPEC-6 | `docdev audit /Users/chihoyo/Project/docs-driven-dev` | 通过 | No findings |
-| SPEC-7 | Windows 真机 `docdev -v` | 待真机验证 | 当前环境不是 Windows；按发布请求先以静态 / unit / package / public install smoke 发布，后续用 Windows 真机或 CI 验证 |
+| SPEC-7 | Windows 真机 `docdev -v` | 通过 | `irm https://github.com/hongzhiyin/docs-driven-dev/releases/latest/download/install_remote.ps1 \| iex` 安装 `0.1.7` 后，新终端已确认可直接使用 `docdev` |
 | SPEC-8 | `pyproject.toml` / `src/docs_driven_dev/__init__.py` | 通过 | release metadata bumped to `0.1.7` |
 | SPEC-9 | `./scripts/package_release.sh --out /private/tmp/docdev-release-assets-0.1.7` | 通过 | 生成 `docdev-0.1.7.tar.gz`、checksum、manifest、Unix / Windows installers |
 | SPEC-10 | `./scripts/install_remote.sh --release-base-url file:///private/tmp/docdev-release-assets-0.1.7 --install-root /private/tmp/docdev-017-local-smoke.Rdg7Pd/root --bin-dir /private/tmp/docdev-017-local-smoke.Rdg7Pd/bin --no-sync-skill` + `docdev --version/init/audit/uninstall` | 通过 | launcher 输出 `docdev 0.1.7`，隔离目标项目 audit 为 No findings，临时 install root / launcher 已卸载 |
 | SPEC-11 | `git tag v0.1.7` / `git push origin main` / `git push origin v0.1.7` / `gh release create v0.1.7 ... --latest` | 通过 | Release URL: `https://github.com/hongzhiyin/docs-driven-dev/releases/tag/v0.1.7` |
 | SPEC-12 | `./scripts/install_remote.sh --install-root /private/tmp/docdev-017-public-smoke.L2JXGb/root --bin-dir /private/tmp/docdev-017-public-smoke.L2JXGb/bin --no-sync-skill` + `docdev --version/init/audit/uninstall` | 通过 | GitHub latest assets 下载和 checksum 通过；launcher 输出 `docdev 0.1.7`；隔离目标 audit 为 No findings；临时安装已卸载 |
 | SPEC-13 | `/Users/chihoyo/.local/bin/docdev update` + `/Users/chihoyo/.local/bin/docdev --version` + `/Users/chihoyo/.local/bin/docdev doctor` | 通过 | 本机 native install 更新到 `/Users/chihoyo/.local/share/docdev/releases/0.1.7`；版本输出 `docdev 0.1.7`；Codex/Cursor/Agents/Claude skill targets 已同步 |
+| SPEC-14 | `& "$HOME\.local\bin\docdev.ps1" -v` / `doctor` / `status E:\Project\docs-driven-dev` / `audit E:\Project\docs-driven-dev` | 通过 | 完整 launcher 输出 `docdev 0.1.7`；`doctor` 可定位 release root；`status` 输出 Step 6i；`audit` 为 `No findings` |
+| SPEC-15 | 安装器默认 skill sync | 失败后已修复源码 | 发布版 `0.1.7` 末尾调用未引用 targets，报 `unrecognized arguments: cursor agents claude`；源码已改为 `--targets "codex,cursor,agents,claude"`，待下一版发布 |
+| SPEC-16 | User PATH 持久写入 | 部分通过 | 安装器打印已添加 PATH；本次 Codex 后续进程未读到该项，手动补写后新终端裸命令可用；后续应加写后验证和诊断输出 |
+| SPEC-17 | `python -m unittest discover -s tests` + `docdev audit E:\Project\docs-driven-dev` | 通过 | Windows 下 37 tests OK，5 个 Unix-only 场景 skipped；project audit 为 `No findings` |
 
 ## 5. 风险与后续
 
@@ -173,4 +183,5 @@
 | F-1 | `docdev.cmd` 仍是 installer-owned shim，不是严格二进制 | 若用户坚持零 shim，则本轮不满足 | 需要用户确认；严格二进制作为后续 |
 | F-2 | PATH 持久修改只影响新终端 | 用户可能在旧终端立刻运行失败 | installer 同步当前 `$env:Path`，并打印重开终端提示 |
 | F-3 | 受管 Windows 环境可能禁止 PATH 修改 | 安装成功但裸命令不可用 | 提供 opt-out 和明确诊断输出 |
-| F-4 | 当前机器不是 Windows | 无法直接 live test 所有 PowerShell 行为 | 已做静态 / unit / package；发布后需要用户或 CI Windows runner 验证 |
+| F-4 | Windows live smoke 发现发布版自动 sync 参数引用缺陷 | 安装本体可用，但 skill sync 可能需要用户手动补跑 | 源码已修复 quoted targets；需要发布下一版或让用户临时运行 `docdev sync-skill --targets all --force` |
+| F-5 | User PATH 写入后未被 Codex 后续进程读到 | 裸命令可能需要重开终端或手动修复；诊断不够明确 | 后续在安装器中增加写后读取验证、失败时打印完整修复命令；区分父进程 PATH 刷新限制和持久 PATH 写入失败 |

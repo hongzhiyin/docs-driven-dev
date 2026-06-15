@@ -91,14 +91,23 @@ function Enable-DocdevCommandOnPath {
     $UserPath = [Environment]::GetEnvironmentVariable("Path", "User")
     if (-not (Test-DocdevPathContains -PathValue $UserPath -Entry $ResolvedDir)) {
         [Environment]::SetEnvironmentVariable("Path", (Add-DocdevPathEntry -PathValue $UserPath -Entry $ResolvedDir), "User")
-        Write-DocdevInstallLog "added to user PATH: $ResolvedDir"
+        $UpdatedUserPath = [Environment]::GetEnvironmentVariable("Path", "User")
+        if (Test-DocdevPathContains -PathValue $UpdatedUserPath -Entry $ResolvedDir) {
+            Write-DocdevInstallLog "added to user PATH: $ResolvedDir"
+        } else {
+            Write-DocdevInstallLog "warning: attempted to add to user PATH but could not verify persistence: $ResolvedDir"
+        }
     } else {
         Write-DocdevInstallLog "user PATH already contains: $ResolvedDir"
     }
 
     if (-not (Test-DocdevPathContains -PathValue $env:Path -Entry $ResolvedDir)) {
         $env:Path = Add-DocdevPathEntry -PathValue $env:Path -Entry $ResolvedDir
-        Write-DocdevInstallLog "added to current process PATH: $ResolvedDir"
+        if (Test-DocdevPathContains -PathValue $env:Path -Entry $ResolvedDir) {
+            Write-DocdevInstallLog "added to current process PATH: $ResolvedDir"
+        } else {
+            Write-DocdevInstallLog "warning: attempted to add to current process PATH but could not verify it: $ResolvedDir"
+        }
     }
 }
 
@@ -172,7 +181,7 @@ python -m docs_driven_dev.cli %*
     }
     & $Launcher doctor
     if (-not $NoSyncSkill) {
-        & $Launcher sync-skill --targets codex,cursor,agents,claude --force
+        & $Launcher sync-skill --targets "codex,cursor,agents,claude" --force
     }
 } finally {
     if (Test-Path $TempDir) {
