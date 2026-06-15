@@ -1226,3 +1226,104 @@ installing again.
 - `docs/changes/2026-06-13-native-uninstall-command/`
 - `src/docs_driven_dev/commands.py`
 - `src/docs_driven_dev/release.py`
+
+---
+
+## D-029 - Step 6i - Use installer-owned Windows command entrypoint, not npm-first
+
+**Date**: 2026-06-15
+
+**Context**:
+Windows release install currently writes `docdev.ps1` but does not make
+`docdev -v` available as a normal command. The user wants a GitHub latest
+install/update flow similar in spirit to `lark-cli`, but without making npm a
+dependency. On Windows, a bare command requires a PATH-visible executable entry
+such as `docdev.exe` or `docdev.cmd`; an environment variable alone is not
+enough.
+
+**Options**:
+- A. Publish npm-first and rely on npm-generated command shims - strong Windows
+  command ergonomics, but requires Node/npm and changes the distribution model.
+- B. Generate `docdev.cmd` and `docdev.ps1` from the PowerShell remote
+  installer, and add the native bin dir to User PATH by default - keeps the
+  GitHub Releases model and makes `docdev -v` work for users.
+- C. Build a Windows `docdev.exe` release artifact now - closest to lark-cli's
+  binary model, but requires a Windows binary build/release/signing workflow.
+
+**Chosen**: B
+
+**Rationale**:
+- The user explicitly prefers GitHub download/install/update over npm.
+- The current release system already has manifest, checksum, current-pointer
+  activation, `docdev update`, and uninstall ownership checks.
+- A generated `docdev.cmd` is an installer-owned command entrypoint, not a
+  user-maintained alias or profile function.
+- Keeping `docdev.exe` as a later enhancement avoids expanding this fix into a
+  full binary packaging/signing project.
+
+**Risks**:
+- `docdev.cmd` still depends on `python` being available on Windows. Mitigation:
+  keep the current Python release contract and track `py`/self-contained exe as
+  future real-machine feedback.
+- User PATH updates may not affect an already-open parent terminal. Mitigation:
+  update current `$env:Path` when possible and document reopening the terminal.
+- Some managed Windows environments may block PATH mutation. Mitigation: provide
+  `-NoModifyPath` and keep direct launcher paths.
+
+**Related code / docs**:
+- SPEC §2 AB, §3.3, §3.4, §4, §7 #13
+- ARCHITECTURE §3.8, §3.9, §5, §6
+- ROADMAP Step 6i
+- `docs/changes/2026-06-15-windows-bare-command-install/`
+- `scripts/install_remote.ps1`
+- `src/docs_driven_dev/release.py`
+- `tests/test_cli.py`
+
+---
+
+## D-030 - Step 6i - Publish Windows command installer after non-Windows verification
+
+**Date**: 2026-06-15
+
+**Context**:
+The Windows bare command contract changes PowerShell installer behavior, but
+the current release workstation is macOS. Unit tests and package inspection can
+verify the generated installer text, update dispatch, manifest packaging, and
+Unix public install path, but they cannot prove a fresh Windows terminal picks
+up User PATH and `docdev.cmd` exactly as intended. The user asked to proceed
+with publishing after accepting the GitHub-first, no-npm plan.
+
+**Options**:
+- A. Block `v0.1.7` until a Windows machine or CI runner completes live
+  install/update smoke - strongest verification, but delays the accepted fix.
+- B. Publish `v0.1.7` after unit, audit, package, local simulated install, and
+  public latest smoke, while recording Windows live smoke as a post-release
+  real-machine verification item.
+- C. Remove the Windows PATH change before release - avoids unverified Windows
+  behavior, but fails the requested `docdev -v` command experience.
+
+**Chosen**: B
+
+**Rationale**:
+- The published artifact still includes checksum verification, manifest-based
+  install, and the existing release rollback shape.
+- Static tests cover the Windows-specific script contract, including
+  `docdev.cmd`, User PATH mutation, `-NoModifyPath`, and platform update
+  dispatch.
+- Recording the live Windows smoke gap keeps the release honest without
+  pretending macOS can validate Windows terminal behavior.
+
+**Risks**:
+- A Windows-only syntax or PATH edge case may appear after release. Mitigation:
+  keep the live smoke item open and treat real-machine feedback as the next
+  patch trigger.
+- Public latest smoke is Unix-like only from this workstation. Mitigation:
+  separate public install verification from Windows shell verification in the
+  change packet.
+
+**Related code / docs**:
+- ROADMAP Step 6i
+- `docs/changes/2026-06-15-windows-bare-command-install/`
+- `scripts/install_remote.ps1`
+- `src/docs_driven_dev/release.py`
+- `tests/test_cli.py`

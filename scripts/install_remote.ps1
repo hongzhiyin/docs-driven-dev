@@ -4,7 +4,8 @@ param(
     [string]$InstallRoot = $(if ($env:DOCDEV_INSTALL_ROOT) { $env:DOCDEV_INSTALL_ROOT } else { Join-Path $HOME ".local\share\docdev" }),
     [string]$BinDir = $(if ($env:DOCDEV_BIN_DIR) { $env:DOCDEV_BIN_DIR } else { Join-Path $HOME ".local\bin" }),
     [switch]$SyncSkill,
-    [switch]$NoSyncSkill
+    [switch]$NoSyncSkill,
+    [switch]$NoModifyPath
 )
 
 $ErrorActionPreference = "Stop"
@@ -40,6 +41,64 @@ function Receive-DocdevAsset {
         Invoke-WebRequest -Uri $Url -OutFile $Destination -Headers $Headers
     } else {
         Copy-Item -LiteralPath $Url -Destination $Destination -Force
+    }
+}
+
+function Normalize-DocdevPathEntry {
+    param([string]$Value)
+    if ([string]::IsNullOrWhiteSpace($Value)) {
+        return ""
+    }
+    $Expanded = [Environment]::ExpandEnvironmentVariables($Value.Trim().Trim('"'))
+    if ([string]::IsNullOrWhiteSpace($Expanded)) {
+        return ""
+    }
+    try {
+        return ([System.IO.Path]::GetFullPath($Expanded)).TrimEnd([char[]]("\\/"))
+    } catch {
+        return $Expanded.TrimEnd([char[]]("\\/"))
+    }
+}
+
+function Test-DocdevPathContains {
+    param([string]$PathValue, [string]$Entry)
+    if ([string]::IsNullOrWhiteSpace($PathValue)) {
+        return $false
+    }
+    $Needle = Normalize-DocdevPathEntry $Entry
+    if (-not $Needle) {
+        return $false
+    }
+    foreach ($Item in ($PathValue -split [System.IO.Path]::PathSeparator)) {
+        if ((Normalize-DocdevPathEntry $Item).Equals($Needle, [System.StringComparison]::OrdinalIgnoreCase)) {
+            return $true
+        }
+    }
+    return $false
+}
+
+function Add-DocdevPathEntry {
+    param([string]$PathValue, [string]$Entry)
+    if ([string]::IsNullOrWhiteSpace($PathValue)) {
+        return $Entry
+    }
+    return $PathValue.TrimEnd([System.IO.Path]::PathSeparator) + [System.IO.Path]::PathSeparator + $Entry
+}
+
+function Enable-DocdevCommandOnPath {
+    param([string]$Directory)
+    $ResolvedDir = [System.IO.Path]::GetFullPath($Directory)
+    $UserPath = [Environment]::GetEnvironmentVariable("Path", "User")
+    if (-not (Test-DocdevPathContains -PathValue $UserPath -Entry $ResolvedDir)) {
+        [Environment]::SetEnvironmentVariable("Path", (Add-DocdevPathEntry -PathValue $UserPath -Entry $ResolvedDir), "User")
+        Write-DocdevInstallLog "added to user PATH: $ResolvedDir"
+    } else {
+        Write-DocdevInstallLog "user PATH already contains: $ResolvedDir"
+    }
+
+    if (-not (Test-DocdevPathContains -PathValue $env:Path -Entry $ResolvedDir)) {
+        $env:Path = Add-DocdevPathEntry -PathValue $env:Path -Entry $ResolvedDir
+        Write-DocdevInstallLog "added to current process PATH: $ResolvedDir"
     }
 }
 
@@ -85,15 +144,32 @@ try {
     New-Item -ItemType Junction -Path $Current -Target $TargetDir | Out-Null
 
     $Launcher = Join-Path $BinDir "docdev.ps1"
+    $CmdLauncher = Join-Path $BinDir "docdev.cmd"
+    $EscapedCurrent = $Current.Replace("'", "''")
+    $EscapedSrc = (Join-Path $Current "src").Replace("'", "''")
     @"
-`$env:DOCDEV_PROJECT_DIR = '$Current'
-`$env:PYTHONPATH = '$Current\src'
+`$env:DOCDEV_PROJECT_DIR = '$EscapedCurrent'
+`$env:PYTHONPATH = '$EscapedSrc'
 python -m docs_driven_dev.cli @args
 exit `$LASTEXITCODE
 "@ | Set-Content -Encoding UTF8 -Path $Launcher
+    $CmdCurrent = $Current.Replace("%", "%%")
+    $CmdSrc = (Join-Path $Current "src").Replace("%", "%%")
+    @"
+@echo off
+set "DOCDEV_PROJECT_DIR=$CmdCurrent"
+set "PYTHONPATH=$CmdSrc"
+python -m docs_driven_dev.cli %*
+"@ | Set-Content -Encoding ASCII -Path $CmdLauncher
 
     Write-DocdevInstallLog "installed version $($Manifest.version) at $TargetDir"
     Write-DocdevInstallLog "launcher: $Launcher"
+    Write-DocdevInstallLog "command: $CmdLauncher"
+    if (-not $NoModifyPath) {
+        Enable-DocdevCommandOnPath -Directory $BinDir
+    } else {
+        Write-DocdevInstallLog "skipped PATH update because -NoModifyPath was set"
+    }
     & $Launcher doctor
     if (-not $NoSyncSkill) {
         & $Launcher sync-skill --targets codex,cursor,agents,claude --force

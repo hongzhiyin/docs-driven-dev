@@ -71,6 +71,52 @@ class CliTests(unittest.TestCase):
         self.assertNotIn("--no-sync-skill", command)
         self.assertEqual(env["DOCDEV_INSTALL_LOG_PREFIX"], "[docdev update]")
 
+    def test_update_dispatches_to_windows_native_installer(self) -> None:
+        completed = subprocess.CompletedProcess(args=["install_remote"], returncode=0)
+        with mock.patch("docs_driven_dev.release.os.name", "nt"):
+            with mock.patch("docs_driven_dev.release.find_source_root", return_value=ROOT):
+                with mock.patch("docs_driven_dev.release.subprocess.run", return_value=completed) as run:
+                    code = cli.main(
+                        [
+                            "update",
+                            "--version",
+                            "0.1.0",
+                            "--release-base-url",
+                            "file:///tmp/assets",
+                            "--install-root",
+                            "C:\\docdev",
+                            "--bin-dir",
+                            "C:\\docdev\\bin",
+                            "--no-sync-skill",
+                        ]
+                    )
+
+        self.assertEqual(code, 0)
+        command = run.call_args.args[0]
+        env = run.call_args.kwargs["env"]
+        self.assertEqual(
+            command[:6],
+            [
+                "powershell.exe",
+                "-NoProfile",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                str(ROOT / "scripts" / "install_remote.ps1"),
+            ],
+        )
+        self.assertIn("-Version", command)
+        self.assertIn("0.1.0", command)
+        self.assertIn("-ReleaseBaseUrl", command)
+        self.assertIn("file:///tmp/assets", command)
+        self.assertIn("-InstallRoot", command)
+        self.assertIn("C:\\docdev", command)
+        self.assertIn("-BinDir", command)
+        self.assertIn("C:\\docdev\\bin", command)
+        self.assertIn("-NoSyncSkill", command)
+        self.assertNotIn("-SyncSkill", command)
+        self.assertEqual(env["DOCDEV_INSTALL_LOG_PREFIX"], "[docdev update]")
+
     def test_update_can_skip_skill_sync(self) -> None:
         completed = subprocess.CompletedProcess(args=["install_remote"], returncode=0)
         with mock.patch("docs_driven_dev.release.find_source_root", return_value=ROOT):
@@ -487,6 +533,12 @@ class CliTests(unittest.TestCase):
         self.assertIn("Get-FileHash -Algorithm SHA256", install_ps)
         self.assertIn("New-Item -ItemType Junction", install_ps)
         self.assertIn("[switch]$NoSyncSkill", install_ps)
+        self.assertIn("[switch]$NoModifyPath", install_ps)
+        self.assertIn('Join-Path $BinDir "docdev.cmd"', install_ps)
+        self.assertIn("Set-Content -Encoding ASCII -Path $CmdLauncher", install_ps)
+        self.assertIn('[Environment]::SetEnvironmentVariable("Path"', install_ps)
+        self.assertIn("Enable-DocdevCommandOnPath -Directory $BinDir", install_ps)
+        self.assertIn("skipped PATH update because -NoModifyPath was set", install_ps)
 
     def test_package_release_script_emits_manifest_and_excludes_local_artifacts(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -666,7 +718,12 @@ class CliTests(unittest.TestCase):
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
         skill = (ROOT / "skill" / "SKILL.md").read_text(encoding="utf-8")
 
+        self.assertIn("源码 checkout", readme)
         self.assertIn("不会把 `docdev` 加入全局 shell `PATH`", readme)
+        self.assertIn("Windows installer 写入", readme)
+        self.assertIn("docdev.cmd", readme)
+        self.assertIn("默认把 `$HOME\\.local\\bin` 加入当前用户 PATH", readme)
+        self.assertIn("-NoModifyPath", readme)
         self.assertIn("直接在终端运行 CLI", readme)
         self.assertIn("整个", readme)
         self.assertIn("目录替换", readme)
@@ -679,10 +736,13 @@ class CliTests(unittest.TestCase):
         self.assertIn("docdev uninstall --yes --keep-skills", readme)
         self.assertIn("docdev uninstall --dry-run", skill)
         self.assertIn("docdev uninstall --yes --keep-skills", skill)
+        self.assertIn("Windows installer 默认写入用户", skill)
+        self.assertIn("docdev.cmd", skill)
+        self.assertIn("-NoModifyPath", skill)
         self.assertIn("先运行 native", readme)
         self.assertIn("Do not guess", skill)
         self.assertIn("local paths or wrappers", skill)
-        self.assertIn("安装器不会修改用户的全局 shell `PATH`", skill)
+        self.assertIn("Unix installer 不会修改用户的全局 shell `PATH`", skill)
         self.assertIn("替换整个 skill 目录", skill)
         self.assertIn("file overlays can leave stale untracked files", skill)
 

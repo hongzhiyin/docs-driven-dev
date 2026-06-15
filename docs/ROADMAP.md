@@ -5,7 +5,7 @@
 ## Current Progress
 
 **Phase**: Phase 1 - portable skill + CLI bootstrap
-**Current Step**: Step 6h complete; v0.1.6 native release published
+**Current Step**: Step 6i release prep; Windows native installer command PATH contract
 
 ### Step Status
 
@@ -39,6 +39,7 @@
 | 6f | Publish v0.1.5 native release | Done |
 | 6g | Add native uninstall command | Done |
 | 6h | Publish v0.1.6 native release | Done |
+| 6i | Add Windows bare command native install contract | Release Prep |
 
 ---
 
@@ -651,6 +652,41 @@ fresh machines can install, update, and uninstall through the release path.
 2. Local and public smoke launchers report `docdev 0.1.6`.
 3. Release launcher supports `docdev uninstall --dry-run` and `docdev uninstall --yes`.
 4. Unit tests, project audit, and diff check pass.
+
+---
+
+## Step 6i - Windows bare command native install
+
+**Goal**: Make Windows native release install/update behave like a normal CLI
+install: after GitHub Release install, users can run `docdev -v` from a normal
+PowerShell or CMD terminal without manually creating aliases.
+
+**Tasks**:
+- [x] Create `docs/changes/2026-06-15-windows-bare-command-install/` with architecture.
+- [x] Record D-029 for installer-owned `docdev.cmd` plus User PATH instead of npm-first.
+- [x] Update `scripts/install_remote.ps1` to generate `docdev.cmd`, preserve
+  `docdev.ps1`, add User PATH by default, and support `-NoModifyPath`.
+- [x] Update `docdev update` to dispatch to the PowerShell remote installer on Windows.
+- [x] Update README, SPEC, ARCHITECTURE, ROADMAP, SKILL, and tests.
+- [x] Run unit tests, package smoke, project audit, and record Windows live
+  verification status in the change packet.
+- [x] Bump release metadata to `0.1.7`.
+- [x] Run local simulated install/init/audit/uninstall smoke from packaged
+  `0.1.7` assets.
+- [ ] Tag and publish GitHub Release `v0.1.7`.
+- [ ] Run public latest install smoke for `v0.1.7`.
+- [ ] Update the local native install and synced skill targets to `v0.1.7`.
+
+**Acceptance**:
+1. Windows remote install writes `docdev.cmd` and `docdev.ps1` under the native bin dir.
+2. Windows installer adds the native bin dir to User PATH by default, with a
+   no-PATH opt-out.
+3. `docdev update` uses `install_remote.ps1` on Windows and `install_remote.sh`
+   on Unix-like hosts.
+4. README/SKILL show GitHub latest install and `docdev -v` verification for Windows.
+5. Unit tests, package smoke, local simulated install smoke, and project audit pass; any missing Windows live
+   smoke is recorded as a post-release real-machine verification item when no
+   Windows environment is available.
 
 ---
 

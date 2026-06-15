@@ -39,6 +39,7 @@ Claude, and shared agent skill homes.
 | Y | Private repository installs | Public GitHub Releases are the default; private releases require explicit `gh auth` or token handling | See D-021 |
 | Z | CLI internal boundary | `docs_driven_dev.cli` remains the public entrypoint; deterministic logic is split into lightweight internal modules by responsibility | See D-026 |
 | AA | Native uninstall | `docdev uninstall` removes docdev-owned native install files and marked skill targets only after explicit confirmation; `--dry-run` previews | See D-028 |
+| AB | Windows native command | Windows release install writes `docdev.cmd` plus `docdev.ps1`, adds the bin dir to User PATH by default, and keeps `-NoModifyPath` as an opt-out | See D-029 |
 
 ## 3. Derived Rules
 
@@ -117,10 +118,14 @@ current working directory is itself the target project.
 
 Agents resolve the CLI without relying on local source paths or compatibility
 wrappers. The normal order is: `docdev` on `PATH`, then the native Unix
-launcher `~/.local/bin/docdev` when present. If neither exists, agents should
-ask the user to run the native installer or repair the install. They should not
-guess local paths or wrappers. `DOCDEV_PROJECT_DIR` + `PYTHONPATH` is reserved
-for explicit source checkout development, not cross-machine agent use.
+launcher `~/.local/bin/docdev` when present. On Windows, release install writes
+`docdev.cmd` under the native bin dir and adds that directory to User PATH by
+default, so `docdev` should be available in a new terminal; if the current
+session has stale PATH, the direct fallback is `$HOME\.local\bin\docdev.ps1`.
+If none of these entries exists, agents should ask the user to run the native
+installer or repair the install. They should not guess local paths or wrappers.
+`DOCDEV_PROJECT_DIR` + `PYTHONPATH` is reserved for explicit source checkout
+development, not cross-machine agent use.
 
 | Command | Purpose | Side effects |
 |---|---|---|
@@ -151,17 +156,30 @@ Default Unix layout:
 ~/.local/bin/docdev
 ```
 
+Default Windows layout:
+
+```text
+%USERPROFILE%\.local\share\docdev\releases\<version>\
+%USERPROFILE%\.local\share\docdev\current
+%USERPROFILE%\.local\bin\docdev.ps1
+%USERPROFILE%\.local\bin\docdev.cmd
+```
+
 The launcher sets `DOCDEV_PROJECT_DIR` and `PYTHONPATH` to the `current`
 release so users do not need a source checkout or manual environment setup.
-The installer may warn when `~/.local/bin` is not on `PATH`, but it must not
-mutate shell startup files automatically.
+The Unix installer may warn when `~/.local/bin` is not on `PATH`, but it must
+not mutate shell startup files automatically. The Windows installer should add
+the native bin dir to User PATH by default, update the current PowerShell
+process PATH when possible, and provide `-NoModifyPath` for managed
+environments.
 
 `docdev update` is the preferred native update entrypoint. It resolves the
-latest or requested version, downloads and verifies the release, switches
-`current`, runs doctor, and refreshes skill target directories by default so
-agents read the same workflow version as the active CLI release. Use
-`--no-sync-skill` only when the caller explicitly wants to update the release
-without writing agent homes.
+latest or requested version, dispatches to the platform installer
+(`install_remote.sh` on Unix-like hosts and `install_remote.ps1` on Windows),
+downloads and verifies the release, switches `current`, runs doctor, and
+refreshes skill target directories by default so agents read the same workflow
+version as the active CLI release. Use `--no-sync-skill` only when the caller
+explicitly wants to update the release without writing agent homes.
 
 `docdev uninstall --yes` removes the native install root, the generated
 launcher, and owned skill targets so a machine can repeat install smoke tests
@@ -318,6 +336,7 @@ use the native launcher instead.
 | Audit report requested | Write `audit.json` under `<docs_dir>/_generated/docdev/` |
 | Audit quality issue found | Report a warning unless required source structure is missing or invalid |
 | Missing `docdev` on `PATH` after native install | Use `~/.local/bin/docdev` directly on Unix-like systems |
+| Windows terminal cannot find `docdev` immediately after install | Reopen the terminal, or use `$HOME\.local\bin\docdev.ps1` as a temporary direct path |
 | Skill invoked in another project with no `docdev` on `PATH` | Use `~/.local/bin/docdev` when present; otherwise ask the user to run the native installer |
 | Explicit source checkout development | Source maintainers may use `.venv` wrappers or `DOCDEV_PROJECT_DIR` + `PYTHONPATH` locally |
 | Human terminal cannot find `docdev` after source checkout install | Use the source `.venv` wrapper or add a PATH entry manually |
@@ -393,3 +412,4 @@ Constraints:
 10. **#10**: `docs_driven_dev.cli` remains the stable executable entrypoint even when internal CLI implementation is split across lightweight modules.
 11. **#11**: Native install/update refreshes skill targets by default after checksum verification and activation, with an explicit no-sync opt-out.
 12. **#12**: Native uninstall must require explicit destructive confirmation and only delete docdev-owned install paths or owned skill targets.
+13. **#13**: Windows native release install must make `docdev -v` available through an installer-owned command entrypoint and User PATH by default, with an explicit no-PATH opt-out.

@@ -67,7 +67,10 @@ docs/changes/YYYY-MM-DD-slug/
 1. 如果 `docdev` 在 `PATH` 上，运行 `docdev <command>`。
 2. 在 macOS、Linux 或 WSL 上，如果 native release launcher 存在但 `docdev` 不在
    `PATH` 上，运行 `~/.local/bin/docdev <command>`。
-3. 如果两者都不存在，说明 `docdev` 安装不可用；要求用户先运行 native installer 或修复
+3. 在 Windows 上，native installer 会写入 `docdev.cmd` 并默认加入用户 PATH。优先运行
+   `docdev <command>`；如果当前终端还没有刷新 PATH，可重新打开终端，或临时运行
+   `$HOME\.local\bin\docdev.ps1 <command>`。
+4. 如果以上入口都不存在，说明 `docdev` 安装不可用；要求用户先运行 native installer 或修复
    安装。Do not guess local paths or wrappers for cross-machine use.
 
 始终显式选择目标项目。只有当用户的当前工作目录显然就是目标项目时，才把当前目录当目标；
@@ -88,8 +91,10 @@ native release install 后，agent 应优先使用 `docdev` 或 Unix-like 系统
 `~/.local/bin/docdev`。这个 launcher 指向 `~/.local/share/docdev/current`，因此 agent
 执行确定性 CLI 操作时不需要访问本项目源码目录。
 
-安装器不会修改用户的全局 shell `PATH`。如果 `docdev` 不在 `PATH` 上，但
-`~/.local/bin/docdev` 存在，agent 直接使用完整路径即可。
+Unix installer 不会修改用户的全局 shell `PATH`。如果 `docdev` 不在 `PATH` 上，但
+`~/.local/bin/docdev` 存在，agent 直接使用完整路径即可。Windows installer 默认写入用户
+PATH；如果当前 session 仍找不到 `docdev`，提示用户重新打开终端，或使用完整
+`$HOME\.local\bin\docdev.ps1` 路径。
 
 CLI 可以复制模板、追加下一个 `D-XXX` skeleton、audit 结构、sync skill、打包 release、
 安装和更新。CLI 不负责做产品设计、不放松 SPEC invariant，也不替用户决定取舍。
@@ -106,6 +111,13 @@ Unix shells：
 curl -fsSL https://github.com/hongzhiyin/docs-driven-dev/releases/latest/download/install_remote.sh | sh
 ```
 
+Windows PowerShell：
+
+```powershell
+irm https://github.com/hongzhiyin/docs-driven-dev/releases/latest/download/install_remote.ps1 | iex
+docdev -v
+```
+
 本地 smoke test 或镜像安装可以设置：
 
 ```bash
@@ -120,9 +132,20 @@ DOCDEV_RELEASE_BASE_URL="file:///path/to/release-assets" ./scripts/install_remot
 ~/.local/bin/docdev
 ```
 
-生成的 launcher 会把 `DOCDEV_PROJECT_DIR` 和 `PYTHONPATH` 指向当前 release。installer
-不会编辑 shell 启动文件；如果 `~/.local/bin` 不在 `PATH` 上，使用完整 launcher 路径，
-或由用户自己添加 PATH。
+Windows default native layout：
+
+```text
+%USERPROFILE%\.local\share\docdev\releases\<version>\
+%USERPROFILE%\.local\share\docdev\current
+%USERPROFILE%\.local\bin\docdev.ps1
+%USERPROFILE%\.local\bin\docdev.cmd
+```
+
+生成的 launcher 会把 `DOCDEV_PROJECT_DIR` 和 `PYTHONPATH` 指向当前 release。Unix
+installer 不会编辑 shell 启动文件；如果 `~/.local/bin` 不在 `PATH` 上，使用完整
+launcher 路径，或由用户自己添加 PATH。Windows installer 会写 `docdev.cmd`，默认把
+bin dir 加入当前用户 PATH，并尽量刷新当前 PowerShell session；如果不允许修改 PATH，
+下载安装脚本后用 `-NoModifyPath`。
 
 native release install 使用 `docdev update` 更新。更新默认会刷新 skill target
 directories，让 agent 读取到的 workflow 和当前 CLI release 保持一致。只有在明确不想写
@@ -136,7 +159,8 @@ docdev uninstall --yes
 ```
 
 如果 `docdev` 不在 `PATH` 上但 native launcher 存在，使用
-`~/.local/bin/docdev uninstall --yes`。卸载只删除 docdev native install root、生成的
+`~/.local/bin/docdev uninstall --yes`；Windows 上可用
+`$HOME\.local\bin\docdev.ps1 uninstall --yes`。卸载只删除 docdev native install root、生成的
 launcher，以及 symlink 或带 `.docdev-skill-source` marker 的 docs-driven-dev skill target。
 未标记 skill 目录会被跳过；只想移除 CLI release 时使用
 `docdev uninstall --yes --keep-skills`。

@@ -15,12 +15,33 @@ macOS、Linux 或 WSL 上，普通使用者优先安装最新 GitHub Release：
 curl -fsSL https://github.com/hongzhiyin/docs-driven-dev/releases/latest/download/install_remote.sh | sh
 ```
 
+Windows PowerShell：
+
+```powershell
+irm https://github.com/hongzhiyin/docs-driven-dev/releases/latest/download/install_remote.ps1 | iex
+docdev -v
+```
+
 安装器会下载 release manifest 和 artifact，校验 checksum，安装到
-`~/.local/share/docdev`，写入 `~/.local/bin/docdev` launcher，并运行
+`~/.local/share/docdev`，写入 native launcher，并运行
 `docdev doctor`。
 
-如果 `~/.local/bin` 不在 `PATH` 里，可以直接运行 `~/.local/bin/docdev`，或自行把
-该目录加入 `PATH`。安装器不会自动修改 shell 启动文件。
+Unix installer 写入 `~/.local/bin/docdev`，但不会自动修改 shell 启动文件。如果
+`~/.local/bin` 不在 `PATH` 里，可以直接运行 `~/.local/bin/docdev`，或自行把该目录加入
+`PATH`。
+
+Windows installer 写入 `$HOME\.local\bin\docdev.ps1` 和
+`$HOME\.local\bin\docdev.cmd`，默认把 `$HOME\.local\bin` 加入当前用户 PATH，并尽量刷新
+当前 PowerShell session 的 `$env:Path`。如果当前终端仍找不到 `docdev`，重新打开终端后再运行
+`docdev -v`。受管环境不希望修改 PATH 时，可以下载脚本后使用 `-NoModifyPath`：
+
+```powershell
+$installer = "$env:TEMP\install_docdev.ps1"
+Invoke-WebRequest `
+  -Uri "https://github.com/hongzhiyin/docs-driven-dev/releases/latest/download/install_remote.ps1" `
+  -OutFile $installer
+powershell -ExecutionPolicy Bypass -File $installer -NoModifyPath
+```
 
 更新 native release 安装：
 
@@ -48,6 +69,12 @@ docdev uninstall --yes
 ~/.local/bin/docdev uninstall --yes
 ```
 
+Windows 上可使用：
+
+```powershell
+& "$HOME\.local\bin\docdev.ps1" uninstall --yes
+```
+
 `uninstall` 只删除 docdev native install root、docdev launcher，以及带
 `.docdev-skill-source` marker 或 symlink 的 `docs-driven-dev` skill target。它不会删除
 `~/.local/bin`、`~/.local/share`、agent home 父目录、源码 checkout，或未标记的同名
@@ -57,8 +84,8 @@ skill 目录。只想移除 CLI release、不动 agent skill 时使用：
 docdev uninstall --yes --keep-skills
 ```
 
-Windows PowerShell 遵循同样的安装 / 更新合同，当前提供 `install_remote.ps1`
-框架和静态校验；真实 Windows live verification 仍是后续项。
+Windows PowerShell 遵循同样的安装 / 更新合同。当前仓库在 macOS 上对
+`install_remote.ps1` 做静态和单元合同校验；发布前仍建议做一次真实 Windows live smoke。
 
 ## Agent 如何使用
 
@@ -73,6 +100,10 @@ Windows PowerShell 遵循同样的安装 / 更新合同，当前提供 `install_
 `PATH`，但 native install 已写入 `~/.local/bin/docdev`，就直接使用这个 launcher。
 该 launcher 指向 `~/.local/share/docdev/current`，因此 agent 执行确定性 CLI 操作时
 不需要访问 `/Users/chihoyo/Project/docs-driven-dev` 这类源码 checkout。
+
+在 Windows 上，native installer 会写入 `docdev.cmd` 并默认加入用户 PATH，所以新终端中
+应优先使用 `docdev`。如果当前终端尚未刷新 PATH，可重新打开终端，或临时使用
+`$HOME\.local\bin\docdev.ps1` 完整路径。
 
 如果 `docdev` 和 `~/.local/bin/docdev` 都不可用，agent 应提示用户先运行 native
 installer，而不是去猜某个源码 checkout 路径或 skill 目录里的 wrapper。`sync-skill`
@@ -137,6 +168,15 @@ DOCDEV_RELEASE_BASE_URL="file:///path/to/release-assets" ./scripts/install_remot
 ~/.local/share/docdev/releases/<version>/
 ~/.local/share/docdev/current
 ~/.local/bin/docdev
+```
+
+Windows 默认 native install 布局：
+
+```text
+%USERPROFILE%\.local\share\docdev\releases\<version>\
+%USERPROFILE%\.local\share\docdev\current
+%USERPROFILE%\.local\bin\docdev.ps1
+%USERPROFILE%\.local\bin\docdev.cmd
 ```
 
 生成的 launcher 会把 `DOCDEV_PROJECT_DIR` 和 `PYTHONPATH` 指向当前 release。用户不需要

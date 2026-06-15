@@ -40,7 +40,7 @@ caller passes.
 | CLI release module | `src/docs_driven_dev/release.py` | Native update dispatch and native uninstall planning/execution | audit/template internals |
 | Skill source | `skill/SKILL.md` | Agent workflow and boundaries | local install paths |
 | Installed skill targets | `<skill-target>/` | Synced skill content plus `.docdev-skill-source` marker; no CLI wrappers | package index |
-| Native launcher | `~/.local/bin/docdev` | User-facing release launcher pointing at `~/.local/share/docdev/current` | source checkout |
+| Native launcher | `~/.local/bin/docdev` on Unix; `%USERPROFILE%\.local\bin\docdev.ps1` and `docdev.cmd` on Windows | User-facing release launcher pointing at the active native release | source checkout |
 | Release install root | `~/.local/share/docdev/releases/<version>` and `current` | Versioned release installs and active version pointer | unverified artifacts |
 | Templates | `skill/templates/` | Four source-doc skeletons copied by `docdev init` | target project state |
 | Change templates | `skill/templates/change/` | Requirement packet skeletons copied by `docdev new-change` | target project state |
@@ -210,15 +210,38 @@ scripts/install_remote.sh
   -> DOCDEV_PROJECT_DIR=~/.local/share/docdev/current
   -> PYTHONPATH=~/.local/share/docdev/current/src
   -> python3 -m docs_driven_dev.cli "$@"
+
+scripts/install_remote.ps1
+  -> resolve release base URL and version/latest channel
+  -> download manifest and artifact
+  -> verify artifact SHA256 against the manifest
+  -> unpack into $HOME\.local\share\docdev\releases\<version>
+  -> switch $HOME\.local\share\docdev\current junction
+  -> write $HOME\.local\bin\docdev.ps1 PowerShell launcher
+  -> write $HOME\.local\bin\docdev.cmd command launcher
+  -> add bin dir to User PATH unless -NoModifyPath
+  -> run docdev doctor through the generated PowerShell launcher
+
+$HOME\.local\bin\docdev.cmd
+  -> DOCDEV_PROJECT_DIR=$HOME\.local\share\docdev\current
+  -> PYTHONPATH=$HOME\.local\share\docdev\current\src
+  -> python -m docs_driven_dev.cli %*
 ```
 
-The installer does not edit shell profiles. If `~/.local/bin` is not on PATH,
-it prints a warning and the direct launcher path.
+The Unix installer does not edit shell profiles. If `~/.local/bin` is not on
+PATH, it prints a warning and the direct launcher path. The Windows installer
+adds its bin dir to User PATH by default, avoids duplicate PATH entries,
+refreshes current `$env:Path` when the script runs in the current PowerShell
+process, and supports `-NoModifyPath` for managed environments. A persistent
+User PATH update may still require opening a new terminal before `docdev` is
+visible to the parent shell.
 
 ### 3.9 Native Update
 
 ```text
 docdev update [--version <version>] [--release-base-url <url>] [--no-sync-skill]
+  -> dispatch to scripts/install_remote.sh on Unix-like hosts
+  -> dispatch to powershell.exe -File scripts/install_remote.ps1 on Windows
   -> use the same manifest/artifact/checksum/install logic as remote install
   -> switch current only after verification succeeds
   -> run doctor through the generated launcher
@@ -295,7 +318,7 @@ separate from project-level D-XXX numbering.
 | `DOCDEV_PROJECT_DIR` | auto-detected | Release/source root set by launchers and source checkout wrappers for template discovery | no |
 | `DOCDEV_TEMPLATE_DIR` | source skill templates | Explicit template directory | no |
 | `DOCDEV_INSTALL_ROOT` | `~/.local/share/docdev` | Native release install root; useful for tests and custom user layouts | no |
-| `DOCDEV_BIN_DIR` | `~/.local/bin` | Native launcher directory | no |
+| `DOCDEV_BIN_DIR` | `~/.local/bin` | Native launcher directory; Windows installer adds this directory to User PATH unless `-NoModifyPath` is used | no |
 | `DOCDEV_RELEASE_BASE_URL` | GitHub Release asset base | Manifest/artifact download source for remote install/update | no |
 | `GITHUB_TOKEN` | unset | Optional private GitHub Release access token; not persisted | no |
 | `DOCDEV_<TARGET>_SKILL_DIR` | unset | Exact installed skill directory for `CODEX`, `CURSOR`, `AGENTS`, or `CLAUDE` | no |
@@ -317,9 +340,11 @@ separate from project-level D-XXX numbering.
 - Native install: remote installer downloads a release manifest/artifact,
   verifies checksum, installs under `DOCDEV_INSTALL_ROOT` or
   `~/.local/share/docdev`, and writes a launcher under `DOCDEV_BIN_DIR` or
-  `~/.local/bin`.
+  `~/.local/bin`. Windows writes both `docdev.ps1` and `docdev.cmd`, and
+  defaults to adding the bin dir to User PATH.
 - Native update: `docdev update` updates release installs, runs doctor, and
-  syncs skill targets by default; `--no-sync-skill` skips that write.
+  syncs skill targets by default; `--no-sync-skill` skips that write. The
+  update command uses the platform-native remote installer.
 - Native uninstall: `docdev uninstall --dry-run` previews removal, and
   `docdev uninstall --yes` removes docdev-owned native install paths and marked
   skill targets.
@@ -348,8 +373,8 @@ separate from project-level D-XXX numbering.
   future adapters.
 - Template lookup assumes a native release root, source checkout, synced skill
   directory, or explicit `DOCDEV_TEMPLATE_DIR` is available.
-- Windows PowerShell scripts use `python`; if a Windows machine only exposes
-  Python as `py`, the wrapper may need a future fallback after real-machine
-  testing.
+- Windows PowerShell scripts and generated `docdev.cmd` use `python`; if a
+  Windows machine only exposes Python as `py`, the wrapper may need a future
+  fallback after real-machine testing.
 - Native installer checksum verification provides file integrity, not a full
   publisher signing trust chain. Signed manifests are a future enhancement.
