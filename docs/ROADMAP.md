@@ -5,7 +5,7 @@
 ## Current Progress
 
 **Phase**: Phase 1 - portable skill + CLI bootstrap
-**Current Step**: Step 6i Windows live smoke recorded; Step 6j follow-up installer patch pending release
+**Current Step**: Step 6j complete; v0.1.8 Windows installer follow-up published
 
 ### Step Status
 
@@ -40,7 +40,7 @@
 | 6g | Add native uninstall command | Done |
 | 6h | Publish v0.1.6 native release | Done |
 | 6i | Add Windows bare command native install contract | Done |
-| 6j | Patch Windows installer live-smoke follow-up findings | In Progress |
+| 6j | Patch Windows installer live-smoke follow-up findings | Done |
 
 ---
 
@@ -719,8 +719,8 @@ findings from the `v0.1.7` release path.
 - [x] Package `0.1.8` release assets.
 - [x] Run local Windows installer smoke from packaged `0.1.8` assets, including
   default sync with temporary skill homes.
-- [ ] Publish the `v0.1.8` patch release.
-- [ ] Re-run Windows remote install/update smoke from the published release.
+- [x] Publish the `v0.1.8` patch release.
+- [x] Re-run Windows remote install/update smoke from the published release.
 
 **Acceptance**:
 1. Remote Windows install no longer prints `unrecognized arguments: cursor agents claude`.
@@ -728,6 +728,14 @@ findings from the `v0.1.7` release path.
    current-process PATH refresh, and parent-terminal staleness.
 3. New PowerShell and CMD sessions can run `docdev -v` after install/update.
 4. Unit tests and `docdev audit` pass.
+
+Verification:
+- `git push origin main` and `git push origin v0.1.8` completed.
+- GitHub Release `v0.1.8` is published as non-draft, non-prerelease, with
+  `docdev-0.1.8.tar.gz`, checksum, manifest, and both remote installers.
+- Public latest Windows install smoke downloaded `docdev-0.1.8.tar.gz`, wrote
+  `docdev.ps1` / `docdev.cmd`, ran default skill sync with temporary homes, and
+  reported `docdev 0.1.8`.
 
 ---
 

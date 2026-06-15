@@ -6,5 +6,6 @@ __pycache__/
 .ruff_cache/
 .DS_Store
 dist/
+release-assets/
 docs/_generated/docdev/*
 !docs/_generated/docdev/.gitkeep
