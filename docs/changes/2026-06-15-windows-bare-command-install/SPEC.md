@@ -6,7 +6,7 @@
 
 | 字段 | 内容 |
 |---|---|
-| 状态 | 发布准备中，待 GitHub Release / public smoke；Windows live smoke 待真机验证 |
+| 状态 | 已发布 v0.1.7；Windows live smoke 待真机验证 |
 | 需求来源 | 用户请求：Windows 安装后希望能直接在终端运行 `docdev -v`，并参考 `lark-cli` 的 GitHub latest 安装 / 更新体验 |
 | 工作包目录 | `docs/changes/2026-06-15-windows-bare-command-install/` |
 | 最后更新 | 2026-06-15 |

@@ -5,7 +5,7 @@
 ## Current Progress
 
 **Phase**: Phase 1 - portable skill + CLI bootstrap
-**Current Step**: Step 6i release prep; Windows native installer command PATH contract
+**Current Step**: Step 6i complete; v0.1.7 Windows native release published
 
 ### Step Status
 
@@ -39,7 +39,7 @@
 | 6f | Publish v0.1.5 native release | Done |
 | 6g | Add native uninstall command | Done |
 | 6h | Publish v0.1.6 native release | Done |
-| 6i | Add Windows bare command native install contract | Release Prep |
+| 6i | Add Windows bare command native install contract | Done |
 
 ---
 
@@ -673,9 +673,9 @@ PowerShell or CMD terminal without manually creating aliases.
 - [x] Bump release metadata to `0.1.7`.
 - [x] Run local simulated install/init/audit/uninstall smoke from packaged
   `0.1.7` assets.
-- [ ] Tag and publish GitHub Release `v0.1.7`.
-- [ ] Run public latest install smoke for `v0.1.7`.
-- [ ] Update the local native install and synced skill targets to `v0.1.7`.
+- [x] Tag and publish GitHub Release `v0.1.7`.
+- [x] Run public latest install smoke for `v0.1.7`.
+- [x] Update the local native install and synced skill targets to `v0.1.7`.
 
 **Acceptance**:
 1. Windows remote install writes `docdev.cmd` and `docdev.ps1` under the native bin dir.
@@ -684,9 +684,10 @@ PowerShell or CMD terminal without manually creating aliases.
 3. `docdev update` uses `install_remote.ps1` on Windows and `install_remote.sh`
    on Unix-like hosts.
 4. README/SKILL show GitHub latest install and `docdev -v` verification for Windows.
-5. Unit tests, package smoke, local simulated install smoke, and project audit pass; any missing Windows live
-   smoke is recorded as a post-release real-machine verification item when no
-   Windows environment is available.
+5. Unit tests, package smoke, local simulated install smoke, public latest
+   smoke, and project audit pass; missing Windows live smoke is recorded as a
+   post-release real-machine verification item because no Windows environment
+   was available.
 
 ---
 

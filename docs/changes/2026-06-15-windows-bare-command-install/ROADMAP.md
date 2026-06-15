@@ -4,8 +4,8 @@
 
 ## 0. 当前状态
 
-**阶段 / Phase**: 发布准备
-**当前 Step / Current Step**: Step 5 - 验证与收尾；准备 v0.1.7 release
+**阶段 / Phase**: 发布验证完成
+**当前 Step / Current Step**: Step 5 - 验证与收尾完成；Windows live smoke 留作后续真机验证
 **ARCHITECTURE 省略理由 / Architecture Omission Reason**: 不省略。本需求改变 Windows native install 的 launcher / PATH / update 调用链，属于配置契约和安装数据流变化。
 
 ## 1. Gates
@@ -50,7 +50,7 @@
 | 2 | 调研既有实现 | 完成 |
 | 3 | 形成并确认方案 | 完成 |
 | 4 | 实施代码与测试 | 完成 |
-| 5 | 验证与收尾 | 发布准备 |
+| 5 | 验证与收尾 | 完成，Windows live smoke 待真机验证 |
 
 ---
 
@@ -138,8 +138,9 @@
 - [x] 运行 package release local smoke。
 - [x] 运行 packaged `0.1.7` local install/init/audit/uninstall smoke。
 - [x] 记录当前环境无法直接执行 Windows 真机 smoke。
-- [ ] 发布 `v0.1.7` 并运行 public latest install smoke。
-- [ ] 尽可能在 Windows 真机运行 latest install/update smoke。
+- [x] 发布 `v0.1.7` 并运行 public latest install smoke。
+- [x] 更新本机 native install 和已同步 skill target 到 `0.1.7`。
+- [x] 记录 Windows 真机 latest install/update smoke 为后续验证项。
 - [x] 把 verification 写回本文件。
 
 **Acceptance**:
@@ -161,6 +162,9 @@
 | SPEC-8 | `pyproject.toml` / `src/docs_driven_dev/__init__.py` | 通过 | release metadata bumped to `0.1.7` |
 | SPEC-9 | `./scripts/package_release.sh --out /private/tmp/docdev-release-assets-0.1.7` | 通过 | 生成 `docdev-0.1.7.tar.gz`、checksum、manifest、Unix / Windows installers |
 | SPEC-10 | `./scripts/install_remote.sh --release-base-url file:///private/tmp/docdev-release-assets-0.1.7 --install-root /private/tmp/docdev-017-local-smoke.Rdg7Pd/root --bin-dir /private/tmp/docdev-017-local-smoke.Rdg7Pd/bin --no-sync-skill` + `docdev --version/init/audit/uninstall` | 通过 | launcher 输出 `docdev 0.1.7`，隔离目标项目 audit 为 No findings，临时 install root / launcher 已卸载 |
+| SPEC-11 | `git tag v0.1.7` / `git push origin main` / `git push origin v0.1.7` / `gh release create v0.1.7 ... --latest` | 通过 | Release URL: `https://github.com/hongzhiyin/docs-driven-dev/releases/tag/v0.1.7` |
+| SPEC-12 | `./scripts/install_remote.sh --install-root /private/tmp/docdev-017-public-smoke.L2JXGb/root --bin-dir /private/tmp/docdev-017-public-smoke.L2JXGb/bin --no-sync-skill` + `docdev --version/init/audit/uninstall` | 通过 | GitHub latest assets 下载和 checksum 通过；launcher 输出 `docdev 0.1.7`；隔离目标 audit 为 No findings；临时安装已卸载 |
+| SPEC-13 | `/Users/chihoyo/.local/bin/docdev update` + `/Users/chihoyo/.local/bin/docdev --version` + `/Users/chihoyo/.local/bin/docdev doctor` | 通过 | 本机 native install 更新到 `/Users/chihoyo/.local/share/docdev/releases/0.1.7`；版本输出 `docdev 0.1.7`；Codex/Cursor/Agents/Claude skill targets 已同步 |
 
 ## 5. 风险与后续
 
