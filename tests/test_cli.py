@@ -409,30 +409,43 @@ class CliTests(unittest.TestCase):
                 self.assertEqual(cli.target_path_for("claude"), root / "claude-home" / "skills" / "docs-driven-dev")
                 self.assertEqual(cli.target_path_for("codex"), root / "codex-home" / "skills" / "docs-driven-dev")
 
-    def test_claude_sync_copies_when_symlink_unavailable(self) -> None:
+    def test_claude_sync_copies_without_agents_dependency(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
-            agents_target = root / ".agents" / "skills" / "docs-driven-dev"
+            agents_home = root / ".agents"
             claude_target = root / ".claude" / "skills" / "docs-driven-dev"
+            env = {
+                "DOCDEV_AGENTS_HOME": str(agents_home),
+                "DOCDEV_CLAUDE_HOME": str(root / ".claude"),
+            }
+            stdout = io.StringIO()
 
-            def fake_target_path_for(target: str) -> Path:
-                if target == "agents":
-                    return agents_target
-                if target == "claude":
-                    return claude_target
-                raise ValueError(target)
+            with mock.patch.dict(os.environ, env, clear=False):
+                with contextlib.redirect_stdout(stdout):
+                    code = cli.main(["sync-skill", "--targets", "claude", "--source", str(ROOT / "skill"), "--force"])
 
-            with mock.patch("docs_driven_dev.sync.target_path_for", side_effect=fake_target_path_for):
-                with mock.patch.object(Path, "symlink_to", side_effect=OSError("symlink denied")):
-                    status = cli.link_claude_to_agents(force=True, source=ROOT / "skill")
-
-            self.assertIn("symlink failed", status)
-            self.assertIn("copied fallback", status)
+            self.assertEqual(code, 0)
+            self.assertNotIn("syncing agents first", stdout.getvalue())
+            self.assertFalse(agents_home.exists())
             self.assertTrue((claude_target / "SKILL.md").exists())
             self.assertTrue((claude_target / ".docdev-skill-source").exists())
             self.assertFalse((claude_target / "bin" / "docdev").exists())
             self.assertFalse((claude_target / "bin" / "docdev.ps1").exists())
             self.assertFalse((claude_target / "bin" / "docdev.cmd").exists())
+
+    @unittest.skipIf(os.name == "nt", "creating symlinks is not portable on Windows test hosts")
+    def test_copy_skill_replaces_legacy_claude_symlink_when_forced(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            claude_target = root / ".claude" / "skills" / "docs-driven-dev"
+            claude_target.parent.mkdir(parents=True)
+            claude_target.symlink_to(Path("..") / ".." / ".agents" / "skills" / "docs-driven-dev")
+
+            self.assertEqual(cli.copy_skill(ROOT / "skill", claude_target, force=True), "copied")
+
+            self.assertFalse(claude_target.is_symlink())
+            self.assertTrue((claude_target / "SKILL.md").exists())
+            self.assertTrue((claude_target / ".docdev-skill-source").exists())
 
     @unittest.skipIf(os.name == "nt", "setup_project.sh is a Unix shell script")
     def test_setup_project_script_creates_audit_report(self) -> None:

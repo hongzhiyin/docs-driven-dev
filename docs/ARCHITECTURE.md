@@ -36,7 +36,7 @@ caller passes.
 | CLI shared models | `src/docs_driven_dev/models.py` | Shared data objects such as `Finding` | command dispatch |
 | CLI template/change module | `src/docs_driven_dev/templates.py` | `init`, `new-change`, template copy, README/AGENTS pointers | audit, sync, release update |
 | CLI audit/status module | `src/docs_driven_dev/audit.py` | Project and change-packet audit, status, decision skeletons | skill target writes, native update |
-| CLI sync/doctor module | `src/docs_driven_dev/sync.py` | Skill target resolution, copy/link sync, doctor output | release download/update dispatch |
+| CLI sync/doctor module | `src/docs_driven_dev/sync.py` | Skill target resolution, copy sync, doctor output | release download/update dispatch |
 | CLI release module | `src/docs_driven_dev/release.py` | Native update dispatch and native uninstall planning/execution | audit/template internals |
 | Skill source | `skill/SKILL.md` | Agent workflow and boundaries | local install paths |
 | Installed skill targets | `<skill-target>/` | Synced skill content plus `.docdev-skill-source` marker; no CLI wrappers | package index |
@@ -123,17 +123,16 @@ docdev sync-skill
   -> resolve source skill directory
   -> resolve target paths from DOCDEV_<TARGET>_SKILL_DIR / DOCDEV_<TARGET>_HOME / defaults
   -> print resolved sync target paths
-  -> replace marked or forced Codex / Cursor / shared agents target directories
-  -> link Claude target to shared agents target when possible
-  -> copy Claude target as fallback when symlink creation is unavailable
+  -> replace marked or forced Codex / Cursor / shared agents / Claude target directories
   -> require --force for unmarked existing target dirs
 ```
 
 Replacement is not an incremental merge. `copy_skill` removes the current
 target directory when it is force-synced or already marked with
-`.docdev-skill-source`, then copies the current source skill and writes the
-marker. This avoids stale files inside the active target path, including
-pre-D-025 `bin/docdev*` wrappers.
+`.docdev-skill-source`; legacy symlinks are removed only through force sync.
+It then copies the current source skill and writes the marker. This avoids
+stale files inside the active target path, including pre-D-025 `bin/docdev*`
+wrappers and pre-D-033 Claude symlinks.
 
 ### 3.6 Update Lifecycle
 
@@ -272,14 +271,14 @@ docdev uninstall [--dry-run | --yes] [--keep-skills]
   -> require --yes before destructive removal
   -> delete install root
   -> delete launcher only when it looks like the generated docdev launcher
-  -> delete skill symlinks and marked skill directories
+  -> delete legacy skill symlinks and marked skill directories
   -> skip unmarked skill directories
 ```
 
 Uninstall does not remove parent directories such as `~/.local/bin`,
 `~/.local/share`, `~/.codex`, `~/.cursor`, `~/.agents`, or `~/.claude`.
-Claude symlink cleanup unlinks the symlink itself; it does not recursively
-delete the symlink target.
+Legacy Claude symlink cleanup unlinks the symlink itself; it does not
+recursively delete the symlink target.
 
 ## 4. Data Model
 
@@ -375,10 +374,9 @@ separate from project-level D-XXX numbering.
 - Change-packet gate checks infer state from ROADMAP phase text and checkbox
   structure; they are workflow guardrails, not semantic proof that a plan is
   good.
-- Sync currently copies skill folders for Codex/Cursor/shared agents. Claude
-  uses a symlink when possible and falls back to a copied skill directory when
-  the platform refuses symlink creation; platform-specific metadata may need
-  future adapters.
+- Sync copies skill folders for Codex/Cursor/shared agents/Claude. Legacy
+  Claude symlinks are only a cleanup compatibility case; new sync runs do not
+  create them. Platform-specific metadata may need future adapters.
 - Template lookup assumes a native release root, source checkout, synced skill
   directory, or explicit `DOCDEV_TEMPLATE_DIR` is available.
 - Windows PowerShell scripts and generated `docdev.cmd` use `python`; if a

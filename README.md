@@ -78,7 +78,7 @@ Windows 上可使用：
 ```
 
 `uninstall` 只删除 docdev native install root、docdev launcher，以及带
-`.docdev-skill-source` marker 或 symlink 的 `docs-driven-dev` skill target。它不会删除
+`.docdev-skill-source` marker 或 legacy symlink 的 `docs-driven-dev` skill target。它不会删除
 `~/.local/bin`、`~/.local/share`、agent home 父目录、源码 checkout，或未标记的同名
 skill 目录。只想移除 CLI release、不动 agent skill 时使用：
 
@@ -236,7 +236,8 @@ Windows PowerShell 使用：
 
 生成的 Windows source checkout launcher 同样会在当前进程内设置 UTF-8 输出。
 
-如果 Windows 不允许创建 symlink，Claude 目标会 fallback 为复制，这样安装仍可完成。
+Claude 目标和 Codex/Cursor/Agents 一样直接复制 skill，不再创建到 Agents target 的
+symlink；已有 legacy symlink 会在 force sync 时被替换为普通 skill 目录。
 如果安装中断，把最后一行以 `[docdev install]` 或 `[docdev update]` 开头的输出拿来定位；
 编号 step 会指出停在哪个阶段。
 

@@ -5,7 +5,7 @@
 ## Current Progress
 
 **Phase**: Phase 1 - portable skill + CLI bootstrap
-**Current Step**: Step 6l complete; v0.1.9 Windows UTF-8 output release published
+**Current Step**: Step 6n in progress; publish v0.1.10 Claude direct-copy sync release
 
 ### Step Status
 
@@ -43,6 +43,8 @@
 | 6j | Patch Windows installer live-smoke follow-up findings | Done |
 | 6k | Fix Windows UTF-8 output for PowerShell/CMD entrypoints | Done |
 | 6l | Publish v0.1.9 Windows UTF-8 output release | Done |
+| 6m | Copy Claude skill target directly instead of symlinking to Agents | Done |
+| 6n | Publish v0.1.10 Claude direct-copy sync release | In Progress |
 
 ---
 
@@ -368,7 +370,7 @@ the default current-user home path on Windows or other machines.
 - [x] Add `DOCDEV_<TARGET>_SKILL_DIR` exact target overrides.
 - [x] Add `DOCDEV_<TARGET>_HOME` base directory overrides, preserving
   `CODEX_HOME` compatibility for Codex.
-- [x] Print resolved sync target paths before copy/link operations.
+- [x] Print resolved sync target paths before sync operations.
 - [x] Generate installed wrappers with OS-native source `src` paths.
 - [x] Document how Windows PowerShell and persistent environment variables
   affect install/sync.
@@ -798,6 +800,64 @@ Verification:
 - Public latest smoke installed `docdev-0.1.9.tar.gz` from GitHub, checksum passed, launcher reported `docdev 0.1.9`, and `docdev init` plus `docdev audit` passed on `/private/tmp/docdev-019-public-target.aExsJA`.
 - Local native install was refreshed to `/Users/chihoyo/.local/share/docdev/releases/0.1.9`; `docdev doctor` confirmed Codex/Cursor/Agents/Claude skill targets were synced.
 - Existing local `0.1.8` release had a CRLF `scripts/install_remote.sh`, so `/Users/chihoyo/.local/bin/docdev update --version 0.1.9` failed with `env: sh\r`. The local refresh used current source `./scripts/install_remote.sh --version 0.1.9`; the installed `0.1.9` release script is LF.
+
+---
+
+## Step 6m - Claude direct-copy skill sync
+
+**Goal**: Make Claude skill sync behave like the other agent targets by copying
+the source skill directly instead of creating a symlink to the Agents target.
+
+**Tasks**:
+- [x] Create `docs/changes/2026-06-16-claude-copy-sync/`.
+- [x] Update SPEC, ARCHITECTURE, DECISIONS, README, and SKILL contracts.
+- [x] Remove the Claude symlink-specific sync implementation.
+- [x] Add tests for direct Claude copy and legacy symlink replacement.
+- [x] Run unit tests and project audit.
+
+**Acceptance**:
+1. `docdev sync-skill --targets claude --force` copies `skill/` directly to
+   the Claude target and does not sync Agents as a hidden prerequisite.
+2. A legacy Claude symlink can be replaced by `copy_skill(..., force=True)`.
+3. Unit tests and `docdev audit` pass.
+
+Verification:
+- `PYTHONPATH=src python3 -m unittest tests.test_cli.CliTests.test_claude_sync_copies_without_agents_dependency tests.test_cli.CliTests.test_copy_skill_replaces_legacy_claude_symlink_when_forced` passed.
+- `python3 -m unittest discover -s tests` passed with 39 tests.
+- `PYTHONPATH=src python3 -m docs_driven_dev.cli audit /Users/chihoyo/Project/docs-driven-dev` reported `No findings`.
+- `rg -n "Claude should use|Claude uses a symlink|link Claude target|link_claude|symlink failed|syncing agents first|shared-agents symlink|copy fallback when" docs README.md skill src tests` found only tests, historical decisions, or this change packet's old-state notes.
+
+---
+
+## Step 6n - v0.1.10 Claude direct-copy sync release
+
+**Goal**: Publish the Claude direct-copy sync fix through GitHub Releases so
+Windows and other machines can receive it through `docdev update`.
+
+**Tasks**:
+- [x] Bump release metadata to `0.1.10`.
+- [x] Run unit tests and project audit.
+- [x] Package release assets.
+- [x] Run local simulated install smoke from packaged `0.1.10` assets.
+- [ ] Commit, tag, and push `v0.1.10`.
+- [ ] Publish GitHub Release `v0.1.10` as latest.
+
+**Acceptance**:
+1. Release assets include `docdev-0.1.10.tar.gz`, checksum, manifest, and both
+   remote installers.
+2. Local simulated install launcher reports `docdev 0.1.10`.
+3. Unit tests and `docdev audit` pass.
+4. Public latest smoke can install `0.1.10` and run `docdev init` plus audit.
+5. Real Windows update smoke remains a post-release verification unless
+   verified separately.
+
+Verification:
+- `python3 -m unittest discover -s tests` passed with 39 tests.
+- `PYTHONPATH=src python3 -m docs_driven_dev.cli audit /Users/chihoyo/Project/docs-driven-dev` reported `No findings`.
+- `PYTHONPATH=src python3 -m docs_driven_dev.cli --version` reported `docdev 0.1.10`.
+- `./scripts/package_release.sh --out /private/tmp/docdev-release-assets-0.1.10` emitted `docdev-0.1.10.tar.gz`, checksum, manifest, and both remote installers.
+- Local simulated install from `/private/tmp/docdev-release-assets-0.1.10` reported `docdev 0.1.10`; `docdev init` plus `docdev audit` passed on `/private/tmp/docdev-010-local-smoke.UYg0zt/target`.
+- Packaged sync smoke from `/private/tmp/docdev-release-assets-0.1.10` ran `sync-skill --targets claude --force` with isolated homes; Claude target was copied, marked, and not a symlink; Agents home was not created.
 
 ---
 

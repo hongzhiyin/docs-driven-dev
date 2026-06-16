@@ -1426,3 +1426,91 @@ before a Python-only fix could affect installer logs.
 - `scripts/install.ps1`
 - `scripts/update_cli.ps1`
 - `tests/test_cli.py`
+
+---
+
+## D-033 - Step 6m - Copy Claude skill target directly instead of symlinking to agents
+
+**Date**: 2026-06-16
+
+**Context**:
+The original Claude sync model used `~/.claude/skills/docs-driven-dev` as a
+symlink to the shared `~/.agents` target, with a Windows copy fallback when
+symlink creation failed. Real update usage now shows the symlink branch itself
+can surface confusing Claude-related errors during normal update/sync flows.
+Codex, Cursor, and Agents already use direct copied skill directories.
+
+**Options**:
+- A. Keep the symlink-first model and improve fallback diagnostics - preserves
+  the original shared-directory optimization, but keeps Claude on a distinct
+  error-prone path.
+- B. Make Claude use the same direct-copy replacement model as the other
+  targets - removes symlink requirements and lets `--targets claude` work
+  without syncing Agents first.
+
+**Chosen**: B
+
+**Rationale**:
+- It removes platform and permission differences around symlink creation from
+  the default update path.
+- It makes all four sync targets follow the same marker, force-replacement,
+  and stale-file cleanup contract.
+- It avoids hidden coupling where a Claude-only sync first mutates the Agents
+  target as an implementation detail.
+
+**Risks**:
+- Claude and Agents copies can drift if only one target is synced manually.
+  Mitigation: default install/update continues syncing
+  `codex,cursor,agents,claude`, and `docdev doctor` reports each target state.
+- Existing machines may still have a legacy Claude symlink. Mitigation:
+  `--force` sync unlinks and replaces it with a marked copy, while uninstall
+  still treats symlink targets as docdev-owned cleanup candidates.
+
+**Related code / docs**:
+- SPEC §2 F/O, §3.7
+- ARCHITECTURE §3.5, §7
+- ROADMAP Step 6m
+- `docs/changes/2026-06-16-claude-copy-sync/`
+- `src/docs_driven_dev/sync.py`
+- `tests/test_cli.py`
+
+---
+
+## D-034 - Step 6n - Publish Claude copy-sync fix after local release verification
+
+**Date**: 2026-06-16
+
+**Context**:
+The Claude direct-copy sync fix affects the update path that Windows users
+exercise through GitHub Releases. The current release workstation is not
+Windows, but the user explicitly asked to commit, push, and publish this fix
+after the source implementation and tests passed.
+
+**Options**:
+- A. Wait for another Windows live smoke before publishing - strongest
+  platform proof, but delays the requested update path.
+- B. Publish `v0.1.10` after unit tests, project audit, package inspection,
+  local simulated install smoke, and public latest smoke - makes the fix
+  available now while keeping Windows live update as follow-up verification.
+
+**Chosen**: B
+
+**Rationale**:
+- The changed behavior is deterministic Python filesystem sync logic covered by
+  unit tests, including Claude-only copy and legacy symlink force replacement.
+- Local package/install smoke verifies the release artifact and launchers use
+  the bumped version.
+- Public latest smoke verifies the uploaded GitHub Release assets can be
+  downloaded, checksum-verified, installed, and used for init/audit.
+
+**Risks**:
+- A Windows-specific installer or filesystem edge case may still appear after
+  publication. Mitigation: keep real Windows update smoke as a post-release
+  verification item and patch promptly if it reports a new defect.
+
+**Related code / docs**:
+- ROADMAP Step 6n
+- `docs/changes/2026-06-16-claude-copy-sync/`
+- `pyproject.toml`
+- `src/docs_driven_dev/__init__.py`
+- `scripts/package_release.sh`

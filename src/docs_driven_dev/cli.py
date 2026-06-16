@@ -60,7 +60,6 @@ from .sync import (
     cmd_doctor,
     cmd_sync_skill,
     copy_skill,
-    link_claude_to_agents,
     parse_targets,
     target_path_for,
 )
@@ -127,7 +126,6 @@ __all__ = [
     "find_source_root",
     "generated_dir_for",
     "labeled_block_body",
-    "link_claude_to_agents",
     "launcher_is_docdev_owned",
     "main",
     "markdown_cells",

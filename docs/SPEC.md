@@ -17,7 +17,7 @@ Claude, and shared agent skill homes.
 | C | Generated output | `<docs_dir>/_generated/docdev/` only | See D-002 |
 | D | Runtime | Python 3.10+ stdlib-only CLI | See D-001 |
 | E | Install style | Release installer installs versioned user-directory releases; source checkout wrappers remain the developer maintenance path | See D-021 |
-| F | Skill sync targets | `~/.codex`, `~/.cursor`, `~/.agents`, and Claude symlink to shared agents skill | See D-003 |
+| F | Skill sync targets | Direct copied skill directories under `~/.codex`, `~/.cursor`, `~/.agents`, and `~/.claude` | See D-003, D-033 |
 | G | Audit strictness | Structural drift is reported as warnings unless a required source document or invariant is broken | See D-005 |
 | H | Cross-project CLI discovery | Agents use `docdev` on PATH or the native launcher; source checkout wrappers are developer-only fallbacks | See D-006, D-021, D-022 |
 | I | Update lifecycle | Source updates should use a project-local install, test, check, sync, check sequence | See D-007 |
@@ -26,7 +26,7 @@ Claude, and shared agent skill homes.
 | L | Source checkout developer onboarding | `scripts/install.sh` installs, verifies, syncs, and enables maintenance from a cloned source checkout | See D-010, D-021, D-024 |
 | M | Requirement granularity | Project-level four docs stay required; per-requirement change packets are optional under `docs/changes/` | See D-012 |
 | N | Windows onboarding | PowerShell install scripts mirror the Unix install lifecycle | See D-013 |
-| O | Windows sync resilience | Claude uses a shared-agents symlink when possible, with a copy fallback when the platform refuses symlinks | See D-015 |
+| O | Claude sync model | Claude sync uses the same direct-copy replacement model as other agent targets; legacy symlinks remain removable by force sync or uninstall | See D-015, D-033 |
 | P | Install diagnostics | Install and update scripts emit prefixed, numbered lifecycle logs so failures can be localized from user output | See D-016 |
 | Q | Skill target overrides | Each sync target supports environment-variable overrides for non-default Windows or agent skill directories | See D-017 |
 | R | Existing code adoption | Existing code projects without four docs should be lightly initialized before opening a requirement change packet | See D-018 |
@@ -135,9 +135,9 @@ development, not cross-machine agent use.
 | `docdev audit <project>` | Check project docs plus existing change packets for structure, numbering, source-map drift, and required rationale blocks | Optional audit report |
 | `docdev status <project>` | Show Phase, Step, next D id | Read-only |
 | `docdev new-decision "<title>" <project>` | Append next D-XXX skeleton | Writes DECISIONS.md |
-| `docdev sync-skill` | Copy/link skill into agent homes | Writes skill target dirs |
+| `docdev sync-skill` | Copy skill into agent homes | Writes skill target dirs |
 | `docdev update` | Update a native release install from a release manifest and artifact | Writes user install dirs; syncs skill target dirs by default |
-| `docdev uninstall` | Remove a native release install and owned skill targets | Deletes docdev install dirs, launcher, and marked/symlink skill targets after `--yes` |
+| `docdev uninstall` | Remove a native release install and owned skill targets | Deletes docdev install dirs, launcher, and marked/legacy symlink skill targets after `--yes` |
 | `docdev doctor` | Show local install and sync state | Read-only |
 | `docdev --version` / `docdev -v` | Show CLI version | Read-only |
 
@@ -188,7 +188,7 @@ explicitly wants to update the release without writing agent homes.
 `docdev uninstall --yes` removes the native install root, the generated
 launcher, and owned skill targets so a machine can repeat install smoke tests
 from a clean state. Use `docdev uninstall --dry-run` first to preview planned
-deletions. Owned skill targets are symlinks or directories containing
+deletions. Owned skill targets are legacy symlinks or directories containing
 `.docdev-skill-source`; unmarked directories are skipped. `--keep-skills`
 removes only the native CLI install and leaves agent skill targets in place.
 
@@ -300,11 +300,10 @@ For each change packet under `<docs_dir>/changes/`, `docdev audit` also checks:
 
 ### 3.7 Sync Behaviour
 
-`docdev sync-skill` may copy the skill to Codex, Cursor, and shared agents
-targets. Claude should use a symlink to `~/.agents/skills/docs-driven-dev` when
-possible, matching the existing shared Lark skill pattern. If the platform
-refuses symlink creation, Claude may receive a copied skill directory instead
-of blocking the whole sync lifecycle.
+`docdev sync-skill` copies the source skill directory to Codex, Cursor, shared
+agents, and Claude targets. Claude must not be special-cased as a symlink to
+the shared agents target and must not require the agents target to be synced
+first.
 
 Sync target paths resolve in this order:
 1. exact target override `DOCDEV_<TARGET>_SKILL_DIR`;
@@ -320,13 +319,14 @@ persistent user/system environment variables.
 Existing target directories without a `.docdev-skill-source` marker require
 `--force` before replacement.
 
-Existing target directories with a `.docdev-skill-source` marker, or any target
-when `--force` is passed, are refreshed by whole-directory replacement: delete
-the target skill directory, copy the current source skill, and write the marker.
-This prevents stale files from remaining inside the current target skill
-directory, including old `bin/docdev*` wrappers from pre-D-025 syncs. It does
-not clean a different old target path if the configured skill directory changed
-between installs.
+Existing target directories with a `.docdev-skill-source` marker are refreshed
+without requiring `--force`. When `--force` is passed, the same whole-target
+replacement applies to any target, including legacy symlinks: delete or unlink
+the current target, copy the current source skill, and write the marker. This
+prevents stale files from remaining inside the current target skill directory,
+including old `bin/docdev*` wrappers from pre-D-025 syncs and old Claude
+symlinks from pre-D-033 syncs. It does not clean a different old target path if
+the configured skill directory changed between installs.
 
 Source checkout sync must not generate skill-local `bin/docdev`,
 `bin/docdev.ps1`, or `bin/docdev.cmd` wrappers. Native cross-machine use should

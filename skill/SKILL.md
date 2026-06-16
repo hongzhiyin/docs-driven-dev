@@ -162,7 +162,7 @@ docdev uninstall --yes
 如果 `docdev` 不在 `PATH` 上但 native launcher 存在，使用
 `~/.local/bin/docdev uninstall --yes`；Windows 上可用
 `$HOME\.local\bin\docdev.ps1 uninstall --yes`。卸载只删除 docdev native install root、生成的
-launcher，以及 symlink 或带 `.docdev-skill-source` marker 的 docs-driven-dev skill target。
+launcher，以及 legacy symlink 或带 `.docdev-skill-source` marker 的 docs-driven-dev skill target。
 未标记 skill 目录会被跳过；只想移除 CLI release 时使用
 `docdev uninstall --yes --keep-skills`。
 

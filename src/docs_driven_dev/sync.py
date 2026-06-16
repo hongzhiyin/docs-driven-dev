@@ -44,34 +44,6 @@ def copy_skill(source: Path, target: Path, force: bool) -> str:
     return "copied"
 
 
-def link_claude_to_agents(force: bool, source: Path | None = None) -> str:
-    target = target_path_for("claude")
-    agents_target = Path("..") / ".." / ".agents" / "skills" / SKILL_NAME
-    if target.exists() or target.is_symlink():
-        if target.is_symlink() and os.readlink(target) == str(agents_target):
-            return "already linked"
-        if not force:
-            return "exists; pass --force to replace"
-        if target.is_symlink() or target.is_file():
-            target.unlink()
-        else:
-            shutil.rmtree(target)
-    target.parent.mkdir(parents=True, exist_ok=True)
-    try:
-        target.symlink_to(agents_target)
-        return "linked to ~/.agents"
-    except OSError as exc:
-        fallback_source = target_path_for("agents")
-        if not (fallback_source / "SKILL.md").exists():
-            fallback_source = source or fallback_source
-        if not (fallback_source / "SKILL.md").exists():
-            raise SystemExit(
-                f"Claude symlink failed ({exc}) and no copy fallback source exists: {fallback_source}"
-            )
-        status = copy_skill(fallback_source, target, force=True)
-        return f"symlink failed ({exc}); {status} fallback"
-
-
 def parse_targets(raw: str) -> list[str]:
     aliases = {
         "all": ["codex", "cursor", "agents", "claude"],
@@ -95,9 +67,6 @@ def cmd_sync_skill(args: argparse.Namespace) -> int:
         raise SystemExit(f"Skill source missing SKILL.md: {source}")
 
     targets = parse_targets(args.targets)
-    if "claude" in targets and "agents" not in targets:
-        print("claude target uses ~/.agents as source; syncing agents first")
-        targets.insert(0, "agents")
 
     print("sync target paths:")
     for target in targets:
@@ -107,10 +76,7 @@ def cmd_sync_skill(args: argparse.Namespace) -> int:
         return 0
 
     for target in targets:
-        if target == "claude":
-            status = link_claude_to_agents(args.force, source)
-        else:
-            status = copy_skill(source, target_path_for(target), args.force)
+        status = copy_skill(source, target_path_for(target), args.force)
         print(f"{target}: {status} -> {target_path_for(target)}")
     return 0
 
