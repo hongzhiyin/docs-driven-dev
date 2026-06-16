@@ -6,7 +6,7 @@
 
 | 字段 | 内容 |
 |---|---|
-| 状态 | 源码修复完成；等待 Windows release/live smoke |
+| 状态 | 已发布 v0.1.9；等待 Windows live smoke |
 | 创建原因 | Windows installer / source scripts / generated launchers 的环境配置契约变化 |
 | 最后更新 | 2026-06-16 |
 

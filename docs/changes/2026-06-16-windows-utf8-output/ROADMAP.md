@@ -4,8 +4,8 @@
 
 ## 0. 当前状态
 
-**阶段 / Phase**: 验证与收尾完成
-**当前 Step / Current Step**: Step 5 - 源码修复完成；等待 Windows release/live smoke
+**阶段 / Phase**: 发布完成
+**当前 Step / Current Step**: Step 6 - v0.1.9 已发布；等待 Windows live smoke
 **ARCHITECTURE 省略理由 / Architecture Omission Reason**: 不省略。本需求改变 Windows installer、source lifecycle scripts 和 generated launchers 的环境配置契约。
 
 ## 1. Gates
@@ -47,6 +47,7 @@
 | 3 | 形成并确认方案 | 完成 |
 | 4 | 实施代码与测试 | 完成 |
 | 5 | 验证与收尾 | 完成 |
+| 6 | 发布 v0.1.9 | 完成 |
 
 ---
 
@@ -146,10 +147,14 @@
 | SPEC-1 | Static tests for Windows UTF-8 prelude | 通过 | `test_windows_scripts_configure_utf8_output` added |
 | SPEC-2 | `python3 -m unittest discover -s tests` | 通过 | 38 tests OK |
 | SPEC-3 | `PYTHONPATH=src python3 -m docs_driven_dev.cli audit /Users/chihoyo/Project/docs-driven-dev` | 通过 | No findings |
+| SPEC-4 | GitHub Release `v0.1.9` publication | 通过 | Release URL: `https://github.com/hongzhiyin/docs-driven-dev/releases/tag/v0.1.9` |
+| SPEC-5 | Public latest install smoke | 通过 | GitHub latest installed `docdev 0.1.9`; init/audit passed on a temp target |
+| SPEC-6 | Local native refresh | 通过 | Installed root `/Users/chihoyo/.local/share/docdev/releases/0.1.9`; skill targets synced |
 
 ## 5. 风险与后续
 
 | ID | 风险 / 后续 | 影响 | 处理 |
 |---|---|---|---|
 | F-1 | macOS cannot prove Windows terminal rendering | 可能仍有 host-specific console behavior | release 前在 Windows PowerShell/CMD live smoke 验证 |
-| F-2 | Fix remains source-only until released | 已安装 Windows latest 不会自动获得未发布源码 | 发布 v0.1.9 后通过 native update / latest install 获取；发布前可运行 source checkout install/update |
+| F-2 | Fix remains source-only until released | 已解决 | v0.1.9 已发布；用户通过 native update / latest install 获取 |
+| F-3 | Existing local `0.1.8` Unix release script had CRLF line endings | `docdev update --version 0.1.9` failed locally with `env: sh\r` | Used current source installer to refresh; installed `0.1.9` script is LF |

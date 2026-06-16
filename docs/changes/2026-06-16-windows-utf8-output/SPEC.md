@@ -6,7 +6,7 @@
 
 | 字段 | 内容 |
 |---|---|
-| 状态 | 源码修复完成；等待 Windows release/live smoke |
+| 状态 | 已发布 v0.1.9；等待 Windows live smoke |
 | 需求来源 | 用户反馈：Windows 平台一开始 PowerShell 输出中文乱码，需要项目直接处理 UTF-8 编码 |
 | 工作包目录 | `docs/changes/2026-06-16-windows-utf8-output/` |
 | 最后更新 | 2026-06-16 |
@@ -36,7 +36,7 @@
 - 不修改用户 PowerShell profile、系统区域设置、System PATH 或系统代码页。
 - 不要求管理员权限。
 - 不引入新的 Windows `docdev.exe` 二进制打包。
-- 不发布 release；发布 v0.1.9 或更新 native install 需单独执行 release 流程。
+- 不在本工作包内声明真实 Windows 终端渲染已验证；该验证需在 Windows live smoke 中完成。
 
 ## 4. 用户场景 / 使用流程
 

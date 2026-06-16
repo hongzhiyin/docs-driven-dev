@@ -5,7 +5,7 @@
 ## Current Progress
 
 **Phase**: Phase 1 - portable skill + CLI bootstrap
-**Current Step**: Step 6l in progress; publish v0.1.9 Windows UTF-8 output release
+**Current Step**: Step 6l complete; v0.1.9 Windows UTF-8 output release published
 
 ### Step Status
 
@@ -42,7 +42,7 @@
 | 6i | Add Windows bare command native install contract | Done |
 | 6j | Patch Windows installer live-smoke follow-up findings | Done |
 | 6k | Fix Windows UTF-8 output for PowerShell/CMD entrypoints | Done |
-| 6l | Publish v0.1.9 Windows UTF-8 output release | In Progress |
+| 6l | Publish v0.1.9 Windows UTF-8 output release | Done |
 
 ---
 
@@ -779,8 +779,8 @@ Windows users installing latest can receive the updated PowerShell/CMD entrypoin
 - [x] Run unit tests and project audit.
 - [x] Package release assets.
 - [x] Run local simulated install smoke from packaged `0.1.9` assets.
-- [ ] Commit, tag, and push `v0.1.9`.
-- [ ] Publish GitHub Release `v0.1.9` as latest.
+- [x] Commit, tag, and push `v0.1.9`.
+- [x] Publish GitHub Release `v0.1.9` as latest.
 
 **Acceptance**:
 1. Release assets include `docdev-0.1.9.tar.gz`, checksum, manifest, and both remote installers.
@@ -793,7 +793,11 @@ Verification:
 - `PYTHONPATH=src python3 -m docs_driven_dev.cli audit /Users/chihoyo/Project/docs-driven-dev` reported `No findings`.
 - `./scripts/package_release.sh --out /private/tmp/docdev-release-assets-0.1.9` emitted `docdev-0.1.9.tar.gz`, checksum, manifest, and both remote installers.
 - Local simulated install from `/private/tmp/docdev-release-assets-0.1.9` reported `docdev 0.1.9`; `docdev init` plus `docdev audit` passed on `/private/tmp/docdev-019-target.jz9xL4`.
-- GitHub publish and public latest smoke pending.
+- Commit `1e83e2d` was tagged as `v0.1.9`; `git push origin main` and `git push origin v0.1.9` completed.
+- GitHub Release `v0.1.9` was published as latest: `https://github.com/hongzhiyin/docs-driven-dev/releases/tag/v0.1.9`.
+- Public latest smoke installed `docdev-0.1.9.tar.gz` from GitHub, checksum passed, launcher reported `docdev 0.1.9`, and `docdev init` plus `docdev audit` passed on `/private/tmp/docdev-019-public-target.aExsJA`.
+- Local native install was refreshed to `/Users/chihoyo/.local/share/docdev/releases/0.1.9`; `docdev doctor` confirmed Codex/Cursor/Agents/Claude skill targets were synced.
+- Existing local `0.1.8` release had a CRLF `scripts/install_remote.sh`, so `/Users/chihoyo/.local/bin/docdev update --version 0.1.9` failed with `env: sh\r`. The local refresh used current source `./scripts/install_remote.sh --version 0.1.9`; the installed `0.1.9` release script is LF.
 
 ---
 
