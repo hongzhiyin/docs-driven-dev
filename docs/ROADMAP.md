@@ -5,7 +5,7 @@
 ## Current Progress
 
 **Phase**: Phase 1 - portable skill + CLI bootstrap
-**Current Step**: Step 6n in progress; publish v0.1.10 Claude direct-copy sync release
+**Current Step**: Step 6n complete; v0.1.10 Claude direct-copy sync release published
 
 ### Step Status
 
@@ -44,7 +44,7 @@
 | 6k | Fix Windows UTF-8 output for PowerShell/CMD entrypoints | Done |
 | 6l | Publish v0.1.9 Windows UTF-8 output release | Done |
 | 6m | Copy Claude skill target directly instead of symlinking to Agents | Done |
-| 6n | Publish v0.1.10 Claude direct-copy sync release | In Progress |
+| 6n | Publish v0.1.10 Claude direct-copy sync release | Done |
 
 ---
 
@@ -839,8 +839,8 @@ Windows and other machines can receive it through `docdev update`.
 - [x] Run unit tests and project audit.
 - [x] Package release assets.
 - [x] Run local simulated install smoke from packaged `0.1.10` assets.
-- [ ] Commit, tag, and push `v0.1.10`.
-- [ ] Publish GitHub Release `v0.1.10` as latest.
+- [x] Commit, tag, and push `v0.1.10`.
+- [x] Publish GitHub Release `v0.1.10` as latest.
 
 **Acceptance**:
 1. Release assets include `docdev-0.1.10.tar.gz`, checksum, manifest, and both
@@ -858,6 +858,11 @@ Verification:
 - `./scripts/package_release.sh --out /private/tmp/docdev-release-assets-0.1.10` emitted `docdev-0.1.10.tar.gz`, checksum, manifest, and both remote installers.
 - Local simulated install from `/private/tmp/docdev-release-assets-0.1.10` reported `docdev 0.1.10`; `docdev init` plus `docdev audit` passed on `/private/tmp/docdev-010-local-smoke.UYg0zt/target`.
 - Packaged sync smoke from `/private/tmp/docdev-release-assets-0.1.10` ran `sync-skill --targets claude --force` with isolated homes; Claude target was copied, marked, and not a symlink; Agents home was not created.
+- Commit `4c6d127` was tagged as `v0.1.10`; `git push origin main` and `git push origin v0.1.10` completed.
+- GitHub Release `v0.1.10` was published as latest: `https://github.com/hongzhiyin/docs-driven-dev/releases/tag/v0.1.10`.
+- Public latest smoke installed `docdev-0.1.10.tar.gz` from GitHub, checksum passed, launcher reported `docdev 0.1.10`, and `docdev init` plus `docdev audit` passed on `/private/tmp/docdev-010-public-smoke.4JyUGM/target`.
+- Local native install was refreshed to `/Users/chihoyo/.local/share/docdev/releases/0.1.10`; `/Users/chihoyo/.local/bin/docdev doctor` confirmed Codex/Cursor/Agents/Claude skill targets were installed.
+- Local Claude target is now a copied, marked directory instead of a symlink: `/Users/chihoyo/.claude/skills/docs-driven-dev`.
 
 ---
 

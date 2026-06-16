@@ -34,7 +34,7 @@
 
 - 不改默认 target 集合，仍为 `codex,cursor,agents,claude`。
 - 不改变 uninstall 对 legacy symlink 的识别和删除能力。
-- 不发布新 release；若需要让其他机器通过 `docdev update` 获取该行为，需要后续版本发布。
+- 不改变 release installer/update 机制；本修复已通过 root ROADMAP Step 6n 发布为 `v0.1.10`。
 
 ## 4. 用户场景 / 使用流程
 
@@ -79,4 +79,4 @@
 
 | ID | 问题 | 当前判断 | 是否阻塞实现 |
 |---|---|---|---|
-| Q1 | 是否立刻发布新 release | 当前用户只要求修复行为，发布可作为后续单独步骤 | 否 |
+| Q1 | 是否立刻发布新 release | 用户随后要求发布，已通过 root ROADMAP Step 6n / `v0.1.10` 完成 | 否 |

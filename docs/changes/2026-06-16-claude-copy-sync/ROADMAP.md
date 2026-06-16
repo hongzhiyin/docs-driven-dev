@@ -147,4 +147,4 @@
 | ID | 风险 / 后续 | 影响 | 处理 |
 |---|---|---|---|
 | F-1 | 只有同步 Claude 或 Agents 其中一个 target 时，两个目录可能暂时不同步 | 手动偏目标 sync 会产生版本差异 | 接受；默认 install/update 仍同步四个 targets，doctor 可查看每个 target |
-| F-2 | 已发布 v0.1.9 不包含本次改动 | 其他机器通过 `docdev update` 暂时拿不到该行为 | 后续需要发布新版本时处理 |
+| F-2 | 已发布 v0.1.9 不包含本次改动 | 其他机器通过旧 release 暂时拿不到该行为 | 已通过 root ROADMAP Step 6n 发布 `v0.1.10` 处理 |
