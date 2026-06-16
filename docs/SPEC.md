@@ -40,6 +40,7 @@ Claude, and shared agent skill homes.
 | Z | CLI internal boundary | `docs_driven_dev.cli` remains the public entrypoint; deterministic logic is split into lightweight internal modules by responsibility | See D-026 |
 | AA | Native uninstall | `docdev uninstall` removes docdev-owned native install files and marked skill targets only after explicit confirmation; `--dry-run` previews | See D-028 |
 | AB | Windows native command | Windows release install writes `docdev.cmd` plus `docdev.ps1`, adds the bin dir to User PATH by default, and keeps `-NoModifyPath` as an opt-out | See D-029 |
+| AC | Windows text encoding | Windows PowerShell scripts and generated Windows launchers configure UTF-8 console/Python IO locally before logs or CLI output | See D-032 |
 
 ## 3. Derived Rules
 
@@ -171,7 +172,10 @@ The Unix installer may warn when `~/.local/bin` is not on `PATH`, but it must
 not mutate shell startup files automatically. The Windows installer should add
 the native bin dir to User PATH by default, update the current PowerShell
 process PATH when possible, and provide `-NoModifyPath` for managed
-environments.
+environments. Windows PowerShell scripts and generated Windows launchers should
+also configure UTF-8 console/Python IO for the current process before emitting
+logs or invoking `docs_driven_dev.cli`; this must not mutate user profiles,
+system locale, or System PATH.
 
 `docdev update` is the preferred native update entrypoint. It resolves the
 latest or requested version, dispatches to the platform installer
@@ -413,3 +417,4 @@ Constraints:
 11. **#11**: Native install/update refreshes skill targets by default after checksum verification and activation, with an explicit no-sync opt-out.
 12. **#12**: Native uninstall must require explicit destructive confirmation and only delete docdev-owned install paths or owned skill targets.
 13. **#13**: Windows native release install must make `docdev -v` available through an installer-owned command entrypoint and User PATH by default, with an explicit no-PATH opt-out.
+14. **#14**: Windows text encoding fixes must stay local to docdev-owned scripts and generated launchers, without editing profiles, system locale, or System PATH.

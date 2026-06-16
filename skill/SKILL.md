@@ -145,7 +145,8 @@ Windows default native layout：
 installer 不会编辑 shell 启动文件；如果 `~/.local/bin` 不在 `PATH` 上，使用完整
 launcher 路径，或由用户自己添加 PATH。Windows installer 会写 `docdev.cmd`，默认把
 bin dir 加入当前用户 PATH，并尽量刷新当前 PowerShell session；如果不允许修改 PATH，
-下载安装脚本后用 `-NoModifyPath`。
+下载安装脚本后用 `-NoModifyPath`。Windows installer 和生成的 launcher 会在当前进程内
+设置 UTF-8 输出，避免中文日志乱码；不会修改 PowerShell profile 或系统区域设置。
 
 native release install 使用 `docdev update` 更新。更新默认会刷新 skill target
 directories，让 agent 读取到的 workflow 和当前 CLI release 保持一致。只有在明确不想写
@@ -201,7 +202,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\install.ps1
 它会安装源码 wrapper、运行验证，并同步 skill target。默认安装会 force sync。对带
 `.docdev-skill-source` marker 的目标，sync 会替换整个 skill 目录，避免旧文件残留，
 包括旧版本生成的 `bin/docdev*` wrapper；如果以前用过另一个目标路径，那个旧路径不会被
-自动清理。
+自动清理。生成的 Windows source checkout launcher 同样会在当前进程内设置 UTF-8 输出。
 
 更新源码 checkout 时，优先用 `git pull` 或干净 clone。不要把下载文件手动覆盖到旧目录；
 manual file overlays can leave stale untracked files in the source checkout，sync 会复制

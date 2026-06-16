@@ -223,9 +223,17 @@ scripts/install_remote.ps1
   -> run docdev doctor through the generated PowerShell launcher
 
 $HOME\.local\bin\docdev.cmd
+  -> chcp 65001 for the current command process
+  -> set PYTHONUTF8 and PYTHONIOENCODING for the child Python process
   -> DOCDEV_PROJECT_DIR=$HOME\.local\share\docdev\current
   -> PYTHONPATH=$HOME\.local\share\docdev\current\src
   -> python -m docs_driven_dev.cli %*
+
+$HOME\.local\bin\docdev.ps1
+  -> best-effort set PowerShell console encoding / $OutputEncoding to UTF-8
+  -> set PYTHONUTF8 and PYTHONIOENCODING for the child Python process
+  -> set DOCDEV_PROJECT_DIR and PYTHONPATH to the active release
+  -> python -m docs_driven_dev.cli @args
 ```
 
 The Unix installer does not edit shell profiles. If `~/.local/bin` is not on

@@ -33,7 +33,9 @@ Unix installer 写入 `~/.local/bin/docdev`，但不会自动修改 shell 启动
 Windows installer 写入 `$HOME\.local\bin\docdev.ps1` 和
 `$HOME\.local\bin\docdev.cmd`，默认把 `$HOME\.local\bin` 加入当前用户 PATH，并尽量刷新
 当前 PowerShell session 的 `$env:Path`。如果当前终端仍找不到 `docdev`，重新打开终端后再运行
-`docdev -v`。受管环境不希望修改 PATH 时，可以下载脚本后使用 `-NoModifyPath`：
+`docdev -v`。Windows installer 和生成的 launcher 会在当前进程内设置 UTF-8 输出，避免中文
+日志乱码；不会修改 PowerShell profile 或系统区域设置。受管环境不希望修改 PATH 时，可以
+下载脚本后使用 `-NoModifyPath`：
 
 ```powershell
 $installer = "$env:TEMP\install_docdev.ps1"
@@ -231,6 +233,8 @@ Windows PowerShell 使用：
 .\.venv\Scripts\docdev.ps1 --version
 .\.venv\Scripts\docdev.ps1 audit C:\path\to\project
 ```
+
+生成的 Windows source checkout launcher 同样会在当前进程内设置 UTF-8 输出。
 
 如果 Windows 不允许创建 symlink，Claude 目标会 fallback 为复制，这样安装仍可完成。
 如果安装中断，把最后一行以 `[docdev install]` 或 `[docdev update]` 开头的输出拿来定位；

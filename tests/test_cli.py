@@ -520,6 +520,35 @@ class CliTests(unittest.TestCase):
         self.assertIn("docdev.cmd", install_cli)
         self.assertIn('Join-Path $ProjectDir "src"', install_cli)
 
+    def test_windows_scripts_configure_utf8_output(self) -> None:
+        powershell_scripts = [
+            ROOT / "scripts" / "install.ps1",
+            ROOT / "scripts" / "update_cli.ps1",
+            ROOT / "scripts" / "install_cli.ps1",
+            ROOT / "scripts" / "install_remote.ps1",
+        ]
+        for script in powershell_scripts:
+            text = script.read_text(encoding="utf-8")
+            with self.subTest(script=script.name):
+                self.assertIn("function Set-DocdevUtf8Console", text)
+                self.assertIn("Set-DocdevUtf8Console", text)
+                self.assertIn("System.Text.UTF8Encoding", text)
+                self.assertIn("[Console]::OutputEncoding", text)
+                self.assertIn("$script:OutputEncoding", text)
+                self.assertIn('$env:PYTHONUTF8 = "1"', text)
+                self.assertIn('$env:PYTHONIOENCODING = "utf-8"', text)
+
+        for script in (ROOT / "scripts" / "install_cli.ps1", ROOT / "scripts" / "install_remote.ps1"):
+            text = script.read_text(encoding="utf-8")
+            with self.subTest(generated_launcher_template=script.name):
+                self.assertIn("$PowerShellUtf8Prelude", text)
+                self.assertIn("$OutputEncoding = $Utf8NoBom", text)
+                self.assertIn("$env:PYTHONUTF8 = '1'", text)
+                self.assertIn("$env:PYTHONIOENCODING = 'utf-8'", text)
+                self.assertLess(text.index("$PowerShellUtf8Prelude"), text.index("`$env:DOCDEV_PROJECT_DIR"))
+                self.assertIn("chcp 65001 >nul", text)
+                self.assertLess(text.index("chcp 65001 >nul"), text.index('set "DOCDEV_PROJECT_DIR='))
+
     def test_remote_install_scripts_exist(self) -> None:
         install_sh = (ROOT / "scripts" / "install_remote.sh").read_text(encoding="utf-8")
         install_ps = (ROOT / "scripts" / "install_remote.ps1").read_text(encoding="utf-8")

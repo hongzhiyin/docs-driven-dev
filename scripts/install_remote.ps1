@@ -9,6 +9,22 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+
+function Set-DocdevUtf8Console {
+    $Utf8NoBom = New-Object System.Text.UTF8Encoding -ArgumentList $false
+    $script:OutputEncoding = $Utf8NoBom
+    $env:PYTHONUTF8 = "1"
+    $env:PYTHONIOENCODING = "utf-8"
+    try {
+        [Console]::InputEncoding = $Utf8NoBom
+        [Console]::OutputEncoding = $Utf8NoBom
+    } catch {
+        # Some non-interactive hosts do not expose mutable console encoding.
+    }
+}
+
+Set-DocdevUtf8Console
+
 $Repo = if ($env:DOCDEV_RELEASE_REPO) { $env:DOCDEV_RELEASE_REPO } else { "hongzhiyin/docs-driven-dev" }
 $LogPrefix = if ($env:DOCDEV_INSTALL_LOG_PREFIX) { $env:DOCDEV_INSTALL_LOG_PREFIX } else { "[docdev install]" }
 if (-not $ReleaseBaseUrl) {
@@ -156,7 +172,20 @@ try {
     $CmdLauncher = Join-Path $BinDir "docdev.cmd"
     $EscapedCurrent = $Current.Replace("'", "''")
     $EscapedSrc = (Join-Path $Current "src").Replace("'", "''")
+    $PowerShellUtf8Prelude = @'
+$ErrorActionPreference = 'Stop'
+$Utf8NoBom = New-Object System.Text.UTF8Encoding -ArgumentList $false
+$OutputEncoding = $Utf8NoBom
+$env:PYTHONUTF8 = '1'
+$env:PYTHONIOENCODING = 'utf-8'
+try {
+    [Console]::InputEncoding = $Utf8NoBom
+    [Console]::OutputEncoding = $Utf8NoBom
+} catch {
+}
+'@
     @"
+$PowerShellUtf8Prelude
 `$env:DOCDEV_PROJECT_DIR = '$EscapedCurrent'
 `$env:PYTHONPATH = '$EscapedSrc'
 python -m docs_driven_dev.cli @args
@@ -166,6 +195,9 @@ exit `$LASTEXITCODE
     $CmdSrc = (Join-Path $Current "src").Replace("%", "%%")
     @"
 @echo off
+chcp 65001 >nul
+set "PYTHONUTF8=1"
+set "PYTHONIOENCODING=utf-8"
 set "DOCDEV_PROJECT_DIR=$CmdCurrent"
 set "PYTHONPATH=$CmdSrc"
 python -m docs_driven_dev.cli %*

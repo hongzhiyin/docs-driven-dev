@@ -5,7 +5,7 @@
 ## Current Progress
 
 **Phase**: Phase 1 - portable skill + CLI bootstrap
-**Current Step**: Step 6j complete; v0.1.8 Windows installer follow-up published
+**Current Step**: Step 6l in progress; publish v0.1.9 Windows UTF-8 output release
 
 ### Step Status
 
@@ -41,6 +41,8 @@
 | 6h | Publish v0.1.6 native release | Done |
 | 6i | Add Windows bare command native install contract | Done |
 | 6j | Patch Windows installer live-smoke follow-up findings | Done |
+| 6k | Fix Windows UTF-8 output for PowerShell/CMD entrypoints | Done |
+| 6l | Publish v0.1.9 Windows UTF-8 output release | In Progress |
 
 ---
 
@@ -736,6 +738,62 @@ Verification:
 - Public latest Windows install smoke downloaded `docdev-0.1.8.tar.gz`, wrote
   `docdev.ps1` / `docdev.cmd`, ran default skill sync with temporary homes, and
   reported `docdev 0.1.8`.
+
+---
+
+## Step 6k - Windows UTF-8 output
+
+**Goal**: Prevent Windows PowerShell/CMD users from seeing garbled Chinese
+output at the start of install, update, source maintenance, or normal `docdev`
+launcher execution.
+
+**Tasks**:
+- [x] Create `docs/changes/2026-06-16-windows-utf8-output/` with architecture.
+- [x] Record D-032 for configuring UTF-8 in docdev-owned Windows entrypoints
+  rather than requiring user profile/code-page setup.
+- [x] Update PowerShell entry scripts and generated PowerShell/CMD launchers.
+- [x] Add static regression tests for UTF-8 setup.
+- [x] Run unit tests and project audit.
+
+**Acceptance**:
+1. Windows PowerShell scripts configure UTF-8 console/Python IO before logs or
+   Python CLI execution.
+2. Generated `docdev.ps1` and `docdev.cmd` launchers configure UTF-8 before
+   running `docs_driven_dev.cli`.
+3. Unit tests and `docdev audit` pass.
+
+Verification:
+- `python3 -m unittest discover -s tests` passed with 38 tests.
+- `PYTHONPATH=src python3 -m docs_driven_dev.cli audit /Users/chihoyo/Project/docs-driven-dev` reported `No findings`.
+- Real Windows terminal rendering still needs release/live-smoke verification before claiming the fix is available through GitHub latest.
+
+---
+
+## Step 6l - v0.1.9 Windows UTF-8 output release
+
+**Goal**: Publish the Windows UTF-8 output fix through GitHub Releases so
+Windows users installing latest can receive the updated PowerShell/CMD entrypoints.
+
+**Tasks**:
+- [x] Bump release metadata to `0.1.9`.
+- [x] Run unit tests and project audit.
+- [x] Package release assets.
+- [x] Run local simulated install smoke from packaged `0.1.9` assets.
+- [ ] Commit, tag, and push `v0.1.9`.
+- [ ] Publish GitHub Release `v0.1.9` as latest.
+
+**Acceptance**:
+1. Release assets include `docdev-0.1.9.tar.gz`, checksum, manifest, and both remote installers.
+2. Local simulated install launcher reports `docdev 0.1.9`.
+3. Unit tests and `docdev audit` pass.
+4. Real Windows terminal rendering remains a post-release live-smoke item unless verified separately.
+
+Verification:
+- `python3 -m unittest discover -s tests` passed with 38 tests.
+- `PYTHONPATH=src python3 -m docs_driven_dev.cli audit /Users/chihoyo/Project/docs-driven-dev` reported `No findings`.
+- `./scripts/package_release.sh --out /private/tmp/docdev-release-assets-0.1.9` emitted `docdev-0.1.9.tar.gz`, checksum, manifest, and both remote installers.
+- Local simulated install from `/private/tmp/docdev-release-assets-0.1.9` reported `docdev 0.1.9`; `docdev init` plus `docdev audit` passed on `/private/tmp/docdev-019-target.jz9xL4`.
+- GitHub publish and public latest smoke pending.
 
 ---
 

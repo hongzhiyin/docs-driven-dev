@@ -1380,3 +1380,49 @@ until it was repaired manually.
 - `scripts/install_remote.ps1`
 - `src/docs_driven_dev/release.py`
 - `tests/test_cli.py`
+
+---
+
+## D-032 - Step 6k - Configure UTF-8 in docdev-owned Windows entrypoints
+
+**Date**: 2026-06-16
+
+**Context**:
+Windows users can now invoke `docdev` directly, but PowerShell/CMD sessions may
+still start with a non-UTF-8 console or Python IO encoding. The resulting
+mojibake appears before users can reasonably run a manual encoding command, and
+before a Python-only fix could affect installer logs.
+
+**Options**:
+- A. Document manual `chcp 65001` / PowerShell profile setup - no code churn,
+  but makes every Windows user carry the workaround.
+- B. Set UTF-8 only in Python CLI startup - helps normal CLI output, but does
+  not cover PowerShell installer/update logs emitted before Python starts.
+- C. Configure UTF-8 in Windows PowerShell scripts and generated Windows
+  launchers - covers installer startup, source maintenance, and normal
+  `docdev` command execution while keeping the change process-local.
+
+**Chosen**: C
+
+**Rationale**:
+- It fixes the earliest user-visible output point.
+- It keeps encoding changes scoped to docdev-owned scripts and child Python
+  processes instead of mutating profiles or system locale.
+- The same generated launcher contract covers release installs and source
+  checkout developer wrappers.
+
+**Risks**:
+- Some PowerShell hosts may reject console encoding mutation. Mitigation: make
+  console mutation best-effort and still set `PYTHONUTF8` plus
+  `PYTHONIOENCODING` for Python output.
+- Static tests cannot prove every Windows terminal renders Chinese correctly.
+  Mitigation: keep a Windows live smoke as release verification.
+
+**Related code / docs**:
+- ROADMAP Step 6k
+- `docs/changes/2026-06-16-windows-utf8-output/`
+- `scripts/install_remote.ps1`
+- `scripts/install_cli.ps1`
+- `scripts/install.ps1`
+- `scripts/update_cli.ps1`
+- `tests/test_cli.py`

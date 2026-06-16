@@ -6,6 +6,21 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+function Set-DocdevUtf8Console {
+    $Utf8NoBom = New-Object System.Text.UTF8Encoding -ArgumentList $false
+    $script:OutputEncoding = $Utf8NoBom
+    $env:PYTHONUTF8 = "1"
+    $env:PYTHONIOENCODING = "utf-8"
+    try {
+        [Console]::InputEncoding = $Utf8NoBom
+        [Console]::OutputEncoding = $Utf8NoBom
+    } catch {
+        # Some non-interactive hosts do not expose mutable console encoding.
+    }
+}
+
+Set-DocdevUtf8Console
+
 function Write-DocdevUpdateLog {
     param([string]$Message)
     $Timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
