@@ -897,7 +897,17 @@ available.
    wrappers.
 
 Verification:
-- Pending final release verification.
+- `python3 -m unittest discover -s tests` passed with 39 tests.
+- `PYTHONPATH=src python3 -m docs_driven_dev.cli audit /Users/chihoyo/Project/docs-driven-dev` reported `No findings`.
+- `PYTHONPATH=src python3 -m docs_driven_dev.cli --version` reported `docdev 0.1.11`.
+- `./scripts/package_release.sh --out /private/tmp/docdev-release-assets-0.1.11` emitted `docdev-0.1.11.tar.gz`, checksum, manifest, and both remote installers.
+- Local simulated install from `/private/tmp/docdev-release-assets-0.1.11` reported `docdev 0.1.11`; `docdev init` plus `docdev audit` passed on `/private/tmp/docdev-011-local-smoke.Hk9iCk/target`.
+- Packaged skill content contains the new no-probe instruction, and packaged skill sync content still has no `bin/docdev*` wrappers.
+- Commit `11b6af1` was tagged as `v0.1.11`; `git push origin main` and `git push origin v0.1.11` completed.
+- GitHub Release `v0.1.11` was published as latest: `https://github.com/hongzhiyin/docs-driven-dev/releases/tag/v0.1.11`.
+- Public latest smoke installed `docdev-0.1.11.tar.gz` from GitHub, checksum passed, launcher reported `docdev 0.1.11`, and `docdev init` plus `docdev audit` passed on `/private/tmp/docdev-011-public-smoke.8pceoG/target`.
+- Local native install was refreshed to `/Users/chihoyo/.local/share/docdev/releases/0.1.11`; `/Users/chihoyo/.local/bin/docdev --version` reports `docdev 0.1.11`, and `docdev doctor` confirms Codex/Cursor/Agents/Claude skill targets are installed.
+- Installed Codex/Cursor/Agents/Claude `SKILL.md` files contain the new no-probe instruction, and installed skill targets still contain no `bin/docdev*` wrappers.
 
 ---
 
