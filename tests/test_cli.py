@@ -791,6 +791,8 @@ class CliTests(unittest.TestCase):
         self.assertIn("先运行 native", readme)
         self.assertIn("Do not guess", skill)
         self.assertIn("local paths or wrappers", skill)
+        self.assertIn("不要探测或报告 `<skill-dir>/bin/docdev", skill)
+        self.assertIn("只有 `docdev` 和 native launcher 都不可用时", skill)
         self.assertIn("Unix installer 不会修改用户的全局 shell `PATH`", skill)
         self.assertIn("替换整个 skill 目录", skill)
         self.assertIn("file overlays can leave stale untracked files", skill)

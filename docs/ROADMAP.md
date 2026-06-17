@@ -5,7 +5,7 @@
 ## Current Progress
 
 **Phase**: Phase 1 - portable skill + CLI bootstrap
-**Current Step**: Step 6n complete; v0.1.10 Claude direct-copy sync release published
+**Current Step**: Step 6o complete; v0.1.11 skill-local wrapper warning release published
 
 ### Step Status
 
@@ -45,6 +45,7 @@
 | 6l | Publish v0.1.9 Windows UTF-8 output release | Done |
 | 6m | Copy Claude skill target directly instead of symlinking to Agents | Done |
 | 6n | Publish v0.1.10 Claude direct-copy sync release | Done |
+| 6o | Publish v0.1.11 skill-local wrapper warning release | Done |
 
 ---
 
@@ -863,6 +864,40 @@ Verification:
 - Public latest smoke installed `docdev-0.1.10.tar.gz` from GitHub, checksum passed, launcher reported `docdev 0.1.10`, and `docdev init` plus `docdev audit` passed on `/private/tmp/docdev-010-public-smoke.4JyUGM/target`.
 - Local native install was refreshed to `/Users/chihoyo/.local/share/docdev/releases/0.1.10`; `/Users/chihoyo/.local/bin/docdev doctor` confirmed Codex/Cursor/Agents/Claude skill targets were installed.
 - Local Claude target is now a copied, marked directory instead of a symlink: `/Users/chihoyo/.claude/skills/docs-driven-dev`.
+
+---
+
+## Step 6o - v0.1.11 skill-local wrapper warning release
+
+**Goal**: Publish the skill guidance fix so agents stop reporting missing
+skill-local `bin/docdev.cmd` as a fallback event when native launchers are
+available.
+
+**Tasks**:
+- [x] Create `docs/changes/2026-06-18-suppress-skill-local-wrapper-warning/`.
+- [x] Clarify `skill/SKILL.md`, README, and SPEC so agents do not probe or
+  report missing `<skill-dir>/bin/docdev*` wrappers.
+- [x] Add regression coverage for the skill guidance.
+- [x] Bump release metadata to `0.1.11`.
+- [x] Run unit tests and project audit.
+- [x] Package release assets.
+- [x] Run local simulated install smoke from packaged `0.1.11` assets.
+- [x] Commit, tag, and push `v0.1.11`.
+- [x] Publish GitHub Release `v0.1.11` as latest.
+- [x] Update the local native install and synced skill targets to `0.1.11`.
+
+**Acceptance**:
+1. Release assets include `docdev-0.1.11.tar.gz`, checksum, manifest, and both
+   remote installers.
+2. Local simulated install launcher reports `docdev 0.1.11`.
+3. Unit tests and `docdev audit` pass.
+4. Public latest smoke can install `0.1.11` and run `docdev init` plus audit.
+5. Local installed Codex/Cursor/Agents/Claude skill copies include the new
+   no-probe instruction and still do not contain skill-local `bin/docdev*`
+   wrappers.
+
+Verification:
+- Pending final release verification.
 
 ---
 

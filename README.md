@@ -109,7 +109,8 @@ Windows PowerShell 遵循同样的安装 / 更新合同。当前仓库在 macOS 
 
 如果 `docdev` 和 `~/.local/bin/docdev` 都不可用，agent 应提示用户先运行 native
 installer，而不是去猜某个源码 checkout 路径或 skill 目录里的 wrapper。`sync-skill`
-只同步 skill 内容；release install/update 默认会刷新 skill 目录，若要跳过则运行
+只同步 skill 内容；不要探测或报告 `<skill-dir>/bin/docdev*` 缺失，这种缺失是预期状态。
+release install/update 默认会刷新 skill 目录，若要跳过则运行
 `docdev update --no-sync-skill`。
 
 当用户明确点名 `docs-driven-dev` 时，agent 不应把它当成泛泛的参考方法。它应该遵循
