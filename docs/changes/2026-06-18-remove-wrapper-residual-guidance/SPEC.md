@@ -6,7 +6,7 @@
 
 | 字段 | 内容 |
 |---|---|
-| 状态 | 完成 |
+| 状态 | 已发布 v0.1.14 |
 | 需求来源 | 用户反馈：其他机器更新后仍出现旧 skill-local Windows launcher 缺失类提示 |
 | 工作包目录 | `docs/changes/2026-06-18-remove-wrapper-residual-guidance/` |
 | 最后更新 | 2026-06-18 |
@@ -37,7 +37,6 @@ CLI 入口和 skill 同步语义，不再被旧 skill-local launcher 路径示�
 
 - 不重写历史 ROADMAP step 或历史 DECISIONS 条目里的旧 launcher 背景。
 - 不改变 CLI resolution、native installer、`sync-skill` 或 release packaging 的代码行为。
-- 不发布新版本，除非用户后续明确要求提交并发布。
 
 ## 4. 用户场景 / 使用流程
 
@@ -74,6 +73,7 @@ CLI 入口和 skill 同步语义，不再被旧 skill-local launcher 路径示�
 2. README / SPEC 描述 current-target replacement 和 supported CLI entries，且保留
    native Windows `docdev.cmd` 入口说明。
 3. `python3 -m unittest discover -s tests` 和 `docdev audit` 通过。
+4. GitHub Release `v0.1.14` 已发布，并通过 public latest smoke 和本机 native update 验证。
 
 ## 9. 开放问题
 

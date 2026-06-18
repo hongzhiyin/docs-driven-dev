@@ -5,7 +5,7 @@
 ## Current Progress
 
 **Phase**: Phase 1 - portable skill + CLI bootstrap
-**Current Step**: Step 6u in progress; publishing v0.1.14 active guidance cleanup release
+**Current Step**: Step 6u complete; v0.1.14 active guidance cleanup release published
 
 ### Step Status
 
@@ -51,7 +51,7 @@
 | 6r | Add optional subagent delegation guidance | Done |
 | 6s | Publish v0.1.13 delegation guidance release | Done |
 | 6t | Remove obsolete launcher residuals from active guidance | Done |
-| 6u | Publish v0.1.14 active guidance cleanup release | In progress |
+| 6u | Publish v0.1.14 active guidance cleanup release | Done |
 
 ---
 
@@ -1100,10 +1100,10 @@ Verification:
 - [x] Run unit tests and project audit.
 - [x] Package release assets.
 - [x] Run local simulated install smoke from packaged `0.1.14` assets.
-- [ ] Commit, tag, and push `v0.1.14`.
-- [ ] Publish GitHub Release `v0.1.14` as latest.
-- [ ] Run public latest smoke.
-- [ ] Update the local native install and synced skill targets to `0.1.14`.
+- [x] Commit, tag, and push `v0.1.14`.
+- [x] Publish GitHub Release `v0.1.14` as latest.
+- [x] Run public latest smoke.
+- [x] Update the local native install and synced skill targets to `0.1.14`.
 
 **Acceptance**:
 1. Release assets include `docdev-0.1.14.tar.gz`, checksum, manifest, and both
@@ -1120,6 +1120,12 @@ Verification:
 - `PYTHONPATH=src python3 -m docs_driven_dev.cli audit /Users/chihoyo/Project/docs-driven-dev` reported `No findings`.
 - `./scripts/package_release.sh --out /private/tmp/docdev-release-assets-0.1.14` emitted `docdev-0.1.14.tar.gz`, checksum, manifest, and both remote installers.
 - Local simulated install from packaged `0.1.14` assets reported `docdev 0.1.14`; `docdev init` plus `docdev audit` passed, synced isolated skill targets contained `sync 使用整目录替换` and `只保留本版本`, and `find` for `*/bin/docdev*` produced no output.
+- Commit `fdb3ab3` was tagged as `v0.1.14`; `git push origin main` and `git push origin v0.1.14` completed.
+- GitHub Release `v0.1.14` was published as latest: `https://github.com/hongzhiyin/docs-driven-dev/releases/tag/v0.1.14`.
+- Public latest smoke installed `docdev-0.1.14.tar.gz` from GitHub, checksum passed, launcher reported `docdev 0.1.14`, and `docdev init` plus `docdev audit` passed on `/private/tmp/docdev-014-public-smoke.x6dPWr/target`.
+- Public latest smoke synced isolated skill targets containing `sync 使用整目录替换` and `只保留本版本`, and `find` for `*/bin/docdev*` produced no output.
+- Local native install was refreshed to `/Users/chihoyo/.local/share/docdev/releases/0.1.14`; `/Users/chihoyo/.local/bin/docdev --version` reports `docdev 0.1.14`, and `docdev doctor` confirms Codex/Cursor/Agents/Claude skill targets are installed.
+- Installed Codex/Cursor/Agents/Claude `SKILL.md` files contain `sync 使用整目录替换` and `只保留本版本`; they do not contain old skill-local launcher wording, and installed skill targets still contain no `bin/docdev*` launchers.
 
 ---
 

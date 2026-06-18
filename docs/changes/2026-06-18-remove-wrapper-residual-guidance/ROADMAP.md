@@ -5,7 +5,7 @@
 ## 0. 当前状态
 
 **阶段 / Phase**: 完成
-**当前 Step / Current Step**: Step 5 - 验证与收尾完成
+**当前 Step / Current Step**: Step 6 - 发布 v0.1.14 完成
 **ARCHITECTURE 省略理由 / Architecture Omission Reason**: 本次只调整活跃文档指导和测试断言，不改变模块边界、数据流、CLI entrypoint、安装布局、配置或迁移行为。
 
 ## 1. Gates
@@ -46,6 +46,7 @@
 | 3 | 形成并确认方案 | 完成 |
 | 4 | 实施文档与测试 | 完成 |
 | 5 | 验证与收尾 | 完成 |
+| 6 | 发布 v0.1.14 | 完成 |
 
 ---
 
@@ -142,9 +143,31 @@
 | SPEC-2 | `PYTHONPATH=src python3 -m unittest discover -s tests` | 通过 | 40 tests OK |
 | SPEC-3 | `PYTHONPATH=src python3 -m docs_driven_dev.cli audit /Users/chihoyo/Project/docs-driven-dev` | 通过 | No findings |
 | SPEC-4 | installed skill `rg` check | 通过 | Codex/Cursor/Agents/Claude skill 含新 replacement wording，不含旧 skill-local launcher wording；`find` for `*/bin/docdev*` 无输出 |
+| SPEC-5 | `PYTHONPATH=src python3 -m docs_driven_dev.cli --version`; package release; local packaged install smoke | 通过 | `docdev 0.1.14`; local smoke install/init/audit passed; isolated skill targets include active guidance cleanup |
+| SPEC-6 | GitHub Release `v0.1.14` publication and public latest smoke | 通过 | Release URL recorded in root ROADMAP Step 6u; public latest install/init/audit passed |
+| SPEC-7 | `/Users/chihoyo/.local/bin/docdev update --version 0.1.14` and installed skill content check | 通过 | Local native install refreshed; four skill targets contain active guidance cleanup |
+
+---
+
+## Step 6 - 发布 v0.1.14
+
+**Goal**: 让 fresh install 和 `docdev update` 获取本次 active guidance cleanup。
+
+**Tasks**:
+- [x] Bump release metadata to `0.1.14`
+- [x] Run tests, audit, package, and local packaged smoke
+- [x] Commit, tag, push, and publish GitHub Release `v0.1.14`
+- [x] Run public latest smoke
+- [x] Update local native install and verify installed skill content
+
+**Acceptance**:
+1. GitHub Release `v0.1.14` published as latest.
+2. Public latest smoke installs `0.1.14` and passes `init` plus `audit`.
+3. Local `/Users/chihoyo/.local/bin/docdev --version` reports `docdev 0.1.14`.
+4. Local installed skill targets contain the active guidance cleanup.
 
 ## 5. 风险与后续
 
 | ID | 风险 / 后续 | 影响 | 处理 |
 |---|---|---|---|
-| F-1 | 其他机器仍运行 v0.1.13 release skill | 需要新 release 才能通过 `docdev update` 获取修复 | 通过 `v0.1.14` release 处理 |
+| F-1 | 其他机器仍运行 v0.1.13 release skill | 需要新 release 才能通过 `docdev update` 获取修复 | 已通过 `v0.1.14` release 处理 |
