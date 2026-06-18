@@ -5,7 +5,7 @@
 ## 0. 当前状态
 
 **阶段 / Phase**: 完成
-**当前 Step / Current Step**: Step 7 - 发布 v0.1.12 进行中
+**当前 Step / Current Step**: Step 7 - 发布 v0.1.12 完成
 **ARCHITECTURE 省略理由 / Architecture Omission Reason**: 本次只调整 skill/docs 中的 CLI resolution 文案，不改变模块边界、数据流、launcher 生成、安装路径、配置或迁移行为。
 
 ## 1. Gates
@@ -46,7 +46,7 @@
 | 4 | 验证与收尾 | 完成 |
 | 5 | 发布 v0.1.11 | 完成 |
 | 6 | 正向化 active skill 文案 | 完成 |
-| 7 | 发布 v0.1.12 | 进行中 |
+| 7 | 发布 v0.1.12 | 完成 |
 
 ---
 
@@ -166,9 +166,9 @@
 - [x] Run unit tests and project audit。
 - [x] Package release assets。
 - [x] Run local simulated install smoke。
-- [ ] Commit, tag, push, and publish GitHub Release。
-- [ ] Run public latest smoke。
-- [ ] Refresh local native install and synced skill targets。
+- [x] Commit, tag, push, and publish GitHub Release。
+- [x] Run public latest smoke。
+- [x] Refresh local native install and synced skill targets。
 
 **Acceptance**:
 1. GitHub Release `v0.1.12` published as latest.
@@ -188,6 +188,8 @@
 | SPEC-6 | `rg` check on active skill / README / SPEC | 通过 | 旧负向运行指令已移除，正向入口合同存在 |
 | SPEC-7 | `./scripts/sync_skill.sh --targets codex,cursor,agents,claude --force` plus installed skill `rg` / `find` checks | 通过 | 四个本机 skill targets 已刷新；正向入口合同存在；`*/bin/docdev*` 无输出 |
 | SPEC-8 | `PYTHONPATH=src python3 -m docs_driven_dev.cli --version`; unit tests; audit; local packaged install smoke | 通过 | `docdev 0.1.12`; 39 tests; No findings; local smoke passed |
+| SPEC-9 | GitHub Release `v0.1.12` publication and public latest smoke | 通过 | Release URL recorded in root ROADMAP Step 6q; public latest install/init/audit passed |
+| SPEC-10 | `/Users/chihoyo/.local/bin/docdev update --version 0.1.12` and installed skill content check | 通过 | Local native install refreshed; four skill targets contain positive CLI resolution wording |
 
 ## 5. 风险与后续
 

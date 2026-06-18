@@ -6,7 +6,7 @@
 
 | 字段 | 内容 |
 |---|---|
-| 状态 | v0.1.12 发布中 |
+| 状态 | 已发布 v0.1.12 |
 | 需求来源 | 用户反馈：agent 使用 skill 时会先提示本地 skill 目录里的 `bin/docdev.cmd` 不存在，再改用 native launcher |
 | 工作包目录 | `docs/changes/2026-06-18-suppress-skill-local-wrapper-warning/` |
 | 最后更新 | 2026-06-18 |
@@ -67,7 +67,7 @@
 
 1. `skill/SKILL.md` 明确写出 CLI resolution 只使用 PATH / native launcher 入口。
 2. Unit tests 和 `docdev audit` 通过。
-3. GitHub Release `v0.1.12` 发布后可通过 native update 获取。
+3. GitHub Release `v0.1.12` 已发布并可通过 native update 获取。
 4. D-025 的 no skill-local wrapper 合同仍成立。
 
 ## 9. 开放问题

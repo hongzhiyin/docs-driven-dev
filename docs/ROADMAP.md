@@ -5,7 +5,7 @@
 ## Current Progress
 
 **Phase**: Phase 1 - portable skill + CLI bootstrap
-**Current Step**: Step 6q in progress; publishing v0.1.12 positive skill guidance release
+**Current Step**: Step 6q complete; v0.1.12 positive skill guidance release published
 
 ### Step Status
 
@@ -47,7 +47,7 @@
 | 6n | Publish v0.1.10 Claude direct-copy sync release | Done |
 | 6o | Publish v0.1.11 skill-local wrapper warning release | Done |
 | 6p | Rewrite active CLI resolution guidance as positive entrypoints | Done |
-| 6q | Publish v0.1.12 positive skill guidance release | In Progress |
+| 6q | Publish v0.1.12 positive skill guidance release | Done |
 
 ---
 
@@ -954,10 +954,10 @@ fresh installs do not reintroduce the v0.1.11 negative wording.
 - [x] Run unit tests and project audit.
 - [x] Package release assets.
 - [x] Run local simulated install smoke from packaged `0.1.12` assets.
-- [ ] Commit, tag, and push `v0.1.12`.
-- [ ] Publish GitHub Release `v0.1.12` as latest.
-- [ ] Run public latest smoke.
-- [ ] Update the local native install and synced skill targets to `0.1.12`.
+- [x] Commit, tag, and push `v0.1.12`.
+- [x] Publish GitHub Release `v0.1.12` as latest.
+- [x] Run public latest smoke.
+- [x] Update the local native install and synced skill targets to `0.1.12`.
 
 **Acceptance**:
 1. Release assets include `docdev-0.1.12.tar.gz`, checksum, manifest, and both
@@ -974,6 +974,12 @@ Verification:
 - `PYTHONPATH=src python3 -m docs_driven_dev.cli audit /Users/chihoyo/Project/docs-driven-dev` reported `No findings`.
 - `./scripts/package_release.sh --out /private/tmp/docdev-release-assets-0.1.12` emitted `docdev-0.1.12.tar.gz`, checksum, manifest, and both remote installers.
 - Local simulated install from `/private/tmp/docdev-012-local-smoke.tgodXb` reported `docdev 0.1.12`; `docdev init` plus `docdev audit` passed, synced isolated skill targets contained `CLI resolution 只使用上面列出的跨机器入口`, and `find` for `*/bin/docdev*` produced no output.
+- Commit `57443a9` was tagged as `v0.1.12`; `git push origin main` and `git push origin v0.1.12` completed.
+- GitHub Release `v0.1.12` was published as latest: `https://github.com/hongzhiyin/docs-driven-dev/releases/tag/v0.1.12`.
+- Public latest smoke installed `docdev-0.1.12.tar.gz` from GitHub, checksum passed, launcher reported `docdev 0.1.12`, and `docdev init` plus `docdev audit` passed on `/private/tmp/docdev-012-public-smoke/target`.
+- Public latest smoke synced isolated skill targets containing `CLI resolution 只使用上面列出的跨机器入口`, and `find` for `*/bin/docdev*` produced no output.
+- Local native install was refreshed to `/Users/chihoyo/.local/share/docdev/releases/0.1.12`; `/Users/chihoyo/.local/bin/docdev --version` reports `docdev 0.1.12`, and `docdev doctor` confirms Codex/Cursor/Agents/Claude skill targets are installed.
+- Installed Codex/Cursor/Agents/Claude `SKILL.md` files contain the positive CLI resolution wording, and installed skill targets still contain no `bin/docdev*` wrappers.
 
 ---
 
