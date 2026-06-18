@@ -117,17 +117,16 @@ narrow fix.
 should pass the intended target project path explicitly unless the user's
 current working directory is itself the target project.
 
-Agents resolve the CLI without relying on local source paths or compatibility
-wrappers. The normal order is: `docdev` on `PATH`, then the native Unix
-launcher `~/.local/bin/docdev` when present. On Windows, release install writes
+Agents resolve the CLI through the documented native/PATH entries. The normal
+order is: `docdev` on `PATH`, then the native Unix launcher
+`~/.local/bin/docdev` when present. On Windows, release install writes
 `docdev.cmd` under the native bin dir and adds that directory to User PATH by
 default, so `docdev` should be available in a new terminal; if the current
 session has stale PATH, the direct fallback is `$HOME\.local\bin\docdev.ps1`.
 If none of these entries exists, agents should ask the user to run the native
-installer or repair the install. They should not guess local paths or wrappers.
-Agents must not probe or report missing `<skill-dir>/bin/docdev`,
-`<skill-dir>/bin/docdev.ps1`, or `<skill-dir>/bin/docdev.cmd`; absence of these
-skill-local wrappers is expected after D-025.
+installer or repair the install. `sync-skill` provides workflow content and
+markers; CLI execution uses the resolved `docdev` command or native launcher
+entries above.
 `DOCDEV_PROJECT_DIR` + `PYTHONPATH` is reserved for explicit source checkout
 development, not cross-machine agent use.
 

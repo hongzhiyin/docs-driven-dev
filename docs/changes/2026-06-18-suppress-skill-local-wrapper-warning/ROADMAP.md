@@ -5,8 +5,8 @@
 ## 0. 当前状态
 
 **阶段 / Phase**: 完成
-**当前 Step / Current Step**: Step 5 - 发布完成
-**ARCHITECTURE 省略理由 / Architecture Omission Reason**: 本次只强化 skill/docs 中的 CLI resolution 指令，不改变模块边界、数据流、launcher 生成、安装路径、配置或迁移行为。
+**当前 Step / Current Step**: Step 7 - 发布 v0.1.12 进行中
+**ARCHITECTURE 省略理由 / Architecture Omission Reason**: 本次只调整 skill/docs 中的 CLI resolution 文案，不改变模块边界、数据流、launcher 生成、安装路径、配置或迁移行为。
 
 ## 1. Gates
 
@@ -31,9 +31,9 @@
 
 | ID | 主题 | 发现 | 证据 / 文件 | 结论 |
 |---|---|---|---|---|
-| R-1 | 当前 skill 指令 | `skill/SKILL.md` 已优先列出 `docdev` / native launcher，但未显式说不要探测 `<skill-dir>/bin/docdev*` | `skill/SKILL.md` | 增加负向规则避免旧探测噪音 |
+| R-1 | 当前 skill 指令 | v0.1.11 已用负向规则压制旧探测噪音，但 active guidance 仍保留旧路径上下文 | `skill/SKILL.md` | 改成正向 PATH / native launcher 入口合同 |
 | R-2 | 当前同步合同 | `sync-skill` 不生成 `bin/docdev`, `bin/docdev.ps1`, `bin/docdev.cmd` | `docs/SPEC.md`, `docs/ROADMAP.md`, `tests/test_cli.py` | 不应通过恢复 wrapper 解决 |
-| R-3 | 测试覆盖 | `test_docs_explain_path_and_replacement_contract` 已保护 CLI resolution 文案 | `tests/test_cli.py` | 在既有测试中增加防回归断言 |
+| R-3 | 测试覆盖 | `test_docs_explain_path_and_replacement_contract` 已保护 CLI resolution 文案 | `tests/test_cli.py` | 将防回归断言改为正向短语 |
 
 ## 3. Step 状态总览
 
@@ -45,6 +45,8 @@
 | 3 | 实施文案与测试 | 完成 |
 | 4 | 验证与收尾 | 完成 |
 | 5 | 发布 v0.1.11 | 完成 |
+| 6 | 正向化 active skill 文案 | 完成 |
+| 7 | 发布 v0.1.12 | 进行中 |
 
 ---
 
@@ -134,6 +136,46 @@
 2. Local `/Users/chihoyo/.local/bin/docdev --version` reports `docdev 0.1.11`.
 3. Installed skill targets include the new no-probe instruction.
 
+---
+
+## Step 6 - 正向化 active skill 文案
+
+**Goal**: 让 skill 只描述 agent 应使用的 CLI entrypoints。
+
+**Tasks**:
+- [x] 将 `skill/SKILL.md` CLI Resolution 改为 PATH / native launcher 正向入口合同。
+- [x] 同步 README、根 SPEC 和本 change packet 的当前合同。
+- [x] 增加 D-002 记录文案取舍。
+- [x] 更新 regression test。
+- [x] 运行目标测试、完整测试和 audit。
+- [x] 同步本机 installed skill targets。
+
+**Acceptance**:
+1. Active `skill/SKILL.md` 中的运行指令只列 supported CLI entrypoints 和安装不可用条件。
+2. README / SPEC / tests 与该合同一致。
+3. 本机安装后的 skill 目标包含正向 CLI resolution 文案。
+
+---
+
+## Step 7 - 发布 v0.1.12
+
+**Goal**: 让 release install/update 获取正向化后的 skill 指令。
+
+**Tasks**:
+- [x] Bump release metadata to `0.1.12`。
+- [x] Run unit tests and project audit。
+- [x] Package release assets。
+- [x] Run local simulated install smoke。
+- [ ] Commit, tag, push, and publish GitHub Release。
+- [ ] Run public latest smoke。
+- [ ] Refresh local native install and synced skill targets。
+
+**Acceptance**:
+1. GitHub Release `v0.1.12` published as latest.
+2. Public latest smoke installs `0.1.12` and passes `init` plus `audit`.
+3. Local `/Users/chihoyo/.local/bin/docdev --version` reports `docdev 0.1.12`.
+4. Installed skill targets include the positive CLI resolution wording.
+
 ## 4. 验证记录
 
 | 验收项 | 验证方式 | 结果 | 备注 |
@@ -143,6 +185,9 @@
 | SPEC-3 | `PYTHONPATH=src python3 -m docs_driven_dev.cli audit /Users/chihoyo/Project/docs-driven-dev` | 通过 | No findings |
 | SPEC-4 | GitHub Release `v0.1.11` publication and public latest smoke | 通过 | Release URL recorded in root ROADMAP Step 6o |
 | SPEC-5 | `/Users/chihoyo/.local/bin/docdev update --version 0.1.11` and installed skill content check | 通过 | Local native install refreshed |
+| SPEC-6 | `rg` check on active skill / README / SPEC | 通过 | 旧负向运行指令已移除，正向入口合同存在 |
+| SPEC-7 | `./scripts/sync_skill.sh --targets codex,cursor,agents,claude --force` plus installed skill `rg` / `find` checks | 通过 | 四个本机 skill targets 已刷新；正向入口合同存在；`*/bin/docdev*` 无输出 |
+| SPEC-8 | `PYTHONPATH=src python3 -m docs_driven_dev.cli --version`; unit tests; audit; local packaged install smoke | 通过 | `docdev 0.1.12`; 39 tests; No findings; local smoke passed |
 
 ## 5. 风险与后续
 

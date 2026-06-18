@@ -71,12 +71,12 @@ docs/changes/YYYY-MM-DD-slug/
    `docdev <command>`；如果当前终端还没有刷新 PATH，可重新打开终端，或临时运行
    `$HOME\.local\bin\docdev.ps1 <command>`。
 4. 如果以上入口都不存在，说明 `docdev` 安装不可用；要求用户先运行 native installer 或修复
-   安装。Do not guess local paths or wrappers for cross-machine use.
+   安装。
 
-不要探测或报告 `<skill-dir>/bin/docdev`、`<skill-dir>/bin/docdev.ps1` 或
-`<skill-dir>/bin/docdev.cmd` 缺失；`sync-skill` 已经有意停止生成这些
-skill-local wrappers。只有 `docdev` 和 native launcher 都不可用时，才把 CLI 安装状态当作
-问题报告。
+CLI resolution 只使用上面列出的跨机器入口：`docdev` on PATH、Unix-like
+`~/.local/bin/docdev`、Windows 新终端里的 `docdev` 或临时
+`$HOME\.local\bin\docdev.ps1`。`sync-skill` 同步的是 skill 内容；agent 需要执行 CLI
+时直接使用这些 native/PATH 入口。安装不可用的诊断条件是上述入口全部不可用。
 
 始终显式选择目标项目。只有当用户的当前工作目录显然就是目标项目时，才把当前目录当目标；
 否则传入用户说出的项目路径。

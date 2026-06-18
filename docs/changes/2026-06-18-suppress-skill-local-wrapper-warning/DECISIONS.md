@@ -39,3 +39,62 @@ launcher。用户确认不希望把 `.cmd` 放回 skill 目录，而是修复 sk
 - `docs/SPEC.md`
 - `README.md`
 - `tests/test_cli.py`
+
+## D-002 - Step 6 - 用正向入口合同替代负向禁令文案
+
+**日期 / Date**: 2026-06-18
+
+**上下文 / Context**:
+v0.1.11 通过显式负向规则降低了旧 wrapper 提示复现概率，但用户指出 skill 对本来就不该做的
+事情不需要反复写“不要怎么做”。active skill guidance 应该说 agent 该走哪些 CLI 入口。
+
+**选项 / Options**:
+- A. 保留 v0.1.11 的负向禁令 - 对旧问题描述最直接，但会继续把旧路径放进模型操作上下文。
+- B. 改成正向入口合同 - 只描述 PATH / native launcher 入口和安装不可用的诊断条件。
+
+**选择 / Chosen**: B
+
+**理由 / Rationale**:
+- skill 的职责是指导当前工作流，正向合同更短、更稳，也更符合用户对 skill 文案的期望。
+- D-025 的同步模型已经决定 CLI 入口由 native/PATH 承担，不需要把旧路径作为运行指令重复出现。
+- 测试保护正向短语即可防止后续文案退回旧模式。
+
+**风险 / Risks**:
+- 如果外层 resolver 仍硬编码旧路径，正向 skill 文案不能单独修复平台代码。缓解：若用户再次复现，
+  再定位 resolver 实现而不是继续堆叠 skill 禁令。
+
+**对应代码 / 文档**:
+- `skill/SKILL.md`
+- `docs/SPEC.md`
+- `README.md`
+- `tests/test_cli.py`
+
+---
+
+## D-003 - Step 7 - 为正向 skill 文案发布 v0.1.12
+
+**日期 / Date**: 2026-06-18
+
+**上下文 / Context**:
+源码和本机已安装 skill 已经改成正向入口合同，但 latest release `v0.1.11` 的 artifact 仍包含上一版
+负向文案。后续 `docdev update` 或新机器安装 latest 时会从 release artifact 取 skill 内容。
+
+**选项 / Options**:
+- A. 等下一次功能 release 顺带发布 - 少一次 release，但 latest install/update 继续落后。
+- B. 发布一个小的 `v0.1.12` skill 文案 release - 让 release artifact 立即与当前 source / installed skill 对齐。
+
+**选择 / Chosen**: B
+
+**理由 / Rationale**:
+- 用户关心的是后续 agent 使用 skill 时的实际表现，分发边界必须包含 release artifact。
+- 本次改动虽然小，但会影响 installed skill 文案，适合用 patch release 交付。
+- 已用 unit tests、audit 和本地 packaged install smoke 验证 artifact。
+
+**风险 / Risks**:
+- 纯文案 release 会增加一个版本号。缓解：不引入行为变更，只发布已验证的 skill/docs 内容。
+
+**对应代码 / 文档**:
+- `pyproject.toml`
+- `src/docs_driven_dev/__init__.py`
+- `skill/SKILL.md`
+- `docs/ROADMAP.md`

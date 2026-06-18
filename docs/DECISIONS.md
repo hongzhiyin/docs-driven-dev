@@ -1514,3 +1514,85 @@ after the source implementation and tests passed.
 - `pyproject.toml`
 - `src/docs_driven_dev/__init__.py`
 - `scripts/package_release.sh`
+
+---
+
+## D-035 - Step 6p - Express CLI resolution as positive entrypoints
+
+**Date**: 2026-06-18
+
+**Context**:
+The v0.1.11 skill guidance fixed the visible fallback warning by naming the old
+skill-local wrapper paths as things agents should avoid. The user pointed out
+that active skill instructions should describe the supported behavior instead
+of spending attention on actions that are outside the model.
+
+**Options**:
+- A. Keep the explicit negative guard - preserves the clearest reference to the
+  observed bug, but keeps deprecated paths in active skill guidance.
+- B. Replace it with a positive entrypoint contract - the skill describes the
+  supported PATH/native launcher resolution order and the install-unavailable
+  diagnostic condition.
+
+**Chosen**: B
+
+**Rationale**:
+- It keeps the skill focused on how to act now: use `docdev` on PATH or the
+  documented native launcher fallback.
+- It reduces the chance that models anchor on obsolete skill-local wrapper
+  paths while following the skill.
+- The behavior still matches D-025: `sync-skill` owns skill content, while CLI
+  execution uses native/PATH launchers.
+
+**Risks**:
+- A separate resolver implementation could still hard-code obsolete probes.
+  Mitigation: treat any recurrence as resolver behavior to fix directly rather
+  than adding more negative wording to the skill.
+
+**Related code / docs**:
+- ROADMAP Step 6p
+- `docs/changes/2026-06-18-suppress-skill-local-wrapper-warning/`
+- `skill/SKILL.md`
+- `docs/SPEC.md`
+- `README.md`
+- `tests/test_cli.py`
+
+---
+
+## D-036 - Step 6q - Publish positive skill guidance as v0.1.12
+
+**Date**: 2026-06-18
+
+**Context**:
+After syncing the positive wording locally, the latest public release was still
+`v0.1.11`, whose packaged skill contained the older negative wording. A future
+`docdev update` or fresh install from latest could therefore overwrite the
+local fix with the older skill text.
+
+**Options**:
+- A. Leave the wording fix source-only until the next functional release - less
+  release churn, but latest install/update remains stale.
+- B. Publish a small `v0.1.12` release for the wording fix after unit tests,
+  audit, package inspection, and local packaged install smoke.
+
+**Chosen**: B
+
+**Rationale**:
+- The change affects the installed skill, so the release artifact is the real
+  distribution boundary.
+- A small release keeps `docdev update` aligned with the current source and
+  avoids reintroducing the exact wording the user asked to remove.
+- Local packaged install smoke proves the artifact contains the new skill
+  wording before publication.
+
+**Risks**:
+- This is a documentation/skill wording release with no new functional code.
+  Mitigation: keep verification focused on version consistency, packaging,
+  installed skill content, `init`, and `audit`.
+
+**Related code / docs**:
+- ROADMAP Step 6q
+- `docs/changes/2026-06-18-suppress-skill-local-wrapper-warning/`
+- `pyproject.toml`
+- `src/docs_driven_dev/__init__.py`
+- `skill/SKILL.md`
