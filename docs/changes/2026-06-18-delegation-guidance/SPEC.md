@@ -6,7 +6,7 @@
 
 | 字段 | 内容 |
 |---|---|
-| 状态 | v0.1.13 发布中 |
+| 状态 | 已发布 v0.1.13 |
 | 需求来源 | 用户希望在 docdev skill 中加入 subagent 协作指导，让主 agent 更关注全局，subagent 处理局部调研、实现或文档一致性工作 |
 | 工作包目录 | `docs/changes/2026-06-18-delegation-guidance/` |
 | 最后更新 | 2026-06-18 |
@@ -76,7 +76,7 @@
 3. `PYTHONPATH=src python3 -m unittest discover -s tests` 通过。
 4. `PYTHONPATH=src python3 -m docs_driven_dev.cli audit /Users/chihoyo/Project/docs-driven-dev` 通过。
 5. 本机 Codex/Cursor/Agents/Claude installed skill targets 同步到新 guidance。
-6. GitHub Release `v0.1.13` 发布后可通过 native update 获取。
+6. GitHub Release `v0.1.13` 已发布并可通过 native update 获取。
 
 ## 9. 开放问题
 

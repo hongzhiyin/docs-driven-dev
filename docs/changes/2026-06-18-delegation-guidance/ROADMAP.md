@@ -4,8 +4,8 @@
 
 ## 0. 当前状态
 
-**阶段 / Phase**: 发布中
-**当前 Step / Current Step**: Step 5 - 发布 v0.1.13
+**阶段 / Phase**: 完成
+**当前 Step / Current Step**: Step 5 - 发布 v0.1.13 完成
 **ARCHITECTURE 省略理由 / Architecture Omission Reason**: 本次只调整 skill workflow guidance、SPEC/README 合同和测试断言；不改变模块边界、数据流、CLI 命令、配置、安装路径或迁移行为。
 
 ## 1. Gates
@@ -44,7 +44,7 @@
 | 2 | 调研既有实现 | 完成 |
 | 3 | 实施 skill/docs/test 文案 | 完成 |
 | 4 | 验证与同步 installed skill | 完成 |
-| 5 | 发布 v0.1.13 | 进行中 |
+| 5 | 发布 v0.1.13 | 完成 |
 
 ---
 
@@ -130,6 +130,8 @@
 | SPEC-3 | `PYTHONPATH=src python3 -m docs_driven_dev.cli audit /Users/chihoyo/Project/docs-driven-dev` | 通过 | No findings |
 | SPEC-4 | installed skill `rg` check | 通过 | Codex/Cursor/Agents/Claude `SKILL.md` 均包含 `Delegation Guidance（委派指导）` |
 | SPEC-5 | `PYTHONPATH=src python3 -m docs_driven_dev.cli --version`; package release; local packaged install smoke | 通过 | `docdev 0.1.13`; local smoke install/init/audit passed; isolated skill targets include delegation guidance |
+| SPEC-6 | GitHub Release `v0.1.13` publication and public latest smoke | 通过 | Release URL recorded in root ROADMAP Step 6s; public latest install/init/audit passed |
+| SPEC-7 | `/Users/chihoyo/.local/bin/docdev update --version 0.1.13` and installed skill content check | 通过 | Local native install refreshed; four skill targets contain delegation guidance |
 
 ---
 
@@ -142,9 +144,9 @@
 - [x] Run unit tests and project audit。
 - [x] Package release assets。
 - [x] Run local simulated install smoke。
-- [ ] Commit, tag, push, and publish GitHub Release。
-- [ ] Run public latest smoke。
-- [ ] Refresh local native install and synced skill targets。
+- [x] Commit, tag, push, and publish GitHub Release。
+- [x] Run public latest smoke。
+- [x] Refresh local native install and synced skill targets。
 
 **Acceptance**:
 1. GitHub Release `v0.1.13` published as latest.
