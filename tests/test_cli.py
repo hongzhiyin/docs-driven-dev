@@ -755,6 +755,28 @@ class CliTests(unittest.TestCase):
         self.assertIn('docdev new-change "<slug>" <project>', text)
         self.assertIn('Treat an explicit user request like "fix it", "补上吧", or "implement it"', text)
 
+    def test_skill_documents_delegation_guidance(self) -> None:
+        text = (ROOT / "skill" / "SKILL.md").read_text(encoding="utf-8")
+        spec = (ROOT / "docs" / "SPEC.md").read_text(encoding="utf-8")
+        readme = (ROOT / "README.md").read_text(encoding="utf-8")
+
+        self.assertIn("## Delegation Guidance（委派指导）", text)
+        self.assertIn("Delegation 是", text)
+        self.assertIn("docs-driven ownership 仍由主 agent 收束", text)
+        self.assertIn("主 agent owns", text)
+        self.assertIn("用户意图、SPEC invariants、scope 和 implementation gate", text)
+        self.assertIn("已批准的窄范围 implementation slice", text)
+        self.assertIn("文档一致性检查", text)
+        self.assertIn("测试失败定位", text)
+        self.assertIn("objective、file", text)
+        self.assertIn("write permission", text)
+        self.assertIn("changed files 或 findings", text)
+        self.assertIn("uncertainty", text)
+        self.assertIn("Agent delegation", spec)
+        self.assertIn("Main agent owns docs-driven scope", spec)
+        self.assertIn("skill-level workflow guidance", spec)
+        self.assertIn("可选 delegation guidance", readme)
+
     def test_readme_documents_explicit_invocation_fast_path(self) -> None:
         text = (ROOT / "README.md").read_text(encoding="utf-8")
 

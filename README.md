@@ -118,6 +118,13 @@ skill 中的某个工作流，并在改代码前创建或更新必要的 docs ar
 写清一条期望行为、触及文件、验收检查和验证结果。若用户明确禁止改文档，agent 应先说明
 完整 docs-driven workflow 被阻塞，再询问是否脱离该 skill 继续。
 
+平台支持 subagents 时，skill 提供可选 delegation guidance：主 agent 保留用户意图、
+SPEC invariants、scope、implementation gate、DECISIONS、最终 review 和 verification；
+subagent 处理边界清楚的 read-only research、已批准的窄范围 implementation slice、
+文档一致性检查或测试失败定位。委派 handoff 应写清 objective、file scope、write
+permission、acceptance checks 和 invariants，返回 changed files / findings、tests、
+uncertainty 以及需要主 agent 判断的点。
+
 ## 手动 CLI 参考
 
 这些命令主要给调试、本地 smoke test 和维护使用。日常场景里，agent 会通过已安装的

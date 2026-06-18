@@ -5,7 +5,7 @@
 ## Current Progress
 
 **Phase**: Phase 1 - portable skill + CLI bootstrap
-**Current Step**: Step 6q complete; v0.1.12 positive skill guidance release published
+**Current Step**: Step 6s in progress; publishing v0.1.13 delegation guidance release
 
 ### Step Status
 
@@ -48,6 +48,8 @@
 | 6o | Publish v0.1.11 skill-local wrapper warning release | Done |
 | 6p | Rewrite active CLI resolution guidance as positive entrypoints | Done |
 | 6q | Publish v0.1.12 positive skill guidance release | Done |
+| 6r | Add optional subagent delegation guidance | Done |
+| 6s | Publish v0.1.13 delegation guidance release | In Progress |
 
 ---
 
@@ -980,6 +982,71 @@ Verification:
 - Public latest smoke synced isolated skill targets containing `CLI resolution 只使用上面列出的跨机器入口`, and `find` for `*/bin/docdev*` produced no output.
 - Local native install was refreshed to `/Users/chihoyo/.local/share/docdev/releases/0.1.12`; `/Users/chihoyo/.local/bin/docdev --version` reports `docdev 0.1.12`, and `docdev doctor` confirms Codex/Cursor/Agents/Claude skill targets are installed.
 - Installed Codex/Cursor/Agents/Claude `SKILL.md` files contain the positive CLI resolution wording, and installed skill targets still contain no `bin/docdev*` wrappers.
+
+---
+
+## Step 6r - Optional subagent delegation guidance
+
+**Goal**: Help agents use subagents as bounded task-slice support while the
+main agent keeps docs-driven ownership of scope, decisions, review, and
+verification.
+
+**Tasks**:
+- [x] Create `docs/changes/2026-06-18-delegation-guidance/`.
+- [x] Add `Delegation Guidance` to `skill/SKILL.md`.
+- [x] Align SPEC and README with the same boundary.
+- [x] Add regression coverage for the guidance wording.
+- [x] Run unit tests and project audit.
+- [x] Refresh local installed skill targets.
+
+**Acceptance**:
+1. Skill guidance states that the main agent owns user intent, SPEC invariants,
+   implementation gate, DECISIONS, final review, verification, and user-facing
+   explanation.
+2. Skill guidance lists suitable subagent slices: bounded research, approved
+   narrow implementation, docs consistency checks, and test-failure diagnosis.
+3. Tests and `docdev audit` pass.
+4. Local installed skill targets contain the new delegation guidance.
+
+Verification:
+- `PYTHONPATH=src python3 -m unittest tests.test_cli.CliTests.test_skill_documents_delegation_guidance` passed.
+- `PYTHONPATH=src python3 -m unittest discover -s tests` passed with 40 tests.
+- `PYTHONPATH=src python3 -m docs_driven_dev.cli audit /Users/chihoyo/Project/docs-driven-dev` reported `No findings`.
+- `./scripts/sync_skill.sh --targets codex,cursor,agents,claude --force` refreshed all four local skill targets.
+- Installed Codex/Cursor/Agents/Claude `SKILL.md` files contain `Delegation Guidance（委派指导）`.
+
+---
+
+## Step 6s - v0.1.13 delegation guidance release
+
+**Goal**: Publish the delegation guidance so fresh installs and `docdev update`
+receive the same skill workflow now synced locally.
+
+**Tasks**:
+- [x] Bump release metadata to `0.1.13`.
+- [x] Run unit tests and project audit.
+- [x] Package release assets.
+- [x] Run local simulated install smoke from packaged `0.1.13` assets.
+- [ ] Commit, tag, and push `v0.1.13`.
+- [ ] Publish GitHub Release `v0.1.13` as latest.
+- [ ] Run public latest smoke.
+- [ ] Update the local native install and synced skill targets to `0.1.13`.
+
+**Acceptance**:
+1. Release assets include `docdev-0.1.13.tar.gz`, checksum, manifest, and both
+   remote installers.
+2. Local simulated install launcher reports `docdev 0.1.13`.
+3. Unit tests and `docdev audit` pass.
+4. Public latest smoke can install `0.1.13` and run `docdev init` plus audit.
+5. Local installed Codex/Cursor/Agents/Claude skill copies include
+   `Delegation Guidance（委派指导）`.
+
+Verification:
+- `PYTHONPATH=src python3 -m docs_driven_dev.cli --version` reported `docdev 0.1.13`.
+- `PYTHONPATH=src python3 -m unittest discover -s tests` passed with 40 tests.
+- `PYTHONPATH=src python3 -m docs_driven_dev.cli audit /Users/chihoyo/Project/docs-driven-dev` reported `No findings`.
+- `./scripts/package_release.sh --out /private/tmp/docdev-release-assets-0.1.13` emitted `docdev-0.1.13.tar.gz`, checksum, manifest, and both remote installers.
+- Local simulated install from `/private/tmp/docdev-013-local-smoke.R6fTCt` reported `docdev 0.1.13`; `docdev init` plus `docdev audit` passed, and synced isolated skill targets contained `Delegation Guidance（委派指导）`.
 
 ---
 

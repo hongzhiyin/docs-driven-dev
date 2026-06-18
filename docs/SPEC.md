@@ -41,6 +41,7 @@ Claude, and shared agent skill homes.
 | AA | Native uninstall | `docdev uninstall` removes docdev-owned native install files and marked skill targets only after explicit confirmation; `--dry-run` previews | See D-028 |
 | AB | Windows native command | Windows release install writes `docdev.cmd` plus `docdev.ps1`, adds the bin dir to User PATH by default, and keeps `-NoModifyPath` as an opt-out | See D-029 |
 | AC | Windows text encoding | Windows PowerShell scripts and generated Windows launchers configure UTF-8 console/Python IO locally before logs or CLI output | See D-032 |
+| AD | Agent delegation | Main agent owns docs-driven scope, decisions, review, and verification; subagents may handle bounded research, implementation, consistency-check, or failure-diagnosis slices when supported | See D-037 |
 
 ## 3. Derived Rules
 
@@ -110,6 +111,21 @@ Small fixes do not skip docs. They use a minimal `Workflow B0` packet:
 After the packet states scope and acceptance, explicit user language such as
 "fix it", "补上吧", or "implement it" counts as implementation approval for the
 narrow fix.
+
+### 3.2.2 Agent Delegation
+
+Delegation is skill-level workflow guidance. It is not a CLI orchestration
+feature and does not change the source-of-truth model. When a platform supports
+subagents, the main agent remains responsible for user intent, SPEC invariants,
+scope, implementation gates, DECISIONS, final diff review, verification, and
+the final user-facing explanation.
+
+Subagents may handle bounded task slices: read-only research, approved narrow
+implementation work, docs consistency checks, or test-failure diagnosis. A
+delegation handoff should include objective, file scope, write permission,
+acceptance checks, and invariants to preserve. A subagent response should
+return changed files or findings, tests run, uncertainty, and judgment points
+for the main agent to review.
 
 ### 3.3 CLI Commands
 
@@ -349,6 +365,7 @@ use the native launcher instead.
 | Existing project needs a new feature or research packet | Use `docdev new-change "<slug>" <project>` |
 | Existing code project has no `docs/SPEC.md` | Run `docdev init <project>` first, then `docdev new-change "<slug>" <project>` |
 | Skill explicitly named for a small bug fix | Use Workflow B0: minimal adoption if needed, then a minimal change packet before code |
+| Platform supports subagents and the task is broad | Main agent keeps docs-driven ownership and delegates bounded research, implementation, consistency-check, or failure-diagnosis slices |
 | Skill explicitly named but user forbids docs | State that the full docs-driven workflow is blocked and ask whether to proceed outside the skill |
 | Change packet omits `ARCHITECTURE.md` | Require a ROADMAP reason explaining why architecture detail is unnecessary |
 | User wants one-command source checkout setup | Use `./scripts/setup_project.sh /path/to/project` |

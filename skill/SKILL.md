@@ -303,12 +303,26 @@ manual file overlays can leave stale untracked files in the source checkout，sy
 发现 module、data-flow、lifecycle、persistence、public API、event、config、migration
 或 cross-cutting impact，就在实现前补 ARCHITECTURE。
 
-### Bounded Read-Only Research
+### Delegation Guidance（委派指导）
 
-当平台支持 sub-agents，且项目区域很宽时，可以把边界清楚的 read-only 问题委派出去，
-降低主上下文压力。例如：“找出现有 X 实现”或“比较 Y 相关测试”。要求返回 file paths、
-可用时带 line references、简短 findings 和 uncertainty。把结果汇总进 change packet。
-不要委派产品决策、implementation approval 或含糊的用户取舍。
+当平台支持 sub-agents，且项目区域很宽或上下文压力较高时，Delegation 是
+context/throughput 工具；docs-driven ownership 仍由主 agent 收束。
+
+主 agent owns：
+- 用户意图、SPEC invariants、scope 和 implementation gate。
+- DECISIONS 的最终取舍、ROADMAP verification、最终 diff review 和给用户的说明。
+- subagent 结果的 review、整合和剩余风险判断。
+
+subagent 适合承担边界清楚的 task slices：
+- bounded read-only research：找出现有实现、调用点、相关测试或相邻约束。
+- 已批准的窄范围 implementation slice：只改指定文件或模块，满足明确 acceptance。
+- 文档一致性检查：比较 SPEC / ROADMAP / README / tests 是否漂移。
+- 测试失败定位：复现失败、归因、给出最小修复建议。
+
+委派前，主 agent 先建立或更新 change packet，并在 handoff 中写清 objective、file
+scope、write permission、acceptance checks 和需要保留的 invariants。subagent 返回
+changed files 或 findings、运行过的 tests、uncertainty，以及需要主 agent 判断的点。
+主 agent review 后再更新 source-of-truth docs、verification records 和最终说明。
 
 ## Workflow C - Project-Level Extend（项目级扩展）
 

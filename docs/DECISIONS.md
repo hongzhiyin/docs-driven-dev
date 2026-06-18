@@ -1596,3 +1596,84 @@ local fix with the older skill text.
 - `pyproject.toml`
 - `src/docs_driven_dev/__init__.py`
 - `skill/SKILL.md`
+
+---
+
+## D-037 - Step 6r - Keep subagent use as skill-level delegation guidance
+
+**Date**: 2026-06-18
+
+**Context**:
+The user wants `docs-driven-dev` to guide agents toward a healthier split when
+subagents are available: the main agent should stay focused on the global
+docs-driven contract, while subagents can handle bounded local work.
+
+**Options**:
+- A. Add CLI orchestration for subagents - could make delegation more
+  mechanical, but would move model/platform judgment into the deterministic
+  CLI boundary.
+- B. Add skill-level delegation guidance - keeps CLI deterministic and lets the
+  main agent decide whether delegation fits the platform, task size, and risk.
+
+**Chosen**: B
+
+**Rationale**:
+- The existing project boundary is skill = workflow/judgment and CLI =
+  deterministic filesystem, numbering, audit, sync, release/install/update.
+- Subagent availability and safe write scope vary by platform, so this belongs
+  in the skill workflow rather than a fixed CLI command.
+- The main agent remains responsible for SPEC invariants, scope,
+  implementation gates, DECISIONS, final review, verification, and the final
+  explanation to the user.
+
+**Risks**:
+- Some platforms may not expose subagents or may expose different permission
+  models. Mitigation: phrase delegation as optional guidance and require
+  explicit task slices, file scope, write permission, acceptance checks, and
+  uncertainty in handoffs.
+
+**Related code / docs**:
+- ROADMAP Step 6r
+- `docs/changes/2026-06-18-delegation-guidance/`
+- `skill/SKILL.md`
+- `docs/SPEC.md`
+- `README.md`
+- `tests/test_cli.py`
+
+---
+
+## D-038 - Step 6s - Publish delegation guidance as v0.1.13
+
+**Date**: 2026-06-18
+
+**Context**:
+The delegation guidance is now present in source and local installed skill
+targets. The user asked to commit, push, and publish it so fresh installs and
+`docdev update` receive the same skill behavior.
+
+**Options**:
+- A. Commit source-only and wait for a later release - keeps release count down,
+  but latest install/update would not include the new guidance.
+- B. Publish a small `v0.1.13` release after tests, audit, packaging, and smoke
+  verification - aligns the release artifact with the current source skill.
+
+**Chosen**: B
+
+**Rationale**:
+- The user explicitly asked to publish the change.
+- This change affects installed skill guidance, so the GitHub Release artifact
+  is the durable distribution boundary.
+- Local packaged smoke and public latest smoke can verify the guidance is
+  present in synced skill targets before and after publication.
+
+**Risks**:
+- The release contains skill/docs guidance rather than functional CLI changes.
+  Mitigation: keep verification focused on package integrity, version
+  consistency, installed skill content, `init`, and `audit`.
+
+**Related code / docs**:
+- ROADMAP Step 6s
+- `docs/changes/2026-06-18-delegation-guidance/`
+- `pyproject.toml`
+- `src/docs_driven_dev/__init__.py`
+- `skill/SKILL.md`
