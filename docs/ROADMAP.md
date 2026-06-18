@@ -5,7 +5,7 @@
 ## Current Progress
 
 **Phase**: Phase 1 - portable skill + CLI bootstrap
-**Current Step**: Step 6s complete; v0.1.13 delegation guidance release published
+**Current Step**: Step 6u in progress; publishing v0.1.14 active guidance cleanup release
 
 ### Step Status
 
@@ -50,6 +50,8 @@
 | 6q | Publish v0.1.12 positive skill guidance release | Done |
 | 6r | Add optional subagent delegation guidance | Done |
 | 6s | Publish v0.1.13 delegation guidance release | Done |
+| 6t | Remove obsolete launcher residuals from active guidance | Done |
+| 6u | Publish v0.1.14 active guidance cleanup release | In progress |
 
 ---
 
@@ -1053,6 +1055,71 @@ Verification:
 - Public latest smoke synced isolated skill targets containing `Delegation Guidance（委派指导）`.
 - Local native install was refreshed to `/Users/chihoyo/.local/share/docdev/releases/0.1.13`; `/Users/chihoyo/.local/bin/docdev --version` reports `docdev 0.1.13`, and `docdev doctor` confirms Codex/Cursor/Agents/Claude skill targets are installed.
 - Installed Codex/Cursor/Agents/Claude `SKILL.md` files contain `Delegation Guidance（委派指导）`.
+
+---
+
+## Step 6t - Remove obsolete launcher residuals from active guidance
+
+**Goal**: Keep active README, SPEC, and skill guidance focused on supported
+entrypoints and current-target replacement semantics, so agents do not anchor
+on old skill-local CLI path examples while using the skill.
+
+**Tasks**:
+- [x] Create `docs/changes/2026-06-18-remove-wrapper-residual-guidance/`.
+- [x] Rewrite active `skill/SKILL.md`, README, and SPEC sync wording to describe
+  current-target replacement without obsolete path examples.
+- [x] Update regression coverage for the new positive wording.
+- [x] Run unit tests and project audit.
+- [x] Refresh local installed skill targets.
+
+**Acceptance**:
+1. Active `skill/SKILL.md`, README, and SPEC describe supported CLI entries and
+   sync replacement semantics without naming obsolete skill-local launcher paths
+   as current guidance.
+2. Historical ROADMAP/DECISIONS entries may keep superseded launcher references
+   as history.
+3. Unit tests, `docdev audit`, and local installed skill refresh pass.
+
+Verification:
+- `PYTHONPATH=src python3 -m unittest tests.test_cli.CliTests.test_docs_explain_path_and_replacement_contract` passed.
+- `PYTHONPATH=src python3 -m unittest discover -s tests` passed with 40 tests.
+- `PYTHONPATH=src python3 -m docs_driven_dev.cli audit /Users/chihoyo/Project/docs-driven-dev` reported `No findings`.
+- `./scripts/sync_skill.sh --targets codex,cursor,agents,claude --force` refreshed all four local skill targets.
+- Installed Codex/Cursor/Agents/Claude `SKILL.md` files contain `sync 使用整目录替换` and `只保留本版本`.
+- Installed Codex/Cursor/Agents/Claude `SKILL.md` files do not contain old skill-local launcher wording, and `find` for `*/bin/docdev*` produced no output.
+
+---
+
+## Step 6u - v0.1.14 active guidance cleanup release
+
+**Goal**: Publish the active guidance cleanup so fresh installs and
+`docdev update` receive the source/installed skill wording from Step 6t.
+
+**Tasks**:
+- [x] Bump release metadata to `0.1.14`.
+- [x] Run unit tests and project audit.
+- [x] Package release assets.
+- [x] Run local simulated install smoke from packaged `0.1.14` assets.
+- [ ] Commit, tag, and push `v0.1.14`.
+- [ ] Publish GitHub Release `v0.1.14` as latest.
+- [ ] Run public latest smoke.
+- [ ] Update the local native install and synced skill targets to `0.1.14`.
+
+**Acceptance**:
+1. Release assets include `docdev-0.1.14.tar.gz`, checksum, manifest, and both
+   remote installers.
+2. Local simulated install launcher reports `docdev 0.1.14`.
+3. Unit tests and `docdev audit` pass.
+4. Public latest smoke can install `0.1.14` and run `docdev init` plus audit.
+5. Local installed Codex/Cursor/Agents/Claude skill copies contain the Step 6t
+   active guidance cleanup.
+
+Verification:
+- `PYTHONPATH=src python3 -m docs_driven_dev.cli --version` reported `docdev 0.1.14`.
+- `PYTHONPATH=src python3 -m unittest discover -s tests` passed with 40 tests.
+- `PYTHONPATH=src python3 -m docs_driven_dev.cli audit /Users/chihoyo/Project/docs-driven-dev` reported `No findings`.
+- `./scripts/package_release.sh --out /private/tmp/docdev-release-assets-0.1.14` emitted `docdev-0.1.14.tar.gz`, checksum, manifest, and both remote installers.
+- Local simulated install from packaged `0.1.14` assets reported `docdev 0.1.14`; `docdev init` plus `docdev audit` passed, synced isolated skill targets contained `sync 使用整目录替换` and `只保留本版本`, and `find` for `*/bin/docdev*` produced no output.
 
 ---
 

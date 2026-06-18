@@ -788,6 +788,7 @@ class CliTests(unittest.TestCase):
     def test_docs_explain_path_and_replacement_contract(self) -> None:
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
         skill = (ROOT / "skill" / "SKILL.md").read_text(encoding="utf-8")
+        spec = (ROOT / "docs" / "SPEC.md").read_text(encoding="utf-8")
 
         self.assertIn("源码 checkout", readme)
         self.assertIn("不会把 `docdev` 加入全局 shell `PATH`", readme)
@@ -798,7 +799,8 @@ class CliTests(unittest.TestCase):
         self.assertIn("直接在终端运行 CLI", readme)
         self.assertIn("整个", readme)
         self.assertIn("目录替换", readme)
-        self.assertIn("旧版本生成的 `bin/docdev*` wrapper，不应残留", readme)
+        self.assertIn("当前目标", readme)
+        self.assertIn("只保留本版本 skill 内容", readme)
         self.assertIn("手动覆盖可能留下 stale untracked files", readme)
         self.assertIn("~/.local/bin/docdev", readme)
         self.assertIn("~/.local/bin/docdev", skill)
@@ -816,8 +818,13 @@ class CliTests(unittest.TestCase):
         self.assertIn("直接使用这些 native/PATH 入口", skill)
         self.assertIn("agent 执行 CLI 时使用 `docdev` 或 native", readme)
         self.assertIn("Unix installer 不会修改用户的全局 shell `PATH`", skill)
-        self.assertIn("替换整个 skill 目录", skill)
+        self.assertIn("sync 使用整目录替换", skill)
+        self.assertIn("只保留本版本", skill)
         self.assertIn("file overlays can leave stale untracked files", skill)
+        legacy_skill_local_hint = "`bin/" + "docdev*` wrapper"
+        self.assertNotIn(legacy_skill_local_hint, skill)
+        self.assertNotIn(legacy_skill_local_hint, readme)
+        self.assertNotIn(legacy_skill_local_hint, spec)
 
     def test_audit_warns_on_readme_documentation_map_drift(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

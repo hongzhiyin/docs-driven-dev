@@ -16,10 +16,10 @@ Claude, and shared agent skill homes.
 | B | Default docs location | `docs/` with `.docdev.toml` `docs_dir` override | See D-002 |
 | C | Generated output | `<docs_dir>/_generated/docdev/` only | See D-002 |
 | D | Runtime | Python 3.10+ stdlib-only CLI | See D-001 |
-| E | Install style | Release installer installs versioned user-directory releases; source checkout wrappers remain the developer maintenance path | See D-021 |
+| E | Install style | Release installer installs versioned user-directory releases; source checkout launchers remain the developer maintenance path | See D-021 |
 | F | Skill sync targets | Direct copied skill directories under `~/.codex`, `~/.cursor`, `~/.agents`, and `~/.claude` | See D-003, D-033 |
 | G | Audit strictness | Structural drift is reported as warnings unless a required source document or invariant is broken | See D-005 |
-| H | Cross-project CLI discovery | Agents use `docdev` on PATH or the native launcher; source checkout wrappers are developer-only fallbacks | See D-006, D-021, D-022 |
+| H | Cross-project CLI discovery | Agents use `docdev` on PATH or the native launcher; source checkout launchers are developer-only fallbacks | See D-006, D-021, D-022 |
 | I | Update lifecycle | Source updates should use a project-local install, test, check, sync, check sequence | See D-007 |
 | J | Quick start | A source-checkout setup script combines install, doctor, init, and audit report for a target project | See D-008 |
 | K | Target project model | `docdev` commands operate on explicit target project paths; source checkout scripts are maintenance conveniences | See D-009 |
@@ -30,7 +30,7 @@ Claude, and shared agent skill homes.
 | P | Install diagnostics | Install and update scripts emit prefixed, numbered lifecycle logs so failures can be localized from user output | See D-016 |
 | Q | Skill target overrides | Each sync target supports environment-variable overrides for non-default Windows or agent skill directories | See D-017 |
 | R | Existing code adoption | Existing code projects without four docs should be lightly initialized before opening a requirement change packet | See D-018 |
-| S | Source maintenance PATH contract | Source install prepares a source-local wrapper but does not mutate the user's global shell `PATH` or skill target CLI entries | See D-019, D-024, D-025 |
+| S | Source maintenance PATH contract | Source install prepares a source-local launcher while leaving the user's global shell `PATH` and skill target CLI entries to the native/PATH contract | See D-019, D-024, D-025 |
 | T | Sync replacement contract | Force sync and marked-target refreshes replace the target skill directory instead of merging files | See D-019 |
 | U | Explicit invocation | When the skill is explicitly named, agents must follow one workflow and create/update required docs before code | See D-020 |
 | V | Small-fix path | Narrow bug fixes use a minimal B0 packet rather than skipping docs or forcing a heavy packet | See D-020 |
@@ -42,6 +42,7 @@ Claude, and shared agent skill homes.
 | AB | Windows native command | Windows release install writes `docdev.cmd` plus `docdev.ps1`, adds the bin dir to User PATH by default, and keeps `-NoModifyPath` as an opt-out | See D-029 |
 | AC | Windows text encoding | Windows PowerShell scripts and generated Windows launchers configure UTF-8 console/Python IO locally before logs or CLI output | See D-032 |
 | AD | Agent delegation | Main agent owns docs-driven scope, decisions, review, and verification; subagents may handle bounded research, implementation, consistency-check, or failure-diagnosis slices when supported | See D-037 |
+| AE | Active guidance hygiene | Current README, SPEC, and SKILL operational guidance names supported entrypoints and describes sync cleanup through current-target replacement rather than obsolete path examples | See D-039 |
 
 ## 3. Derived Rules
 
@@ -242,7 +243,7 @@ For a one-command target project bootstrap from this source checkout, run:
 ./scripts/setup_project.sh /path/to/project
 ```
 
-This script installs the local wrapper, runs `docdev doctor`, initializes the
+This script prepares the local launcher, runs `docdev doctor`, initializes the
 target project, and runs `docdev audit <project> --write-report`.
 
 It may pass `docdev init` options after the project path. When `--docs-dir` is
@@ -276,14 +277,14 @@ After changing this source checkout, run:
 ./scripts/update_cli.sh --targets codex,cursor,agents,claude --force
 ```
 
-The lifecycle installs the source wrapper, runs tests, checks the local install,
+The lifecycle prepares the source launcher, runs tests, checks the local install,
 syncs installed skills, then checks again.
 
-The update lifecycle prepares the source-local wrapper and refreshes installed
+The update lifecycle prepares the source-local launcher and refreshes installed
 skill content for source checkout maintenance. `scripts/install.sh` is the
-shorter cloned-checkout developer entrypoint over this same lifecycle. It does
-not add `docdev` to the user's global shell `PATH` and does not create
-skill-local CLI wrappers.
+shorter cloned-checkout developer entrypoint over this same lifecycle. Global
+shell PATH and cross-machine CLI execution continue to follow the native/PATH
+contract described in §3.3.
 Direct terminal use from the source checkout should use `./.venv/bin/docdev`
 on Unix shells or `.\.venv\Scripts\docdev.ps1` / `.\.venv\Scripts\docdev.cmd`
 on Windows unless the user has explicitly configured PATH.
@@ -341,14 +342,13 @@ Existing target directories with a `.docdev-skill-source` marker are refreshed
 without requiring `--force`. When `--force` is passed, the same whole-target
 replacement applies to any target, including legacy symlinks: delete or unlink
 the current target, copy the current source skill, and write the marker. This
-prevents stale files from remaining inside the current target skill directory,
-including old `bin/docdev*` wrappers from pre-D-025 syncs and old Claude
-symlinks from pre-D-033 syncs. It does not clean a different old target path if
-the configured skill directory changed between installs.
+makes the current target skill directory reflect only the current synced skill
+content. It does not clean a different old target path if the configured skill
+directory changed between installs.
 
-Source checkout sync must not generate skill-local `bin/docdev`,
-`bin/docdev.ps1`, or `bin/docdev.cmd` wrappers. Native cross-machine use should
-use the native launcher instead.
+Current operational guidance should keep CLI execution and sync semantics
+separate: CLI execution uses the supported native/PATH entries; `sync-skill`
+refreshes skill content and marker files through current-target replacement.
 
 ## 4. Default Handling
 
@@ -360,8 +360,8 @@ use the native launcher instead.
 | Missing `docdev` on `PATH` after native install | Use `~/.local/bin/docdev` directly on Unix-like systems |
 | Windows terminal cannot find `docdev` immediately after install | Reopen the terminal, or use `$HOME\.local\bin\docdev.ps1` as a temporary direct path |
 | Skill invoked in another project with no `docdev` on `PATH` | Use `~/.local/bin/docdev` when present; otherwise ask the user to run the native installer |
-| Explicit source checkout development | Source maintainers may use `.venv` wrappers or `DOCDEV_PROJECT_DIR` + `PYTHONPATH` locally |
-| Human terminal cannot find `docdev` after source checkout install | Use the source `.venv` wrapper or add a PATH entry manually |
+| Explicit source checkout development | Source maintainers may use `.venv` launchers or `DOCDEV_PROJECT_DIR` + `PYTHONPATH` locally |
+| Human terminal cannot find `docdev` after source checkout install | Use the source `.venv` launcher or add a PATH entry manually |
 | Existing project needs a new feature or research packet | Use `docdev new-change "<slug>" <project>` |
 | Existing code project has no `docs/SPEC.md` | Run `docdev init <project>` first, then `docdev new-change "<slug>" <project>` |
 | Skill explicitly named for a small bug fix | Use Workflow B0: minimal adoption if needed, then a minimal change packet before code |
@@ -392,7 +392,7 @@ def main(argv: Iterable[str] | None = None) -> int:
 ```
 
 `docs_driven_dev.cli` is the stable executable module for native launchers,
-source checkout wrappers, and `python -m docs_driven_dev.cli`. It may re-export
+source checkout launchers, and `python -m docs_driven_dev.cli`. It may re-export
 selected helpers for compatibility, but feature implementation should live in
 responsibility-focused internal modules such as `commands.py`, `templates.py`,
 `audit.py`, `sync.py`, and `release.py`.

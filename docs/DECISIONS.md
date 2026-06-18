@@ -1677,3 +1677,85 @@ targets. The user asked to commit, push, and publish it so fresh installs and
 - `pyproject.toml`
 - `src/docs_driven_dev/__init__.py`
 - `skill/SKILL.md`
+
+---
+
+## D-039 - Step 6t - Use abstract replacement wording in active guidance
+
+**Date**: 2026-06-18
+
+**Context**:
+After the v0.1.13 release, another machine still saw agent output about an old
+skill-directory Windows launcher path. Source inspection showed that active
+sync guidance still named obsolete skill-local launcher paths as cleanup
+examples, even though runtime CLI resolution had already moved to PATH/native
+launcher entries.
+
+**Options**:
+- A. Keep naming old launcher paths in active cleanup guidance - historically
+  precise, but it gives models a fresh path string to anchor on.
+- B. Describe sync cleanup through current-target replacement semantics in
+  active guidance, while leaving historical ROADMAP/DECISIONS entries intact.
+
+**Chosen**: B
+
+**Rationale**:
+- Active guidance should tell agents what to do now: execute CLI through
+  supported native/PATH entries and treat `sync-skill` as skill-content refresh.
+- Current-target replacement is the durable behavior users need to understand;
+  old path examples are historical evidence rather than operational guidance.
+- Keeping history in ROADMAP/DECISIONS preserves traceability without putting
+  obsolete path strings in the text agents are most likely to follow.
+
+**Risks**:
+- The abstract wording is less explicit about the exact legacy files removed in
+  earlier migrations. Mitigation: historical decisions and roadmap steps remain
+  searchable for migration archaeology.
+
+**Related code / docs**:
+- ROADMAP Step 6t
+- `docs/changes/2026-06-18-remove-wrapper-residual-guidance/`
+- `skill/SKILL.md`
+- `docs/SPEC.md`
+- `README.md`
+- `tests/test_cli.py`
+
+---
+
+## D-040 - Step 6u - Publish active guidance cleanup as v0.1.14
+
+**Date**: 2026-06-18
+
+**Context**:
+Step 6t removed obsolete skill-local launcher examples from active source and
+local installed skill guidance. Other machines still need a published release
+artifact before `docdev update` or fresh native install can receive the same
+skill wording.
+
+**Options**:
+- A. Keep the cleanup source-only until a later functional release - fewer
+  releases, but latest install/update remains stale for this exact issue.
+- B. Publish a small `v0.1.14` release after tests, audit, packaging, and smoke
+  verification - aligns latest install/update with source and local skill
+  targets.
+
+**Chosen**: B
+
+**Rationale**:
+- The user explicitly asked to submit, publish, and push the cleanup.
+- Installed skill content is distributed through release artifacts, so
+  source-only fixes do not help other machines running latest.
+- A small release can verify package integrity, launcher version, install/init
+  audit behavior, and installed skill wording without changing CLI semantics.
+
+**Risks**:
+- The release is primarily skill/docs guidance. Mitigation: keep verification
+  focused on version consistency, packaging, local/public install smoke, and
+  installed skill content.
+
+**Related code / docs**:
+- ROADMAP Step 6u
+- `docs/changes/2026-06-18-remove-wrapper-residual-guidance/`
+- `pyproject.toml`
+- `src/docs_driven_dev/__init__.py`
+- `skill/SKILL.md`

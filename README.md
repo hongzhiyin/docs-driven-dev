@@ -223,7 +223,7 @@ PowerShell 命令，或在 Git Bash / WSL 中运行 `bash ./scripts/install.sh`�
 powershell -ExecutionPolicy Bypass -File .\scripts\install.ps1
 ```
 
-这条开发安装路径会安装源码维护 wrapper、验证 CLI，并把 skill 内容同步到 agent homes。
+这条开发安装路径会准备源码维护入口、验证 CLI，并把 skill 内容同步到 agent homes。
 它是开发者维护路径，不是普通用户的首选 native release install 路径。
 
 它不会把 `docdev` 加入全局 shell `PATH`。如果要从源码 checkout 直接在终端运行 CLI，
@@ -249,9 +249,9 @@ symlink；已有 legacy symlink 会在 force sync 时被替换为普通 skill �
 编号 step 会指出停在哪个阶段。
 
 默认安装会 force sync。对于已有 marker 的 `docs-driven-dev` skill 目标，sync 会做整个
-目录替换：先移除目标 skill 目录，再从当前源码 checkout 复制当前 skill 内容。因此旧目标
-目录里的陈旧文件，包括旧版本生成的 `bin/docdev*` wrapper，不应残留。如果过去使用过另一个
-目标路径，那是当前 sync 目标集合之外的目录，不再需要时需要手动清理。
+目录替换：先移除目标 skill 目录，再从当前源码 checkout 复制当前 skill 内容。当前目标
+只保留本版本 skill 内容。如果过去使用过另一个目标路径，那是当前 sync 目标集合之外的
+目录，不再需要时需要手动清理。
 
 更新源码 checkout 时，优先使用 `git pull` 或干净的 `git clone`。不要把下载文件手动覆盖
 到旧源码目录上；手动覆盖可能留下 stale untracked files，而 install/sync 会复制当前 checkout
@@ -288,9 +288,8 @@ $env:DOCDEV_AGENTS_HOME = "$env:USERPROFILE\.agents"
 ./scripts/setup_project.sh /path/to/project
 ```
 
-只在需要从源码 checkout 手动初始化某个目标项目时使用它。该脚本会安装本地源码维护
-`docdev` wrapper，运行 `doctor`，初始化目标项目，并把 audit report 写到目标项目的
-docs 目录下。
+只在需要从源码 checkout 手动初始化某个目标项目时使用它。该脚本会准备本地源码维护
+`docdev` 入口，运行 `doctor`，初始化目标项目，并把 audit report 写到目标项目的 docs 目录下。
 
 ## Documentation Map（文档地图）
 
