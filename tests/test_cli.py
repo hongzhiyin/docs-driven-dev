@@ -745,8 +745,8 @@ class CliTests(unittest.TestCase):
         self.assertIn("## Invocation Contract（调用合同）", text)
         self.assertIn("只读一遍 `SKILL.md` 然后直接写代码是不够的", text)
         self.assertIn("不要把明确的 `docs-driven-dev` 调用静默降级", text)
-        self.assertIn("不要改 docs", text)
-        self.assertIn("否则默认创建或更新文档", text)
+        self.assertIn("在改代码前创建或更新必要的 docs artifacts", text)
+        self.assertIn("即使只是小修复", text)
         self.assertIn("Workflow B0 - Small Existing-Project Fix（小修复）", text)
         self.assertLess(
             text.index("Workflow B0 - Small Existing-Project Fix（小修复）"),

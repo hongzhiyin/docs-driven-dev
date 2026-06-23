@@ -1883,3 +1883,43 @@ should be made smaller, then approved a simplification pass.
 - `skill/SKILL.md`
 - `README.md`
 - `tests/test_cli.py`
+
+---
+
+## D-044 - Step 6y - Publish runtime skill trim as v0.1.15
+
+**Date**: 2026-06-24
+
+**Context**:
+Step 6x trimmed the active skill to a concise runtime contract and refreshed
+local installed skill targets from source. Other machines still need a
+published release artifact before fresh install or `docdev update` can receive
+the same installed skill behavior.
+
+**Options**:
+- A. Leave the trim source-only until a later functional release - fewer
+  releases, but latest install/update remains stale for this exact skill change.
+- B. Publish a small `v0.1.15` release after tests, audit, packaging, local
+  smoke, public smoke, and local native refresh.
+
+**Chosen**: B
+
+**Rationale**:
+- The user explicitly asked to publish a new version and reinstall local
+  `docdev`.
+- Installed skill content is distributed through native release artifacts, not
+  just the source checkout.
+- A small release verifies version consistency, package integrity, init/audit,
+  and installed skill content without changing CLI semantics.
+
+**Risks**:
+- This is primarily a skill/docs release. Mitigation: keep verification focused
+  on packaging, public install, local native update, and installed skill
+  content.
+
+**Related code / docs**:
+- ROADMAP Step 6y
+- `docs/changes/2026-06-24-skill-surface-runtime-trim/`
+- `pyproject.toml`
+- `src/docs_driven_dev/__init__.py`
+- `skill/SKILL.md`
