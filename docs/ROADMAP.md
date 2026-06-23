@@ -5,7 +5,7 @@
 ## Current Progress
 
 **Phase**: Phase 1 - portable skill + CLI bootstrap
-**Current Step**: Step 6y in progress; v0.1.16 runtime skill trim release
+**Current Step**: Step 6y complete; v0.1.16 released and local install refreshed
 
 ### Step Status
 
@@ -55,7 +55,7 @@
 | 6v | Hide historical entrypoint details from active skill surface | Done |
 | 6w | Remove source checkout install from active skill and promote delegation guidance | Done |
 | 6x | Trim active skill to concise runtime contract | Done |
-| 6y | Publish v0.1.16 runtime skill trim release | In Progress |
+| 6y | Publish v0.1.16 runtime skill trim release | Done |
 
 ---
 
@@ -1250,14 +1250,14 @@ Verification:
 bundle verification found remaining launcher-path and legacy placeholder text.
 
 **Tasks**:
-- [ ] Bump release metadata to `0.1.16`.
-- [ ] Run unit tests and project audit.
-- [ ] Package release assets.
-- [ ] Run local simulated install smoke from packaged `0.1.16` assets.
-- [ ] Commit, tag, and push `v0.1.16`.
-- [ ] Publish GitHub Release `v0.1.16` as latest.
-- [ ] Run public latest smoke.
-- [ ] Update the local native install and synced skill targets to `0.1.16`.
+- [x] Bump release metadata to `0.1.16`.
+- [x] Run unit tests and project audit.
+- [x] Package release assets.
+- [x] Run local simulated install smoke from packaged `0.1.16` assets.
+- [x] Commit, tag, and push `v0.1.16`.
+- [x] Publish GitHub Release `v0.1.16` as latest.
+- [x] Run public latest smoke.
+- [x] Update the local native install and synced skill targets to `0.1.16`.
 
 **Acceptance**:
 1. Release assets include `docdev-0.1.16.tar.gz`, checksum, manifest, and both
@@ -1268,6 +1268,33 @@ bundle verification found remaining launcher-path and legacy placeholder text.
 5. Local installed Codex/Cursor/Agents/Claude skill copies are 187 lines and
    contain the runtime-trim guidance without launcher-path or legacy placeholder
    text.
+
+**Verification**:
+- `PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests`
+  ran 40 tests successfully.
+- `PYTHONPATH=src python3 -m docs_driven_dev.cli audit
+  /Users/chihoyo/Project/docs-driven-dev` returned no findings.
+- `PYTHONPATH=src python3 -m docs_driven_dev.cli --version` returned
+  `docdev 0.1.16`.
+- Release assets were generated under
+  `/private/tmp/docdev-release-assets-0.1.16.NSvBYD/`, including tarball,
+  checksum, manifest, `install_remote.sh`, and `install_remote.ps1`.
+- Local `file://` smoke installed from those assets to
+  `/private/tmp/docdev-016-local-smoke.iFFno2/`; version, init, and audit
+  passed, packaged `SKILL.md` was 187 lines, and forbidden-detail search found
+  no matches under the packaged `skill/`.
+- Commit `329adc6` and tag `v0.1.16` were pushed to `origin/main`; GitHub
+  Release URL:
+  `https://github.com/hongzhiyin/docs-driven-dev/releases/tag/v0.1.16`.
+- Public latest smoke installed `docdev-0.1.16.tar.gz` from GitHub latest to
+  `/private/tmp/docdev-016-public-smoke.ffTRGP/`; checksum, version, init,
+  audit, 187-line `SKILL.md`, and forbidden-detail search all passed.
+- `/Users/chihoyo/.local/bin/docdev update --version 0.1.16` refreshed the
+  local native install and synced Codex/Cursor/Agents/Claude skill targets.
+- Final local verification: `/Users/chihoyo/.local/bin/docdev --version`
+  returned `docdev 0.1.16`; `doctor` found all four skill targets installed;
+  each installed `SKILL.md` was 187 lines; forbidden-detail search across
+  source and installed skill targets returned no matches.
 
 ---
 
