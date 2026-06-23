@@ -797,6 +797,10 @@ class CliTests(unittest.TestCase):
     def test_docs_explain_path_and_replacement_contract(self) -> None:
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
         skill = (ROOT / "skill" / "SKILL.md").read_text(encoding="utf-8")
+        skill_bundle = "\n".join(
+            path.read_text(encoding="utf-8")
+            for path in sorted((ROOT / "skill").rglob("*.md"))
+        )
         spec = (ROOT / "docs" / "SPEC.md").read_text(encoding="utf-8")
 
         self.assertLessEqual(len(skill.splitlines()), 230)
@@ -809,7 +813,6 @@ class CliTests(unittest.TestCase):
         self.assertIn("让当前 skill 目标反映这个源码 checkout 的 `skill/` 内容", readme)
         self.assertIn("手动覆盖可能留下 stale untracked files", readme)
         self.assertIn("~/.local/bin/docdev", readme)
-        self.assertIn("~/.local/bin/docdev", skill)
         self.assertIn("docdev uninstall --dry-run", readme)
         self.assertIn("docdev uninstall --yes", readme)
         self.assertIn("docdev uninstall --yes --keep-skills", readme)
@@ -818,7 +821,7 @@ class CliTests(unittest.TestCase):
         self.assertIn("README / SPEC / DECISIONS", skill)
         self.assertIn("先运行 native", readme)
         self.assertIn("按这个顺序解析 CLI", skill)
-        self.assertIn("agent 执行 CLI 时使用上述 native/PATH entries", skill)
+        self.assertIn("`docdev <command>` if available on `PATH`", skill)
         self.assertIn("agent 执行 CLI 时使用 `docdev` 或 native", readme)
         active_surface_forbidden = [
             "wrapper",
@@ -836,6 +839,7 @@ class CliTests(unittest.TestCase):
             with self.subTest(forbidden=forbidden):
                 self.assertNotIn(forbidden, skill)
                 self.assertNotIn(forbidden, readme)
+                self.assertNotIn(forbidden, skill_bundle)
         active_skill_source_forbidden = [
             "Source Checkout",
             "源码",
@@ -853,10 +857,15 @@ class CliTests(unittest.TestCase):
             "default native layout",
             "Private GitHub",
             "docdev uninstall",
+            "~/.local/bin/docdev",
+            "$HOME\\.local\\bin",
+            "docdev.ps1",
+            "bin/docdev",
         ]
         for forbidden in active_skill_source_forbidden:
             with self.subTest(skill_source_forbidden=forbidden):
                 self.assertNotIn(forbidden, skill)
+                self.assertNotIn(forbidden, skill_bundle)
         self.assertIn("docdev.cmd", spec)
 
     def test_audit_warns_on_readme_documentation_map_drift(self) -> None:

@@ -5,7 +5,7 @@
 ## Current Progress
 
 **Phase**: Phase 1 - portable skill + CLI bootstrap
-**Current Step**: Step 6y in progress; v0.1.15 runtime skill trim release
+**Current Step**: Step 6y in progress; v0.1.16 runtime skill trim release
 
 ### Step Status
 
@@ -55,7 +55,7 @@
 | 6v | Hide historical entrypoint details from active skill surface | Done |
 | 6w | Remove source checkout install from active skill and promote delegation guidance | Done |
 | 6x | Trim active skill to concise runtime contract | Done |
-| 6y | Publish v0.1.15 runtime skill trim release | In Progress |
+| 6y | Publish v0.1.16 runtime skill trim release | In Progress |
 
 ---
 
@@ -1241,29 +1241,33 @@ Verification:
 
 ---
 
-## Step 6y - v0.1.15 runtime skill trim release
+## Step 6y - v0.1.16 runtime skill trim release
 
 **Goal**: Publish the active skill runtime trim so fresh installs and
-`docdev update` receive the 192-line skill and current source-of-truth records.
+`docdev update` receive the 187-line skill and current source-of-truth records.
+
+`v0.1.15` was published during this step and then superseded after final skill
+bundle verification found remaining launcher-path and legacy placeholder text.
 
 **Tasks**:
-- [ ] Bump release metadata to `0.1.15`.
+- [ ] Bump release metadata to `0.1.16`.
 - [ ] Run unit tests and project audit.
 - [ ] Package release assets.
-- [ ] Run local simulated install smoke from packaged `0.1.15` assets.
-- [ ] Commit, tag, and push `v0.1.15`.
-- [ ] Publish GitHub Release `v0.1.15` as latest.
+- [ ] Run local simulated install smoke from packaged `0.1.16` assets.
+- [ ] Commit, tag, and push `v0.1.16`.
+- [ ] Publish GitHub Release `v0.1.16` as latest.
 - [ ] Run public latest smoke.
-- [ ] Update the local native install and synced skill targets to `0.1.15`.
+- [ ] Update the local native install and synced skill targets to `0.1.16`.
 
 **Acceptance**:
-1. Release assets include `docdev-0.1.15.tar.gz`, checksum, manifest, and both
+1. Release assets include `docdev-0.1.16.tar.gz`, checksum, manifest, and both
    remote installers.
-2. Local simulated install launcher reports `docdev 0.1.15`.
+2. Local simulated install launcher reports `docdev 0.1.16`.
 3. Unit tests and `docdev audit` pass.
-4. Public latest smoke can install `0.1.15` and run `docdev init` plus audit.
-5. Local installed Codex/Cursor/Agents/Claude skill copies are 192 lines and
-   contain the runtime-trim guidance.
+4. Public latest smoke can install `0.1.16` and run `docdev init` plus audit.
+5. Local installed Codex/Cursor/Agents/Claude skill copies are 187 lines and
+   contain the runtime-trim guidance without launcher-path or legacy placeholder
+   text.
 
 ---
 

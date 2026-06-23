@@ -58,10 +58,8 @@ docs/changes/YYYY-MM-DD-slug/
 按这个顺序解析 CLI：
 
 1. `docdev <command>` if available on `PATH`。
-2. Unix-like systems: `~/.local/bin/docdev <command>` if present。
-3. Windows: `docdev <command>` in a fresh terminal; if PATH is stale, use
-   `$HOME\.local\bin\docdev.ps1 <command>` temporarily。
-4. 如果以上入口都不可用，请用户先运行 native installer 或修复安装。
+2. Windows: `docdev <command>` in a fresh terminal。
+3. 如果 `docdev` 不可用，请用户先运行 native installer 或修复安装。
 
 常用命令：
 

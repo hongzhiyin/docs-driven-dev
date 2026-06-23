@@ -20,7 +20,7 @@ before filling the rest of the docs.>
 | A | Runtime / platform | <example: Python 3.10+ CLI> | - |
 | B | Main framework / SDK | <example: no runtime dependencies> | See D-001 |
 | C | Storage | <example: local markdown files> | - |
-| D | Distribution | <example: native installer + developer source checkout path> | See D-XXX |
+| D | Distribution | <example: native installer, package registry, or hosted service> | See D-XXX |
 | E | <add more> | <add more> | |
 
 ## 3. Derived Rules

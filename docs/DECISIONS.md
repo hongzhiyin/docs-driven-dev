@@ -1923,3 +1923,42 @@ the same installed skill behavior.
 - `pyproject.toml`
 - `src/docs_driven_dev/__init__.py`
 - `skill/SKILL.md`
+
+---
+
+## D-045 - Step 6y - Supersede v0.1.15 with a cleaner v0.1.16
+
+**Date**: 2026-06-24
+
+**Context**:
+`v0.1.15` was published and passed public installer smoke, but final installed
+skill verification still found concrete launcher-path guidance in active
+`SKILL.md` and legacy/source placeholders in skill templates. The user had
+asked that the skill surface avoid exposing old wrapper details, path-specific
+launcher guidance, and similar negative or historical phrasing.
+
+**Options**:
+- A. Leave `v0.1.15` as latest and defer cleanup - fewer releases, but latest
+  would still expose implementation details in installed skill content.
+- B. Publish `v0.1.16` as a patch release after removing those residuals and
+  adding tests that guard the full skill bundle.
+
+**Chosen**: B
+
+**Rationale**:
+- Release artifacts are immutable enough that a follow-up patch is clearer than
+  rewriting the already-published tag.
+- The active skill and skill templates are user-facing runtime material, so
+  they should not include wrapper/path history or old-entry placeholders.
+- A test guard across `skill/**/*.md` makes the cleanup durable.
+
+**Risks**:
+- Two releases are created in one session. Mitigation: mark `v0.1.16` as latest
+  and record that `v0.1.15` was superseded during final verification.
+
+**Related code / docs**:
+- ROADMAP Step 6y
+- `skill/SKILL.md`
+- `skill/templates/SPEC.md`
+- `skill/templates/change/zh/SPEC.md`
+- `tests/test_cli.py`
