@@ -30,8 +30,7 @@ Unix installer 写入 `~/.local/bin/docdev`，但不会自动修改 shell 启动
 `~/.local/bin` 不在 `PATH` 里，可以直接运行 `~/.local/bin/docdev`，或自行把该目录加入
 `PATH`。
 
-Windows installer 写入 `$HOME\.local\bin\docdev.ps1` 和
-`$HOME\.local\bin\docdev.cmd`，默认把 `$HOME\.local\bin` 加入当前用户 PATH，并尽量刷新
+Windows installer 默认把 `$HOME\.local\bin` 加入当前用户 PATH，并尽量刷新
 当前 PowerShell session 的 `$env:Path`。如果当前终端仍找不到 `docdev`，重新打开终端后再运行
 `docdev -v`。Windows installer 和生成的 launcher 会在当前进程内设置 UTF-8 输出，避免中文
 日志乱码；不会修改 PowerShell profile 或系统区域设置。受管环境不希望修改 PATH 时，可以
@@ -77,10 +76,9 @@ Windows 上可使用：
 & "$HOME\.local\bin\docdev.ps1" uninstall --yes
 ```
 
-`uninstall` 只删除 docdev native install root、docdev launcher，以及带
-`.docdev-skill-source` marker 或 legacy symlink 的 `docs-driven-dev` skill target。它不会删除
-`~/.local/bin`、`~/.local/share`、agent home 父目录、源码 checkout，或未标记的同名
-skill 目录。只想移除 CLI release、不动 agent skill 时使用：
+`uninstall` 只删除 docdev native install root、docdev 命令入口，以及 docdev 管理的
+已安装 skill target。它不会删除 `~/.local/bin`、`~/.local/share`、agent home 父目录、
+源码 checkout，或未由 docdev 管理的同名 skill 目录。只想移除 CLI release、不动 agent skill 时使用：
 
 ```bash
 docdev uninstall --yes --keep-skills
@@ -103,8 +101,8 @@ Windows PowerShell 遵循同样的安装 / 更新合同。当前仓库在 macOS 
 该 launcher 指向 `~/.local/share/docdev/current`，因此 agent 执行确定性 CLI 操作时
 不需要访问 `/Users/chihoyo/Project/docs-driven-dev` 这类源码 checkout。
 
-在 Windows 上，native installer 会写入 `docdev.cmd` 并默认加入用户 PATH，所以新终端中
-应优先使用 `docdev`。如果当前终端尚未刷新 PATH，可重新打开终端，或临时使用
+在 Windows 上，native installer 会让 `docdev` 在新终端中可用，所以应优先使用
+`docdev`。如果当前终端尚未刷新 PATH，可重新打开终端，或临时使用
 `$HOME\.local\bin\docdev.ps1` 完整路径。
 
 如果 `docdev` 和 `~/.local/bin/docdev` 都不可用，agent 应提示用户先运行 native
@@ -118,12 +116,12 @@ skill 中的某个工作流，并在改代码前创建或更新必要的 docs ar
 写清一条期望行为、触及文件、验收检查和验证结果。若用户明确禁止改文档，agent 应先说明
 完整 docs-driven workflow 被阻塞，再询问是否脱离该 skill 继续。
 
-平台支持 subagents 时，skill 提供可选 delegation guidance：主 agent 保留用户意图、
-SPEC invariants、scope、implementation gate、DECISIONS、最终 review 和 verification；
-subagent 处理边界清楚的 read-only research、已批准的窄范围 implementation slice、
-文档一致性检查或测试失败定位。委派 handoff 应写清 objective、file scope、write
-permission、acceptance checks 和 invariants，返回 changed files / findings、tests、
-uncertainty 以及需要主 agent 判断的点。
+平台支持 subagents 且任务存在边界清楚的 slice 时，优先考虑 delegation：主 agent 保留
+用户意图、SPEC invariants、scope、implementation gate、DECISIONS、最终 review 和
+verification；subagent 处理边界清楚的 read-only research、已批准的窄范围
+implementation slice、文档一致性检查或测试失败定位。委派 handoff 应写清 objective、
+file scope、write permission、acceptance checks 和 invariants，返回 changed files /
+findings、tests、uncertainty 以及需要主 agent 判断的点。
 
 ## 手动 CLI 参考
 
@@ -185,7 +183,6 @@ Windows 默认 native install 布局：
 %USERPROFILE%\.local\share\docdev\releases\<version>\
 %USERPROFILE%\.local\share\docdev\current
 %USERPROFILE%\.local\bin\docdev.ps1
-%USERPROFILE%\.local\bin\docdev.cmd
 ```
 
 生成的 launcher 会把 `DOCDEV_PROJECT_DIR` 和 `PYTHONPATH` 指向当前 release。用户不需要
@@ -241,17 +238,13 @@ Windows PowerShell 使用：
 .\.venv\Scripts\docdev.ps1 audit C:\path\to\project
 ```
 
-生成的 Windows source checkout launcher 同样会在当前进程内设置 UTF-8 输出。
+生成的 Windows source checkout 入口同样会在当前进程内设置 UTF-8 输出。
 
-Claude 目标和 Codex/Cursor/Agents 一样直接复制 skill，不再创建到 Agents target 的
-symlink；已有 legacy symlink 会在 force sync 时被替换为普通 skill 目录。
+Claude 目标和 Codex/Cursor/Agents 一样按当前配置刷新为独立 skill 内容。
 如果安装中断，把最后一行以 `[docdev install]` 或 `[docdev update]` 开头的输出拿来定位；
 编号 step 会指出停在哪个阶段。
 
-默认安装会 force sync。对于已有 marker 的 `docs-driven-dev` skill 目标，sync 会做整个
-目录替换：先移除目标 skill 目录，再从当前源码 checkout 复制当前 skill 内容。当前目标
-只保留本版本 skill 内容。如果过去使用过另一个目标路径，那是当前 sync 目标集合之外的
-目录，不再需要时需要手动清理。
+默认安装会 force sync，让当前 skill 目标反映这个源码 checkout 的 `skill/` 内容。
 
 更新源码 checkout 时，优先使用 `git pull` 或干净的 `git clone`。不要把下载文件手动覆盖
 到旧源码目录上；手动覆盖可能留下 stale untracked files，而 install/sync 会复制当前 checkout

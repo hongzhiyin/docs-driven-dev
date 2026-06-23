@@ -1759,3 +1759,127 @@ skill wording.
 - `pyproject.toml`
 - `src/docs_driven_dev/__init__.py`
 - `skill/SKILL.md`
+
+---
+
+## D-041 - Step 6v - Keep active skill surface current-action only
+
+**Date**: 2026-06-24
+
+**Context**:
+After the v0.1.14 cleanup, the user noticed that active skill guidance still
+included maintenance details about command entrypoint migration, owned targets,
+and cleanup behavior. Even when written as a correction, those details can
+make agents focus on paths they should never inspect during normal use.
+
+**Options**:
+- A. Keep the maintenance details in active skill guidance - convenient for
+  self-diagnosis, but it keeps implementation history in the text agents follow.
+- B. Move maintenance details to source docs/tests/scripts and keep active skill
+  guidance limited to current `docdev` commands and workflow boundaries - a
+  cleaner user surface, with maintenance facts still traceable.
+
+**Chosen**: B
+
+**Rationale**:
+- The skill is a procedural context for agents, so every extra implementation
+  detail risks becoming an accidental action.
+- Users and agents only need the stable command contract: `docdev` on PATH, the
+  Unix native path when needed, and the Windows PowerShell fallback.
+- SPEC, DECISIONS, ARCHITECTURE, tests, and scripts still preserve the install
+  and cleanup implementation facts for maintainers.
+
+**Risks**:
+- Troubleshooting from only the skill text has less low-level detail.
+  Mitigation: README and source docs remain available for maintainer workflows,
+  and install/update logs still identify failed lifecycle steps.
+
+**Related code / docs**:
+- ROADMAP Step 6v
+- `docs/changes/2026-06-24-skill-surface-hide-wrapper-history/`
+- `skill/SKILL.md`
+- `README.md`
+- `tests/test_cli.py`
+
+---
+
+## D-042 - Step 6w - Keep source checkout install out of active skill
+
+**Date**: 2026-06-24
+
+**Context**:
+After Step 6v, the active skill still contained a `Source Checkout Install`
+section with maintainer commands and kept `Delegation Guidance` nested under
+Workflow B. The user clarified that source checkout development installation is
+not runtime skill guidance, and delegation should apply whenever a platform
+supports bounded subagent slices.
+
+**Options**:
+- A. Keep source checkout installation and delegation placement as-is - useful
+  for maintainers reading only the skill, but it exposes development mechanics
+  and makes delegation look Workflow-B-specific.
+- B. Remove source checkout installation from active skill, leave maintainer
+  onboarding in README/source docs, and promote delegation to a top-level skill
+  workflow section.
+
+**Chosen**: B
+
+**Rationale**:
+- The skill should be the agent runtime decision layer, not the developer
+  installation manual.
+- Source checkout commands can anchor agents to repository maintenance paths
+  during normal user tasks.
+- Delegation is a cross-workflow judgment tool: the main agent keeps
+  docs-driven ownership while subagents handle bounded slices when available.
+
+**Risks**:
+- A maintainer reading only the installed skill will not see source checkout
+  setup commands. Mitigation: README and source docs keep maintainer onboarding
+  instructions.
+
+**Related code / docs**:
+- ROADMAP Step 6w
+- `docs/changes/2026-06-24-skill-surface-hide-wrapper-history/`
+- `skill/SKILL.md`
+- `tests/test_cli.py`
+
+---
+
+## D-043 - Step 6x - Trim active skill to runtime contract
+
+**Date**: 2026-06-24
+
+**Context**:
+After removing obsolete entrypoint and development-install details, the active
+skill was still about 338 lines and included low-frequency install, update,
+uninstall, release, layout, and template guidance. The user asked whether it
+should be made smaller, then approved a simplification pass.
+
+**Options**:
+- A. Keep the longer skill as a self-contained guide - easier for a reader who
+  only opens `SKILL.md`, but it loads maintenance details into every runtime
+  invocation.
+- B. Keep active skill as a concise runtime contract, with install/release and
+  maintainer manuals in README / source docs.
+
+**Chosen**: B
+
+**Rationale**:
+- The skill should optimize for the agent's immediate action path: docs-first
+  gates, CLI resolution, delegation, workflow selection, and verification.
+- README and source-of-truth docs already preserve the lower-frequency install
+  and release contracts.
+- A line-budget test makes future growth intentional instead of accidental.
+
+**Risks**:
+- Some troubleshooting details are no longer visible in installed skill text.
+  Mitigation: the skill points installation and maintenance details back to
+  README / SPEC / DECISIONS, and tests keep those docs as the maintenance
+  surface.
+
+**Related code / docs**:
+- ROADMAP Step 6x
+- `docs/changes/2026-06-24-skill-surface-runtime-trim/`
+- `skill/SKILL.md`
+- `README.md`
+- `tests/test_cli.py`

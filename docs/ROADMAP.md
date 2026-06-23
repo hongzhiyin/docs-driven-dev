@@ -5,7 +5,7 @@
 ## Current Progress
 
 **Phase**: Phase 1 - portable skill + CLI bootstrap
-**Current Step**: Step 6u complete; v0.1.14 active guidance cleanup release published
+**Current Step**: Step 6x complete; active skill surface trimmed to runtime contract
 
 ### Step Status
 
@@ -52,6 +52,9 @@
 | 6s | Publish v0.1.13 delegation guidance release | Done |
 | 6t | Remove obsolete launcher residuals from active guidance | Done |
 | 6u | Publish v0.1.14 active guidance cleanup release | Done |
+| 6v | Hide historical entrypoint details from active skill surface | Done |
+| 6w | Remove source checkout install from active skill and promote delegation guidance | Done |
+| 6x | Trim active skill to concise runtime contract | Done |
 
 ---
 
@@ -1126,6 +1129,114 @@ Verification:
 - Public latest smoke synced isolated skill targets containing `sync 使用整目录替换` and `只保留本版本`, and `find` for `*/bin/docdev*` produced no output.
 - Local native install was refreshed to `/Users/chihoyo/.local/share/docdev/releases/0.1.14`; `/Users/chihoyo/.local/bin/docdev --version` reports `docdev 0.1.14`, and `docdev doctor` confirms Codex/Cursor/Agents/Claude skill targets are installed.
 - Installed Codex/Cursor/Agents/Claude `SKILL.md` files contain `sync 使用整目录替换` and `只保留本版本`; they do not contain old skill-local launcher wording, and installed skill targets still contain no `bin/docdev*` launchers.
+
+---
+
+## Step 6v - Active skill surface hygiene
+
+**Goal**: Keep the active skill and README usage surface focused on current
+`docdev` commands, without teaching users or agents about historical
+entrypoint implementations.
+
+**Tasks**:
+- [x] Create `docs/changes/2026-06-24-skill-surface-hide-wrapper-history/`.
+- [x] Remove implementation-specific Windows command shim wording and historical
+  cleanup details from `skill/SKILL.md`.
+- [x] Remove the same implementation-specific wording from README usage sections.
+- [x] Add regression coverage that rejects historical entrypoint wording in
+  active skill and README surfaces.
+- [x] Update SPEC and DECISIONS with the durable surface hygiene rule.
+
+**Acceptance**:
+1. `skill/SKILL.md` and README usage sections describe current `docdev` command
+   behavior without historical entrypoint details.
+2. Tests and project audit pass.
+3. A targeted search over active skill/README surfaces finds no old entrypoint
+   wording, including negative or "do not" style guidance.
+
+Verification:
+- `PYTHONPATH=src python3 -m unittest tests.test_cli.CliTests.test_docs_explain_path_and_replacement_contract` passed.
+- `python3 -m unittest discover -s tests` passed with 40 tests.
+- `PYTHONPATH=src python3 -m docs_driven_dev.cli audit /Users/chihoyo/Project/docs-driven-dev` reported `No findings`.
+- Active surface search over `skill/SKILL.md` and README found no old entrypoint,
+  skill-local, marker, legacy cleanup, or Windows command shim filename wording.
+- `./scripts/sync_skill.sh --targets codex,cursor,agents,claude --force` refreshed local installed skill targets.
+- Installed Codex/Cursor/Agents/Claude `SKILL.md` files have no old entrypoint,
+  skill-local, marker, legacy cleanup, or Windows command shim filename wording;
+  `find` for `*/bin/docdev*` produced no output.
+
+---
+
+## Step 6w - Active skill runtime surface
+
+**Goal**: Keep the active skill focused on runtime workflow: current `docdev`
+entrypoints, docs-driven ownership, and top-level delegation guidance, without
+source checkout developer installation instructions.
+
+**Tasks**:
+- [x] Remove the source checkout install section from `skill/SKILL.md`.
+- [x] Move `Delegation Guidance（委派指导）` before workflow-specific sections.
+- [x] Strengthen tests for source-install forbidden wording and delegation
+  placement.
+- [x] Update root docs and the active change packet.
+- [x] Run tests, audit, forbidden-term searches, and refresh installed skill
+  targets.
+
+**Acceptance**:
+1. `skill/SKILL.md` contains no source checkout install section, source install
+   commands, or `.venv` maintenance entrypoints.
+2. Delegation guidance is a top-level section and applies before Workflow A/B/C
+   selection when platform support and bounded slices exist.
+3. Unit tests, `docdev audit`, source forbidden-term search, and installed
+   skill forbidden-term search pass.
+
+Verification:
+- `PYTHONPATH=src python3 -m unittest tests.test_cli.CliTests.test_skill_documents_delegation_guidance tests.test_cli.CliTests.test_docs_explain_path_and_replacement_contract` passed.
+- `python3 -m unittest discover -s tests` passed with 40 tests.
+- `PYTHONPATH=src python3 -m docs_driven_dev.cli audit /Users/chihoyo/Project/docs-driven-dev` reported `No findings`.
+- Source `skill/SKILL.md` search found no source checkout install section,
+  source install scripts, `.venv`, `DOCDEV_PROJECT_DIR`, or `PYTHONPATH`.
+- Source `skill/SKILL.md` and README search found no old wrapper/cmd wording,
+  including negative reminders.
+- `./scripts/sync_skill.sh --targets codex,cursor,agents,claude --force`
+  refreshed local installed skill targets.
+- Installed Codex/Cursor/Agents/Claude `SKILL.md` files have no source checkout
+  install wording, old wrapper/cmd wording, or `bin/docdev*` files; each has
+  `Delegation Guidance（委派指导）` before `Workflow A`.
+
+---
+
+## Step 6x - Active skill runtime trim
+
+**Goal**: Reduce `skill/SKILL.md` to a concise runtime contract while keeping
+the docs-first gates, CLI resolution, delegation ownership, and workflows.
+
+**Tasks**:
+- [x] Create `docs/changes/2026-06-24-skill-surface-runtime-trim/`.
+- [x] Remove low-frequency install/update/uninstall/release manual detail from
+  active skill.
+- [x] Keep README / SPEC as the maintainer information surface.
+- [x] Add tests for line budget and forbidden active-skill detail.
+- [x] Run tests, audit, forbidden searches, and refresh installed skill targets.
+
+**Acceptance**:
+1. `skill/SKILL.md` is at or below 230 lines.
+2. Active skill no longer includes remote installer commands, native layout,
+   private-release instructions, or uninstall command details.
+3. Tests, `docdev audit`, source forbidden search, and installed skill search
+   pass.
+
+Verification:
+- `skill/SKILL.md` is 192 lines.
+- `PYTHONPATH=src python3 -m unittest tests.test_cli.CliTests.test_skill_documents_existing_code_adoption tests.test_cli.CliTests.test_skill_requires_workflow_when_explicitly_named tests.test_cli.CliTests.test_skill_documents_delegation_guidance tests.test_cli.CliTests.test_docs_explain_path_and_replacement_contract` passed.
+- `python3 -m unittest discover -s tests` passed with 40 tests.
+- `PYTHONPATH=src python3 -m docs_driven_dev.cli audit /Users/chihoyo/Project/docs-driven-dev` reported `No findings`.
+- Source `skill/SKILL.md` forbidden-detail search returned no matches.
+- `./scripts/sync_skill.sh --targets codex,cursor,agents,claude --force`
+  refreshed local installed skill targets.
+- Installed Codex/Cursor/Agents/Claude `SKILL.md` files are each 192 lines,
+  forbidden-detail search returned no matches, and `find` found no `bin/docdev*`
+  files.
 
 ---
 

@@ -746,7 +746,7 @@ class CliTests(unittest.TestCase):
         self.assertIn("只读一遍 `SKILL.md` 然后直接写代码是不够的", text)
         self.assertIn("不要把明确的 `docs-driven-dev` 调用静默降级", text)
         self.assertIn("不要改 docs", text)
-        self.assertIn("如果没有这种明确限制", text)
+        self.assertIn("否则默认创建或更新文档", text)
         self.assertIn("Workflow B0 - Small Existing-Project Fix（小修复）", text)
         self.assertLess(
             text.index("Workflow B0 - Small Existing-Project Fix（小修复）"),
@@ -761,21 +761,30 @@ class CliTests(unittest.TestCase):
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
 
         self.assertIn("## Delegation Guidance（委派指导）", text)
+        self.assertNotIn("### Delegation Guidance（委派指导）", text)
+        self.assertLess(
+            text.index("## Delegation Guidance（委派指导）"),
+            text.index("## Workflow A - Bootstrap（项目初始化）"),
+        )
+        self.assertIn("优先考虑委派", text)
         self.assertIn("Delegation 是", text)
-        self.assertIn("docs-driven ownership 仍由主 agent 收束", text)
+        self.assertIn("ownership 仍由主 agent 收束", text)
         self.assertIn("主 agent owns", text)
-        self.assertIn("用户意图、SPEC invariants、scope 和 implementation gate", text)
+        self.assertIn("用户意图、SPEC invariants、scope、implementation gate", text)
         self.assertIn("已批准的窄范围 implementation slice", text)
         self.assertIn("文档一致性检查", text)
         self.assertIn("测试失败定位", text)
-        self.assertIn("objective、file", text)
+        self.assertIn("objective", text)
+        self.assertIn("file scope", text)
         self.assertIn("write permission", text)
-        self.assertIn("changed files 或 findings", text)
+        self.assertIn("changed files / findings", text)
         self.assertIn("uncertainty", text)
         self.assertIn("Agent delegation", spec)
         self.assertIn("Main agent owns docs-driven scope", spec)
         self.assertIn("skill-level workflow guidance", spec)
-        self.assertIn("可选 delegation guidance", readme)
+        self.assertIn("before executing any workflow", spec)
+        self.assertIn("Present delegation guidance as a top-level workflow rule", spec)
+        self.assertIn("优先考虑 delegation", readme)
 
     def test_readme_documents_explicit_invocation_fast_path(self) -> None:
         text = (ROOT / "README.md").read_text(encoding="utf-8")
@@ -790,41 +799,65 @@ class CliTests(unittest.TestCase):
         skill = (ROOT / "skill" / "SKILL.md").read_text(encoding="utf-8")
         spec = (ROOT / "docs" / "SPEC.md").read_text(encoding="utf-8")
 
+        self.assertLessEqual(len(skill.splitlines()), 230)
         self.assertIn("源码 checkout", readme)
         self.assertIn("不会把 `docdev` 加入全局 shell `PATH`", readme)
-        self.assertIn("Windows installer 写入", readme)
-        self.assertIn("docdev.cmd", readme)
+        self.assertIn("Windows installer 默认把 `$HOME\\.local\\bin` 加入当前用户 PATH", readme)
         self.assertIn("默认把 `$HOME\\.local\\bin` 加入当前用户 PATH", readme)
         self.assertIn("-NoModifyPath", readme)
         self.assertIn("直接在终端运行 CLI", readme)
-        self.assertIn("整个", readme)
-        self.assertIn("目录替换", readme)
-        self.assertIn("当前目标", readme)
-        self.assertIn("只保留本版本 skill 内容", readme)
+        self.assertIn("让当前 skill 目标反映这个源码 checkout 的 `skill/` 内容", readme)
         self.assertIn("手动覆盖可能留下 stale untracked files", readme)
         self.assertIn("~/.local/bin/docdev", readme)
         self.assertIn("~/.local/bin/docdev", skill)
         self.assertIn("docdev uninstall --dry-run", readme)
         self.assertIn("docdev uninstall --yes", readme)
         self.assertIn("docdev uninstall --yes --keep-skills", readme)
-        self.assertIn("docdev uninstall --dry-run", skill)
-        self.assertIn("docdev uninstall --yes --keep-skills", skill)
-        self.assertIn("Windows installer 默认写入用户", skill)
-        self.assertIn("docdev.cmd", skill)
-        self.assertIn("-NoModifyPath", skill)
+        self.assertIn("Install And Update Boundary（安装与更新边界）", skill)
+        self.assertIn("不属于 active", skill)
+        self.assertIn("README / SPEC / DECISIONS", skill)
         self.assertIn("先运行 native", readme)
-        self.assertIn("CLI resolution 只使用上面列出的跨机器入口", skill)
-        self.assertIn("agent 需要执行 CLI", skill)
-        self.assertIn("直接使用这些 native/PATH 入口", skill)
+        self.assertIn("按这个顺序解析 CLI", skill)
+        self.assertIn("agent 执行 CLI 时使用上述 native/PATH entries", skill)
         self.assertIn("agent 执行 CLI 时使用 `docdev` 或 native", readme)
-        self.assertIn("Unix installer 不会修改用户的全局 shell `PATH`", skill)
-        self.assertIn("sync 使用整目录替换", skill)
-        self.assertIn("只保留本版本", skill)
-        self.assertIn("file overlays can leave stale untracked files", skill)
-        legacy_skill_local_hint = "`bin/" + "docdev*` wrapper"
-        self.assertNotIn(legacy_skill_local_hint, skill)
-        self.assertNotIn(legacy_skill_local_hint, readme)
-        self.assertNotIn(legacy_skill_local_hint, spec)
+        active_surface_forbidden = [
+            "wrapper",
+            "skill-local",
+            "<skill-dir>",
+            "docdev.cmd",
+            ".docdev-skill-source",
+            "legacy",
+            "旧路径",
+            "旧入口",
+            "不会被自动清理",
+            "skill 目录下",
+        ]
+        for forbidden in active_surface_forbidden:
+            with self.subTest(forbidden=forbidden):
+                self.assertNotIn(forbidden, skill)
+                self.assertNotIn(forbidden, readme)
+        active_skill_source_forbidden = [
+            "Source Checkout",
+            "源码",
+            "source checkout",
+            "install.sh",
+            "install.ps1",
+            ".venv",
+            "DOCDEV_PROJECT_DIR",
+            "PYTHONPATH",
+            "DOCDEV_<TARGET>_SKILL_DIR",
+            "DOCDEV_<TARGET>_HOME",
+            "install_remote",
+            "DOCDEV_RELEASE_BASE_URL",
+            "Native Release Install",
+            "default native layout",
+            "Private GitHub",
+            "docdev uninstall",
+        ]
+        for forbidden in active_skill_source_forbidden:
+            with self.subTest(skill_source_forbidden=forbidden):
+                self.assertNotIn(forbidden, skill)
+        self.assertIn("docdev.cmd", spec)
 
     def test_audit_warns_on_readme_documentation_map_drift(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

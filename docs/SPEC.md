@@ -43,6 +43,9 @@ Claude, and shared agent skill homes.
 | AC | Windows text encoding | Windows PowerShell scripts and generated Windows launchers configure UTF-8 console/Python IO locally before logs or CLI output | See D-032 |
 | AD | Agent delegation | Main agent owns docs-driven scope, decisions, review, and verification; subagents may handle bounded research, implementation, consistency-check, or failure-diagnosis slices when supported | See D-037 |
 | AE | Active guidance hygiene | Current README, SPEC, and SKILL operational guidance names supported entrypoints and describes sync cleanup through current-target replacement rather than obsolete path examples | See D-039 |
+| AF | Skill surface hygiene | Active skill and README usage guidance describe current `docdev` commands, not historical entrypoint migrations or implementation-specific command shim filenames | See D-041 |
+| AG | Active skill runtime surface | Active skill omits source-checkout maintenance instructions and presents delegation as global workflow guidance when bounded subagent slices are available | See D-042 |
+| AH | Active skill compactness | Active skill stays a concise runtime contract, with install/update/release manuals kept in README and source docs | See D-043 |
 
 ## 3. Derived Rules
 
@@ -121,9 +124,14 @@ subagents, the main agent remains responsible for user intent, SPEC invariants,
 scope, implementation gates, DECISIONS, final diff review, verification, and
 the final user-facing explanation.
 
-Subagents may handle bounded task slices: read-only research, approved narrow
-implementation work, docs consistency checks, or test-failure diagnosis. A
-delegation handoff should include objective, file scope, write permission,
+When the platform supports subagents and a task has a bounded slice, agents
+should consider delegation before executing any workflow, not only during
+Workflow B. Good slices include read-only research, approved narrow
+implementation work, docs consistency checks, or test-failure diagnosis. Avoid
+delegation only when the task is too small to split cleanly, tool support is
+missing, or splitting would increase risk.
+
+A delegation handoff should include objective, file scope, write permission,
 acceptance checks, and invariants to preserve. A subagent response should
 return changed files or findings, tests run, uncertainty, and judgment points
 for the main agent to review.
@@ -412,6 +420,14 @@ Constraints:
 - Mention when to use the CLI.
 - Preserve the four-file boundaries.
 - Avoid agent-specific tools unless phrased as current-tool fallbacks.
+- Keep the active skill surface focused on current workflow and `docdev` commands; implementation-specific
+  command shim filenames, target markers, and historical entrypoint migration details belong in source docs,
+  tests, or scripts instead of `skill/SKILL.md`.
+- Keep source-checkout development installation commands out of `skill/SKILL.md`; maintainer onboarding belongs in
+  README and source docs.
+- Present delegation guidance as a top-level workflow rule before workflow-specific sections.
+- Keep `skill/SKILL.md` concise enough for runtime context. As a regression guard, it should stay at or below
+  230 lines unless a future D-XXX explicitly accepts the extra context.
 
 ## 6. Non-Goals
 
@@ -437,3 +453,5 @@ Constraints:
 12. **#12**: Native uninstall must require explicit destructive confirmation and only delete docdev-owned install paths or owned skill targets.
 13. **#13**: Windows native release install must make `docdev -v` available through an installer-owned command entrypoint and User PATH by default, with an explicit no-PATH opt-out.
 14. **#14**: Windows text encoding fixes must stay local to docdev-owned scripts and generated launchers, without editing profiles, system locale, or System PATH.
+15. **#15**: Active skill guidance must not expose historical entrypoint migration details or implementation-specific command shim filenames when the current `docdev` command contract is enough.
+16. **#16**: Active skill guidance must stay concise runtime context; install, update, uninstall, release, and maintainer manuals belong in README / source docs unless they are necessary for immediate agent action.
