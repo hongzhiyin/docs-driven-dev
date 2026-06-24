@@ -30,6 +30,16 @@ from .audit import (
     section_has_real_table_row,
 )
 from .commands import build_parser, main
+from .docs_health import (
+    THRESHOLDS,
+    collect_docs_health,
+    cmd_docs_health,
+    count_lines,
+    docs_health_signals,
+    packet_line_count,
+    print_human_report,
+    step_status_counts,
+)
 from .models import Finding
 from .paths import (
     CHANGE_OPTIONAL_DOC_NAMES,
@@ -88,6 +98,7 @@ __all__ = [
     "Finding",
     "GENERATED_SUBDIR",
     "SKILL_NAME",
+    "THRESHOLDS",
     "UninstallAction",
     "VERSION",
     "architecture_omission_reason_exists",
@@ -104,6 +115,7 @@ __all__ = [
     "checkbox_counts",
     "cmd_audit",
     "cmd_doctor",
+    "cmd_docs_health",
     "cmd_init",
     "cmd_new_change",
     "cmd_new_decision",
@@ -113,9 +125,12 @@ __all__ = [
     "cmd_update",
     "copy_skill",
     "copy_template",
+    "collect_docs_health",
+    "count_lines",
     "current_phase_from_roadmap",
     "decision_sections",
     "decision_skeleton",
+    "docs_health_signals",
     "discover_change_packets",
     "docs_dir_for",
     "docs_rel_for_markdown",
@@ -134,13 +149,16 @@ __all__ = [
     "normalize_slug",
     "parse_current_status",
     "parse_targets",
+    "packet_line_count",
     "path_from_env",
     "plan_native_uninstall",
     "project_root_from_module",
+    "print_human_report",
     "read_config",
     "roadmap_step_sections",
     "section_has_real_table_row",
     "skill_source_dir",
+    "step_status_counts",
     "target_path_for",
     "template_dir_for",
 ]

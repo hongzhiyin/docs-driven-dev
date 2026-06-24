@@ -1962,3 +1962,79 @@ launcher guidance, and similar negative or historical phrasing.
 - `skill/templates/SPEC.md`
 - `skill/templates/change/zh/SPEC.md`
 - `tests/test_cli.py`
+
+---
+
+## D-046 - Step 6z - Add docs-health as report support, not auto-trimming
+
+**Date**: 2026-06-24
+
+**Context**:
+After trimming the active skill, the remaining maintenance burden moved to
+README and the project source-of-truth docs. The user also pointed out that
+periodic documentation compaction should be reusable by other projects that
+adopt docdev.
+
+**Options**:
+- A. Only hand-trim this repository - fastest, but leaves other projects
+  without reusable support.
+- B. Add an automatic trim/archive command - powerful, but risks deleting or
+  rewriting human-authored rationale.
+- C. Add `docdev docs-health` as a deterministic report and let agents or
+  maintainers decide the actual trim.
+
+**Chosen**: C
+
+**Rationale**:
+- Documentation maintenance requires judgment about current entrypoints,
+  historical evidence, and append-only decision logs.
+- The CLI is a good fit for line counts, packet counts, largest-file signals,
+  and generated JSON reports.
+- Keeping the command read-only preserves the project boundary: deterministic
+  mechanics in CLI, judgment in skill/agent workflow.
+
+**Risks**:
+- Thresholds may be noisy for some projects. Mitigation: docs-health signals
+  are review prompts, not audit warnings or failing checks.
+
+**Related code / docs**:
+- SPEC §3.8
+- ARCHITECTURE §3.4a
+- ROADMAP Step 6z
+- `src/docs_driven_dev/docs_health.py`
+- `tests/test_cli.py`
+
+---
+
+## D-047 - Step 6aa - Publish docs-health as v0.1.17
+
+**Date**: 2026-06-24
+
+**Context**:
+`docdev docs-health` and the README/ROADMAP surface trim are useful only from
+source until a release is published. The user explicitly asked to commit, push,
+publish, and update the local native install.
+
+**Options**:
+- A. Commit source changes only - preserves work but leaves installed `docdev`
+  unable to run `docs-health`.
+- B. Publish a patch release `v0.1.17` after tests, audit, package smoke,
+  public smoke, and local native refresh.
+
+**Chosen**: B
+
+**Rationale**:
+- `docs-health` is a new CLI capability, so users need a release artifact.
+- Local native install and installed skill homes must be refreshed together so
+  the CLI and agent guidance describe the same workflow.
+- A patch release matches the scope: additive command plus docs surface trim.
+
+**Risks**:
+- Release effort is larger than a simple source commit. Mitigation: follow the
+  existing packaging, public smoke, and local refresh checklist.
+
+**Related code / docs**:
+- ROADMAP Step 6aa
+- `src/docs_driven_dev/docs_health.py`
+- `README.md`
+- `skill/SKILL.md`

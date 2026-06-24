@@ -69,6 +69,7 @@ docdev new-change "feature-slug" /path/to/project
 docdev audit /path/to/project --write-report
 docdev status /path/to/project
 docdev new-decision "Step N - trade-off title" /path/to/project
+docdev docs-health /path/to/project --write-report
 docdev sync-skill --targets codex,cursor,agents,claude --force
 docdev doctor
 ```
@@ -173,6 +174,7 @@ migration 或 cross-cutting impact，在实现前补 ARCHITECTURE。
 - 每个 non-trivial decision 至少包含 options、chosen、rationale、risks 和相关文件。
 - change packet 省略 `ARCHITECTURE.md` 时，ROADMAP 必须写 omission reason。
 - 最终回答前验证 acceptance，并写回 verification results。
+- 定期精简维护文档前，先运行 `docdev docs-health <project>`；CLI 只给 signals，实际删减/归档由 agent 判断。
 
 ## Anti-Patterns（反模式）
 

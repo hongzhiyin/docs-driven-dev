@@ -46,6 +46,7 @@ Claude, and shared agent skill homes.
 | AF | Skill surface hygiene | Active skill and README usage guidance describe current `docdev` commands, not historical entrypoint migrations or implementation-specific command shim filenames | See D-041 |
 | AG | Active skill runtime surface | Active skill omits source-checkout maintenance instructions and presents delegation as global workflow guidance when bounded subagent slices are available | See D-042 |
 | AH | Active skill compactness | Active skill stays a concise runtime contract, with install/update/release manuals kept in README and source docs | See D-043 |
+| AI | Docs maintenance health | `docdev docs-health` reports documentation size and maintenance signals without rewriting human-authored docs | See D-046 |
 
 ## 3. Derived Rules
 
@@ -161,6 +162,7 @@ development, not cross-machine agent use.
 | `docdev new-change "<slug>" <project>` | Create a per-requirement change packet | Writes project docs |
 | `docdev audit <project>` | Check project docs plus existing change packets for structure, numbering, source-map drift, and required rationale blocks | Optional audit report |
 | `docdev status <project>` | Show Phase, Step, next D id | Read-only |
+| `docdev docs-health <project>` | Report README/source-doc/change-packet size and maintenance signals | Optional generated report |
 | `docdev new-decision "<title>" <project>` | Append next D-XXX skeleton | Writes DECISIONS.md |
 | `docdev sync-skill` | Copy skill into agent homes | Writes skill target dirs |
 | `docdev update` | Update a native release install from a release manifest and artifact | Writes user install dirs; syncs skill target dirs by default |
@@ -358,6 +360,21 @@ Current operational guidance should keep CLI execution and sync semantics
 separate: CLI execution uses the supported native/PATH entries; `sync-skill`
 refreshes skill content and marker files through current-target replacement.
 
+### 3.8 Docs Maintenance Health
+
+`docdev docs-health <project>` is a deterministic reporting command for
+periodic documentation maintenance. It reports line counts and review signals
+for README, the four source documents, and requirement change packets.
+
+The command must not automatically rewrite, delete, or archive human-authored
+source documents. It may print a human summary, emit JSON with `--json`, and
+write `docs-health.json` under `<docs_dir>/_generated/docdev/` when
+`--write-report` is passed.
+
+The report is input for agent or maintainer judgment. In particular,
+`DECISIONS.md` remains append-only; if it becomes large, prefer an index or
+summary over deleting historical D-XXX entries.
+
 ## 4. Default Handling
 
 | Scenario | Default behaviour |
@@ -380,6 +397,8 @@ refreshes skill content and marker files through current-target replacement.
 | Source has just been updated | Run `./scripts/update_cli.sh --targets codex,cursor,agents,claude --force` |
 | User wants release-style install from GitHub Releases | Run the native remote installer and verify manifest/checksum before activation |
 | Native release install has been updated | Run `docdev update`; use `--no-sync-skill` only when skill targets should not be refreshed |
+| Maintenance docs feel too large | Run `docdev docs-health <project>` before deciding what to trim, summarize, archive, or keep |
+| Docs-health report flags DECISIONS as large | Keep D-XXX entries append-only; add an index or summary instead of deleting old decisions |
 | User wants to remove native install before retesting | Run `docdev uninstall --dry-run`, then `docdev uninstall --yes` |
 | Source repo has just been cloned for development | Run `./scripts/install.sh` |
 | Source repo has just been cloned for development in Windows PowerShell | Run `.\scripts\install.ps1` |
@@ -408,6 +427,7 @@ responsibility-focused internal modules such as `commands.py`, `templates.py`,
 Constraints:
 - Input domain: project paths, optional docs dir override, change slug/date/lang, sync target list.
 - Output domain: console summaries, markdown scaffolds, optional JSON audit.
+- Docs-health output domain: console summaries, optional JSON report under `_generated/docdev`.
 - Error categories: missing templates, missing docs, audit warnings/errors, unsafe sync replacement.
 - Related invariants: #1, #2, #3, #4, #7.
 
@@ -428,6 +448,7 @@ Constraints:
 - Present delegation guidance as a top-level workflow rule before workflow-specific sections.
 - Keep `skill/SKILL.md` concise enough for runtime context. As a regression guard, it should stay at or below
   230 lines unless a future D-XXX explicitly accepts the extra context.
+- Mention `docs-health` as a pre-trim report command without turning active skill guidance into a maintenance runbook.
 
 ## 6. Non-Goals
 
@@ -455,3 +476,4 @@ Constraints:
 14. **#14**: Windows text encoding fixes must stay local to docdev-owned scripts and generated launchers, without editing profiles, system locale, or System PATH.
 15. **#15**: Active skill guidance must not expose historical entrypoint migration details or implementation-specific command shim filenames when the current `docdev` command contract is enough.
 16. **#16**: Active skill guidance must stay concise runtime context; install, update, uninstall, release, and maintainer manuals belong in README / source docs unless they are necessary for immediate agent action.
+17. **#17**: Docs maintenance health checks must report review signals, not automatically rewrite or delete human-authored source documents.

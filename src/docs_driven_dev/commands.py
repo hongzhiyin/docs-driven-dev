@@ -4,6 +4,7 @@ import argparse
 from typing import Iterable
 
 from .audit import cmd_audit, cmd_new_decision, cmd_status
+from .docs_health import cmd_docs_health
 from .paths import VERSION
 from .release import cmd_uninstall, cmd_update
 from .sync import cmd_doctor, cmd_sync_skill
@@ -47,6 +48,13 @@ def build_parser() -> argparse.ArgumentParser:
     status.add_argument("project", nargs="?", default=".")
     status.add_argument("--docs-dir", default=None)
     status.set_defaults(func=cmd_status)
+
+    health = sub.add_parser("docs-health", help="Report documentation size and maintenance signals.")
+    health.add_argument("project", nargs="?", default=".")
+    health.add_argument("--docs-dir", default=None)
+    health.add_argument("--json", action="store_true")
+    health.add_argument("--write-report", action="store_true")
+    health.set_defaults(func=cmd_docs_health)
 
     decision = sub.add_parser("new-decision", help="Append the next D-XXX decision skeleton.")
     decision.add_argument("title")

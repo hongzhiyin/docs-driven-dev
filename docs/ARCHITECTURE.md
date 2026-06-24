@@ -36,6 +36,7 @@ caller passes.
 | CLI shared models | `src/docs_driven_dev/models.py` | Shared data objects such as `Finding` | command dispatch |
 | CLI template/change module | `src/docs_driven_dev/templates.py` | `init`, `new-change`, template copy, README/AGENTS pointers | audit, sync, release update |
 | CLI audit/status module | `src/docs_driven_dev/audit.py` | Project and change-packet audit, status, decision skeletons | skill target writes, native update |
+| CLI docs-health module | `src/docs_driven_dev/docs_health.py` | Documentation size metrics, change-packet metrics, and maintenance review signals | release install/update and human-authored rewrites |
 | CLI sync/doctor module | `src/docs_driven_dev/sync.py` | Skill target resolution, copy sync, doctor output | release download/update dispatch |
 | CLI release module | `src/docs_driven_dev/release.py` | Native update dispatch and native uninstall planning/execution | audit/template internals |
 | Skill source | `skill/SKILL.md` | Agent workflow and boundaries | local install paths |
@@ -115,6 +116,23 @@ docdev audit <project>
   -> print findings
   -> optionally write docs/_generated/docdev/audit.json
 ```
+
+### 3.4a Docs Health
+
+```text
+docdev docs-health <project> [--json] [--write-report]
+  -> resolve docs_dir
+  -> count README and four source-doc lines
+  -> count ROADMAP step sections and Step Status states
+  -> count D-XXX entries
+  -> count change packets and largest packet sizes
+  -> emit review signals without mutating human-authored docs
+  -> optionally write docs/_generated/docdev/docs-health.json
+```
+
+Docs-health is deliberately separate from `audit`: audit checks structural
+correctness; docs-health reports maintenance pressure and leaves trimming
+judgment to the agent or maintainer.
 
 ### 3.5 Sync
 
@@ -317,6 +335,23 @@ docs/changes/YYYY-MM-DD-slug/
 The date and slug are filesystem identity. Packet-local D-XXX numbering is
 separate from project-level D-XXX numbering.
 
+### 4.4 Docs Health Report
+
+```json
+{
+  "schema_version": 1,
+  "files": [],
+  "totals": {},
+  "roadmap": {},
+  "decisions": {},
+  "change_packets": {},
+  "signals": []
+}
+```
+
+Signals are review prompts, not audit failures. They should remain stable
+enough for agents to consume without implying automatic document mutation.
+
 ## 5. Configuration
 
 | Field / Env | Default | Meaning | Required |
@@ -344,6 +379,8 @@ separate from project-level D-XXX numbering.
   overrides, and home overrides compose with `skills/docs-driven-dev`.
 - Target project setup: `scripts/setup_project.sh /path/to/project`.
 - Requirement setup: `docdev new-change "<slug>" /path/to/project`.
+- Docs maintenance: `docdev docs-health /path/to/project --write-report`
+  creates a generated report for agent review before trimming source docs.
 - Native install: remote installer downloads a release manifest/artifact,
   verifies checksum, installs under `DOCDEV_INSTALL_ROOT` or
   `~/.local/share/docdev`, and writes a launcher under `DOCDEV_BIN_DIR` or
@@ -384,3 +421,5 @@ separate from project-level D-XXX numbering.
   fallback after real-machine testing.
 - Native installer checksum verification provides file integrity, not a full
   publisher signing trust chain. Signed manifests are a future enhancement.
+- Docs-health thresholds are intentionally heuristic and should not replace
+  human judgment about what to keep, summarize, or archive.

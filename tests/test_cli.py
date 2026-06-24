@@ -268,6 +268,45 @@ class CliTests(unittest.TestCase):
             self.assertEqual(cli.main(["audit", tmp]), 0)
             self.assertEqual(self.finding_messages(Path(tmp)), [])
 
+    def test_docs_health_reports_size_signals(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp)
+            self.assertEqual(cli.main(["init", tmp]), 0)
+            readme = project / "README.md"
+            readme.write_text(readme.read_text(encoding="utf-8") + "\n" + ("extra\n" * 190), encoding="utf-8")
+            self.assertEqual(cli.main(["new-change", "sample-feature", tmp, "--date", "2026-06-09"]), 0)
+
+            stdout = io.StringIO()
+            with contextlib.redirect_stdout(stdout):
+                code = cli.main(["docs-health", tmp])
+
+            output = stdout.getvalue()
+            self.assertEqual(code, 0)
+            self.assertIn("Document lines:", output)
+            self.assertIn("README.md", output)
+            self.assertIn("Change packets: 1 packets", output)
+            self.assertIn("readme-long", output)
+
+    def test_docs_health_json_and_write_report(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp)
+            self.assertEqual(cli.main(["init", tmp]), 0)
+
+            stdout = io.StringIO()
+            with contextlib.redirect_stdout(stdout):
+                code = cli.main(["docs-health", tmp, "--json", "--write-report"])
+
+            self.assertEqual(code, 0)
+            payload = json.loads(stdout.getvalue())
+            self.assertEqual(payload["schema_version"], 1)
+            self.assertEqual(payload["totals"]["change_packet_count"], 0)
+            self.assertIn("files", payload)
+
+            report = project / "docs" / "_generated" / "docdev" / "docs-health.json"
+            self.assertTrue(report.exists())
+            written = json.loads(report.read_text(encoding="utf-8"))
+            self.assertEqual(written["schema_version"], 1)
+
     def test_new_decision_appends_next_id(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             self.assertEqual(cli.main(["init", tmp]), 0)
@@ -784,15 +823,15 @@ class CliTests(unittest.TestCase):
         self.assertIn("skill-level workflow guidance", spec)
         self.assertIn("before executing any workflow", spec)
         self.assertIn("Present delegation guidance as a top-level workflow rule", spec)
-        self.assertIn("优先考虑 delegation", readme)
+        self.assertIn("When subagents are available", readme)
 
     def test_readme_documents_explicit_invocation_fast_path(self) -> None:
         text = (ROOT / "README.md").read_text(encoding="utf-8")
 
-        self.assertIn("不应把它当成泛泛的参考方法", text)
-        self.assertIn("small-fix path", text)
-        self.assertIn("窄范围 bug fix", text)
-        self.assertIn("明确禁止改文档", text)
+        self.assertIn("When `docs-driven-dev` is explicitly named", text)
+        self.assertIn("Small", text)
+        self.assertIn("minimal change packet", text)
+        self.assertIn("forbids doc changes", text)
 
     def test_docs_explain_path_and_replacement_contract(self) -> None:
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
@@ -804,25 +843,24 @@ class CliTests(unittest.TestCase):
         spec = (ROOT / "docs" / "SPEC.md").read_text(encoding="utf-8")
 
         self.assertLessEqual(len(skill.splitlines()), 230)
-        self.assertIn("源码 checkout", readme)
-        self.assertIn("不会把 `docdev` 加入全局 shell `PATH`", readme)
-        self.assertIn("Windows installer 默认把 `$HOME\\.local\\bin` 加入当前用户 PATH", readme)
-        self.assertIn("默认把 `$HOME\\.local\\bin` 加入当前用户 PATH", readme)
-        self.assertIn("-NoModifyPath", readme)
-        self.assertIn("直接在终端运行 CLI", readme)
-        self.assertIn("让当前 skill 目标反映这个源码 checkout 的 `skill/` 内容", readme)
-        self.assertIn("手动覆盖可能留下 stale untracked files", readme)
-        self.assertIn("~/.local/bin/docdev", readme)
+        self.assertLessEqual(len(readme.splitlines()), 170)
+        self.assertIn("## Quick Install", readme)
+        self.assertIn("## Agent Usage", readme)
+        self.assertIn("## Docs Health", readme)
+        self.assertIn("## Maintainer Notes", readme)
+        self.assertIn("Fresh user installs", readme)
+        self.assertIn("Common maintainer commands", readme)
         self.assertIn("docdev uninstall --dry-run", readme)
         self.assertIn("docdev uninstall --yes", readme)
         self.assertIn("docdev uninstall --yes --keep-skills", readme)
+        self.assertIn("docdev docs-health /path/to/project --write-report", readme)
         self.assertIn("Install And Update Boundary（安装与更新边界）", skill)
         self.assertIn("不属于 active", skill)
         self.assertIn("README / SPEC / DECISIONS", skill)
-        self.assertIn("先运行 native", readme)
+        self.assertIn("release installer", readme)
         self.assertIn("按这个顺序解析 CLI", skill)
         self.assertIn("`docdev <command>` if available on `PATH`", skill)
-        self.assertIn("agent 执行 CLI 时使用 `docdev` 或 native", readme)
+        self.assertIn("The release installer", readme)
         active_surface_forbidden = [
             "wrapper",
             "skill-local",
@@ -867,6 +905,8 @@ class CliTests(unittest.TestCase):
                 self.assertNotIn(forbidden, skill)
                 self.assertNotIn(forbidden, skill_bundle)
         self.assertIn("docdev.cmd", spec)
+        self.assertIn("Docs maintenance health", spec)
+        self.assertIn("docdev docs-health", spec)
 
     def test_audit_warns_on_readme_documentation_map_drift(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
