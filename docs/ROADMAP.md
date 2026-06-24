@@ -7,7 +7,7 @@
 ## Current Progress
 
 **Phase**: Phase 1 - portable skill + CLI bootstrap
-**Current Step**: Step 6aa in progress; publish docs-health as v0.1.17
+**Current Step**: Step 6aa complete; v0.1.17 published and local install refreshed
 
 ### Step Status
 
@@ -59,7 +59,7 @@
 | 6x | Trim active skill to concise runtime contract | Done |
 | 6y | Publish v0.1.16 runtime skill trim release | Done |
 | 6z | Add docs-health and trim current docs surface | Done |
-| 6aa | Publish v0.1.17 docs-health release | In Progress |
+| 6aa | Publish v0.1.17 docs-health release | Done |
 
 ## Historical Summary
 
@@ -69,7 +69,7 @@
 | 5-5h | Added requirement change packets, Windows source maintenance scripts, install/update diagnostics, configurable skill homes, existing-code adoption, and explicit invocation rules | D-012 through D-020 |
 | 6-6h | Added GitHub Releases/native installer distribution, module split, default skill sync on native update, and uninstall | D-021 through D-028 |
 | 6i-6n | Added Windows bare-command install, UTF-8 launcher handling, and direct Claude copy sync; published v0.1.9 and v0.1.10 | D-029 through D-034 |
-| 6o-6y | Removed skill-local wrapper residue from active guidance, promoted delegation, trimmed active skill, and published v0.1.16 | D-035 through D-045 |
+| 6o-6aa | Removed skill-local wrapper residue from active guidance, promoted delegation, trimmed active skill, added docs-health, and published v0.1.17 | D-035 through D-047 |
 
 Detailed step verification was intentionally moved out of the current view. Use
 the linked D-XXX records and requirement packets for historical evidence.
@@ -164,14 +164,14 @@ then use it to keep this repository's current docs surface readable.
 so fresh installs and `docdev update` receive the new maintenance capability.
 
 **Tasks**:
-- [ ] Bump release metadata to `0.1.17`.
-- [ ] Run unit tests, project audit, and docs-health.
-- [ ] Package release assets.
-- [ ] Run local simulated install smoke from packaged `0.1.17` assets.
-- [ ] Commit, tag, and push `v0.1.17`.
-- [ ] Publish GitHub Release `v0.1.17` as latest.
-- [ ] Run public latest smoke including `docs-health`.
-- [ ] Update the local native install and synced skill targets to `0.1.17`.
+- [x] Bump release metadata to `0.1.17`.
+- [x] Run unit tests, project audit, and docs-health.
+- [x] Package release assets.
+- [x] Run local simulated install smoke from packaged `0.1.17` assets.
+- [x] Commit, tag, and push `v0.1.17`.
+- [x] Publish GitHub Release `v0.1.17` as latest.
+- [x] Run public latest smoke including `docs-health`.
+- [x] Update the local native install and synced skill targets to `0.1.17`.
 
 **Acceptance**:
 1. Release assets include `docdev-0.1.17.tar.gz`, checksum, manifest, and both
@@ -181,3 +181,29 @@ so fresh installs and `docdev update` receive the new maintenance capability.
 4. Local `/Users/chihoyo/.local/bin/docdev` reports `docdev 0.1.17`.
 5. Installed skill targets include the docs-health guidance and still avoid old
    wrapper/source-checkout wording.
+
+**Verification**:
+- 42 tests passed with `PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m
+  unittest discover -s tests`.
+- Source checkout audit returned no findings, and source checkout
+  `docs-health --write-report` wrote `docs/_generated/docdev/docs-health.json`
+  with only expected DECISIONS/source-doc/change-packet review signals.
+- Packaged release assets in `/private/tmp/docdev-release-assets-0.1.17.LBzBuT`;
+  manifest listed `docdev-0.1.17.tar.gz` with SHA-256
+  `359771a3b68067a6180ea1ca691512e1000d136f80faf6c94c763a07ee18f29a`.
+- Local file smoke in `/private/tmp/docdev-017-local-smoke.2f7avF` installed
+  `docdev 0.1.17`, ran init/audit/docs-health, confirmed packaged `SKILL.md`
+  was 189 lines, and found no old wrapper/cmd/source-checkout terms.
+- Commit `1de8991`, tag `v0.1.17`, and the `main` branch were pushed to
+  origin.
+- GitHub Release:
+  `https://github.com/hongzhiyin/docs-driven-dev/releases/tag/v0.1.17`.
+- Public latest smoke in `/private/tmp/docdev-017-public-smoke.31pUXJ`
+  installed the GitHub release, ran version/init/audit/docs-health, confirmed
+  packaged `SKILL.md` was 189 lines, and found no old wrapper/cmd/source-checkout
+  terms.
+- Local native update refreshed `/Users/chihoyo/.local/bin/docdev` to
+  `docdev 0.1.17`; `doctor` passed, repository `docs-health --write-report`
+  ran successfully, Codex/Cursor/Agents/Claude skill targets were 189 lines,
+  and no old wrapper/cmd/source-checkout terms were found in source or installed
+  skill files.
