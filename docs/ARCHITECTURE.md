@@ -102,6 +102,10 @@ Change packets are scoped working memory for existing-project requirements.
 They do not replace root project docs. `ARCHITECTURE.md` is optional inside a
 change packet when ROADMAP records the omission reason.
 
+Tracked docdev text, shipped templates, and CLI-generated skeletons are
+English-only. Audit parsing may retain compatibility with older archived
+packets without exposing non-English text in generated output or source docs.
+
 ### 3.4 Audit
 
 ```text

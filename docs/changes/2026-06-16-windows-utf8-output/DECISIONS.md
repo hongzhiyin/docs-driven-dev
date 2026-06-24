@@ -1,55 +1,46 @@
-# DECISIONS - Windows UTF-8 output
+# DECISIONS - Windows Utf8 Output
 
-> 本文件记录这次需求中为什么这么选。只写真实取舍，不为机械改动补仪式性决策。
+> Archived English summary for a historical docdev change packet.
 
-## 维护规则
+## Maintenance Rules
 
-1. `D-XXX` 在本工作包内单调递增，不复用。
-2. 每条记录 2-3 个真实选项；不要编造凑数选项。
-3. 写清选择、理由、风险和对应文件。
-4. 决策被推翻时，新增一条 D-XXX 引用旧决策，旧决策保留原文。
+1. Keep decision records concise and tied to real trade-offs.
+2. Preserve current product truth in root `docs/DECISIONS.md`.
+3. Use git history for detailed pre-compaction wording.
 
 ---
 
-## D-001 - Step 3 - Configure UTF-8 at Windows entrypoints
+## D-001 - Archive packet in English-only form
 
-**日期 / Date**: 2026-06-16
+**Date**: 2026-06-25
 
-**上下文 / Context**:
-The reported mojibake appears at the beginning of Windows PowerShell usage. A
-Python-only fix would not cover installer logs emitted before Python starts,
-and user instructions would keep the defect outside the project.
+**Context**:
+The `windows-utf8-output` packet was created on 2026-06-16 as part of earlier docdev maintenance.
+The repository now has a compatibility requirement that tracked docdev text use
+English only. Keeping the packet directory is useful for traceability, but the
+old detailed prose is no longer suitable as live tracked text.
 
-**选项 / Options**:
-- A. Document that users should run `chcp 65001` or set PowerShell encoding
-  manually - low implementation cost, but repeats the burden on every Windows
-  user.
-- B. Set UTF-8 only inside the Python CLI - improves some command output, but
-  does not fix installer and launcher startup logs.
-- C. Configure UTF-8 in Windows PowerShell entry scripts and generated
-  launchers - covers installer startup, source maintenance scripts, and normal
-  `docdev` command execution.
+**Options**:
+- A. Keep the original detailed packet unchanged - maximizes inline history, but
+  violates the repository-wide English-only contract.
+- B. Delete the packet - removes incompatible text, but loses discoverability of
+  the historical change topic.
+- C. Replace the packet with a concise English archive summary - keeps the
+  historical topic visible while satisfying the current compatibility rule.
 
-**选择 / Chosen**: C
+**Chosen**: C
 
-**理由 / Rationale**:
-- It fixes the earliest output point, before `Write-Host` logs or Python CLI
-  output can be garbled.
-- It keeps the change local to docdev-owned processes and launchers.
-- It does not require admin rights, profile edits, npm shims, or a new binary
-  packaging model.
+**Rationale**:
+- The archive summary keeps the date, slug, and source-of-truth relationship.
+- Root docs and tests define current behavior; old packet details do not need to
+  stay in runtime context.
+- Git history remains the right place for exact pre-compaction wording.
 
-**风险 / Risks**:
-- Some PowerShell hosts may reject console encoding mutation. Mitigation: use
-  best-effort console setup and still set Python UTF-8 environment variables.
-- Static tests cannot prove every Windows terminal host renders Chinese
-  correctly. Mitigation: keep real Windows smoke as release verification.
+**Risks**:
+- Maintainers lose quick inline access to detailed old verification logs.
+  Mitigation: use git history when that level of evidence is needed.
 
-**对应代码 / 文档**:
-- SPEC §5
-- ROADMAP Step 4
-- `scripts/install_remote.ps1`
-- `scripts/install_cli.ps1`
-- `scripts/install.ps1`
-- `scripts/update_cli.ps1`
-- `tests/test_cli.py`
+**Related code / docs**:
+- `docs/changes/2026-06-16-windows-utf8-output/`
+- `docs/DECISIONS.md` D-048
+- `docs/ROADMAP.md` Step 6ab

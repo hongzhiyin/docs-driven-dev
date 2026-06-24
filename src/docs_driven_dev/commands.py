@@ -31,7 +31,6 @@ def build_parser() -> argparse.ArgumentParser:
     change.add_argument("project", nargs="?", default=".")
     change.add_argument("--docs-dir", default=None)
     change.add_argument("--template-dir", default=None)
-    change.add_argument("--lang", choices=("zh", "en"), default="zh")
     change.add_argument("--date", default=None)
     change.add_argument("--with-architecture", action="store_true")
     change.add_argument("--force", action="store_true")

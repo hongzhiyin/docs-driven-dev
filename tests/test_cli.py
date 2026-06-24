@@ -328,7 +328,7 @@ class CliTests(unittest.TestCase):
             self.assertFalse((packet / "ARCHITECTURE.md").exists())
             self.assertEqual(self.finding_messages(project), [])
 
-    def test_new_change_can_include_architecture_and_english_templates(self) -> None:
+    def test_new_change_can_include_architecture_and_uses_english_templates(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             project = Path(tmp)
             self.assertEqual(cli.main(["init", tmp]), 0)
@@ -340,8 +340,6 @@ class CliTests(unittest.TestCase):
                         tmp,
                         "--date",
                         "2026-06-09",
-                        "--lang",
-                        "en",
                         "--with-architecture",
                     ]
                 ),
@@ -354,6 +352,16 @@ class CliTests(unittest.TestCase):
             self.assertIn("One-Sentence Goal", spec)
             self.assertEqual(self.finding_messages(project), [])
 
+    def test_change_templates_do_not_use_language_subdirectories(self) -> None:
+        template_dir = ROOT / "skill" / "templates" / "change"
+
+        self.assertTrue((template_dir / "SPEC.md").exists())
+        self.assertTrue((template_dir / "ROADMAP.md").exists())
+        self.assertTrue((template_dir / "DECISIONS.md").exists())
+        self.assertTrue((template_dir / "ARCHITECTURE.md").exists())
+        self.assertFalse((template_dir / "en").exists())
+        self.assertFalse((template_dir / "zh").exists())
+
     def test_audit_warns_when_change_omits_architecture_without_reason(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             project = Path(tmp)
@@ -364,7 +372,7 @@ class CliTests(unittest.TestCase):
             text = roadmap.read_text(encoding="utf-8")
             roadmap.write_text(
                 text.replace(
-                    "**ARCHITECTURE 省略理由 / Architecture Omission Reason**: 当前需求尚未确认结构、数据流、接口、配置或迁移变化；如调研发现需要结构说明，先补 `ARCHITECTURE.md` 再实现。\n",
+                    "**Architecture Omission Reason**: This requirement has not yet shown module, data-flow, API, config, or migration impact. Add `ARCHITECTURE.md` before implementation if research changes that.\n",
                     "",
                 ),
                 encoding="utf-8",
@@ -381,7 +389,7 @@ class CliTests(unittest.TestCase):
 
             roadmap = project / "docs" / "changes" / "2026-06-09-approval-gate" / "ROADMAP.md"
             text = roadmap.read_text(encoding="utf-8")
-            roadmap.write_text(text.replace("**阶段 / Phase**: 需求接入", "**阶段 / Phase**: 实现中"), encoding="utf-8")
+            roadmap.write_text(text.replace("**Phase**: Intake", "**Phase**: Implementation"), encoding="utf-8")
 
             messages = self.finding_messages(project)
             self.assertIn(
@@ -768,55 +776,57 @@ class CliTests(unittest.TestCase):
 
     def test_skill_documents_existing_code_adoption(self) -> None:
         text = (ROOT / "skill" / "SKILL.md").read_text(encoding="utf-8")
-        self.assertIn("已有代码库没有项目级四件套时，这是 adoption case", text)
-        self.assertIn("不是 blocked case", text)
+        self.assertIn("An existing codebase without the root four-doc set is an adoption case", text)
+        self.assertIn("blocked case. Run", text)
         self.assertIn("`docdev init <project>`", text)
         self.assertIn('docdev new-change "<slug>" <project>', text)
-        self.assertIn("不要让一个单独的", text)
-        self.assertIn("成为项目唯一的 docs-driven artifact", text)
+        self.assertIn("A lone `docs/changes/...`", text)
+        self.assertIn("must not become the project's only docs-driven artifact", text)
 
     def test_skill_requires_workflow_when_explicitly_named(self) -> None:
         text = (ROOT / "skill" / "SKILL.md").read_text(encoding="utf-8")
 
         self.assertIn("description: >-", text)
-        self.assertIn("用 docs-driven development 维护项目", text)
-        self.assertIn("四件套文档", text)
-        self.assertIn("## Invocation Contract（调用合同）", text)
-        self.assertIn("只读一遍 `SKILL.md` 然后直接写代码是不够的", text)
-        self.assertIn("不要把明确的 `docs-driven-dev` 调用静默降级", text)
-        self.assertIn("在改代码前创建或更新必要的 docs artifacts", text)
-        self.assertIn("即使只是小修复", text)
-        self.assertIn("Workflow B0 - Small Existing-Project Fix（小修复）", text)
+        self.assertIn("Use docs-driven development", text)
+        self.assertIn("source-of-truth documents", text)
+        self.assertIn("## Invocation Contract", text)
+        self.assertIn("Reading `SKILL.md` once", text)
+        self.assertIn("then coding directly is not enough", text)
+        self.assertIn("Do not silently downgrade", text)
+        self.assertIn("before changing production code", text)
+        self.assertIn("small\nfixes", text)
+        self.assertIn("Workflow B0 - Small Existing-Project Fix", text)
         self.assertLess(
-            text.index("Workflow B0 - Small Existing-Project Fix（小修复）"),
-            text.index("Workflow B - Existing Project Requirement（已有项目需求）"),
+            text.index("Workflow B0 - Small Existing-Project Fix"),
+            text.index("Workflow B - Existing Project Requirement"),
         )
         self.assertIn('docdev new-change "<slug>" <project>', text)
-        self.assertIn('Treat an explicit user request like "fix it", "补上吧", or "implement it"', text)
+        self.assertIn('Treat explicit user language like "fix it" or "implement it"', text)
 
     def test_skill_documents_delegation_guidance(self) -> None:
         text = (ROOT / "skill" / "SKILL.md").read_text(encoding="utf-8")
         spec = (ROOT / "docs" / "SPEC.md").read_text(encoding="utf-8")
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
 
-        self.assertIn("## Delegation Guidance（委派指导）", text)
-        self.assertNotIn("### Delegation Guidance（委派指导）", text)
+        self.assertIn("## Delegation Guidance", text)
+        self.assertNotIn("### Delegation Guidance", text)
         self.assertLess(
-            text.index("## Delegation Guidance（委派指导）"),
-            text.index("## Workflow A - Bootstrap（项目初始化）"),
+            text.index("## Delegation Guidance"),
+            text.index("## Workflow A - Bootstrap"),
         )
-        self.assertIn("优先考虑委派", text)
-        self.assertIn("Delegation 是", text)
-        self.assertIn("ownership 仍由主 agent 收束", text)
-        self.assertIn("主 agent owns", text)
-        self.assertIn("用户意图、SPEC invariants、scope、implementation gate", text)
-        self.assertIn("已批准的窄范围 implementation slice", text)
-        self.assertIn("文档一致性检查", text)
-        self.assertIn("测试失败定位", text)
+        self.assertIn("consider delegation first", text)
+        self.assertIn("Delegation is", text)
+        self.assertIn("ownership remains with the main agent", text)
+        self.assertIn("The main agent owns", text)
+        self.assertIn("user intent, SPEC invariants, scope, implementation gates", text)
+        self.assertIn("approved narrow", text)
+        self.assertIn("implementation slices", text)
+        self.assertIn("docs consistency checks", text)
+        self.assertIn("test-failure diagnosis", text)
         self.assertIn("objective", text)
         self.assertIn("file scope", text)
         self.assertIn("write permission", text)
-        self.assertIn("changed files / findings", text)
+        self.assertIn("changed\nfiles or findings", text)
         self.assertIn("uncertainty", text)
         self.assertIn("Agent delegation", spec)
         self.assertIn("Main agent owns docs-driven scope", spec)
@@ -854,11 +864,11 @@ class CliTests(unittest.TestCase):
         self.assertIn("docdev uninstall --yes", readme)
         self.assertIn("docdev uninstall --yes --keep-skills", readme)
         self.assertIn("docdev docs-health /path/to/project --write-report", readme)
-        self.assertIn("Install And Update Boundary（安装与更新边界）", skill)
-        self.assertIn("不属于 active", skill)
+        self.assertIn("Install And Update Boundary", skill)
+        self.assertIn("not active", skill)
         self.assertIn("README / SPEC / DECISIONS", skill)
         self.assertIn("release installer", readme)
-        self.assertIn("按这个顺序解析 CLI", skill)
+        self.assertIn("Resolve the CLI in this order", skill)
         self.assertIn("`docdev <command>` if available on `PATH`", skill)
         self.assertIn("The release installer", readme)
         active_surface_forbidden = [
@@ -868,10 +878,6 @@ class CliTests(unittest.TestCase):
             "docdev.cmd",
             ".docdev-skill-source",
             "legacy",
-            "旧路径",
-            "旧入口",
-            "不会被自动清理",
-            "skill 目录下",
         ]
         for forbidden in active_surface_forbidden:
             with self.subTest(forbidden=forbidden):
@@ -880,7 +886,6 @@ class CliTests(unittest.TestCase):
                 self.assertNotIn(forbidden, skill_bundle)
         active_skill_source_forbidden = [
             "Source Checkout",
-            "源码",
             "source checkout",
             "install.sh",
             "install.ps1",
@@ -907,6 +912,26 @@ class CliTests(unittest.TestCase):
         self.assertIn("docdev.cmd", spec)
         self.assertIn("Docs maintenance health", spec)
         self.assertIn("docdev docs-health", spec)
+
+    def test_repository_text_has_no_chinese_copy(self) -> None:
+        text_suffixes = {".bat", ".cmd", ".json", ".md", ".ps1", ".py", ".sh", ".toml", ".txt", ".yaml", ".yml"}
+        text_names = {".gitignore"}
+        ignored_parts = {".git", ".venv", "__pycache__"}
+
+        paths: list[Path] = []
+        for path in sorted(ROOT.rglob("*")):
+            if not path.is_file():
+                continue
+            if ignored_parts.intersection(path.relative_to(ROOT).parts):
+                continue
+            if path.suffix not in text_suffixes and path.name not in text_names:
+                continue
+            paths.append(path)
+
+        self.assertGreater(len(paths), 0)
+        for path in paths:
+            with self.subTest(path=str(path.relative_to(ROOT))):
+                self.assertNotRegex(path.read_text(encoding="utf-8"), r"[\u4e00-\u9fff]")
 
     def test_audit_warns_on_readme_documentation_map_drift(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

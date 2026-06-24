@@ -479,7 +479,7 @@ operations, audit, install, and cross-agent sync.
 **Related code / docs**:
 - SPEC §3.2, §3.3, §3.5
 - ROADMAP Step 5
-- `temp/DocsDrivenDev-对比与改造方案.md`
+- `temp/DocsDrivenDev-comparison-and-redesign-plan.md`
 - `temp/SKILL.md`
 
 ---
@@ -832,9 +832,9 @@ chose between a heavy workflow and no docs workflow.
   required docs artifacts before code changes.
 - A B0 path gives agents a legitimate low-documentation route for small fixes
   instead of inventing a direct-coding shortcut.
-- Treating "fix it", "补上吧", or "implement it" as implementation approval only
-  after scope and acceptance are stated reconciles the skill with Codex's
-  default implementation bias.
+- Treating "fix it" or "implement it" as implementation approval only after
+  scope and acceptance are stated reconciles the skill with Codex's default
+  implementation bias.
 
 **Risks**:
 - Even B0 can feel heavy in very large existing repositories. Mitigation: keep
@@ -1960,7 +1960,7 @@ launcher guidance, and similar negative or historical phrasing.
 - ROADMAP Step 6y
 - `skill/SKILL.md`
 - `skill/templates/SPEC.md`
-- `skill/templates/change/zh/SPEC.md`
+- `skill/templates/change/`
 - `tests/test_cli.py`
 
 ---
@@ -2038,3 +2038,93 @@ publish, and update the local native install.
 - `src/docs_driven_dev/docs_health.py`
 - `README.md`
 - `skill/SKILL.md`
+
+---
+
+## D-048 - Step 6ab - Keep docdev repository text English-only
+
+**Date**: 2026-06-25
+
+**Context**:
+The user decided that docdev should use one language consistently and should
+not expose Chinese copy in repository text. Before this change, `skill/SKILL.md`,
+default change packet templates, generated decision skeletons, tests, root
+docs, and archived change packets included Chinese or bilingual copy.
+
+**Options**:
+- A. Keep bilingual guidance - friendly to the current conversation language,
+  but inconsistent and leaks language choice into reusable tooling.
+- B. Add configurable root and change-template languages - flexible, but
+  increases product surface and keeps language branching in the CLI.
+- C. Standardize shipped runtime guidance, templates, skeletons, tests, active
+  source-of-truth docs, and archived change packet text on English.
+
+**Chosen**: C
+
+**Rationale**:
+- A reusable CLI/skill should have one stable repository language and avoid
+  mixed active guidance.
+- English templates fit public projects, code identifiers, command names, and
+  cross-agent usage.
+- Removing the language option simplifies `docdev new-change` and prevents new
+  Chinese packet scaffolds from being generated.
+- Archived change packets remain useful as traceability anchors, but their
+  tracked text can be compacted to English summaries while exact old wording
+  stays available in git history.
+
+**Risks**:
+- Detailed old verification logs are no longer inline in archived change
+  packets. Mitigation: use git history when line-level historical evidence is
+  needed, and keep root docs current.
+- Users who preferred localized packet templates lose the built-in option.
+  Mitigation: custom templates remain possible through `--template-dir`.
+
+**Related code / docs**:
+- SPEC §3.2
+- ARCHITECTURE §3.3
+- ROADMAP Step 6ab
+- `skill/SKILL.md`
+- `skill/templates/change/`
+- `src/docs_driven_dev/templates.py`
+- `tests/test_cli.py`
+
+---
+
+## D-049 - Step 6ac - Publish the English-only cleanup as v0.1.18
+
+**Date**: 2026-06-25
+
+**Context**:
+The English-only cleanup changes active skill guidance, shipped templates,
+generated skeletons, archived packet text, and the `new-change` template
+selection path. Source and local skill targets can be synced directly, but
+fresh installs and other machines still receive `v0.1.17` until a release is
+published.
+
+**Options**:
+- A. Keep the changes as source-only for now - faster, but published native
+  installs keep the old template layout and CLI surface.
+- B. Publish a patch release `v0.1.18` after source verification, package
+  smoke, public smoke, and local native refresh.
+
+**Chosen**: B
+
+**Rationale**:
+- The change affects deterministic CLI behavior and shipped skill templates,
+  not only prose.
+- `docdev update` should converge the native CLI and installed skill targets on
+  the same English-only runtime surface.
+- A patch release matches the scope: template layout, generated text, and
+  documentation cleanup without a breaking command rename.
+
+**Risks**:
+- The release requires another full smoke cycle. Mitigation: follow the
+  existing release checklist and keep the active skill concise.
+
+**Related code / docs**:
+- ROADMAP Step 6ac
+- `docs/changes/2026-06-25-english-only-docdev-surface/`
+- `skill/SKILL.md`
+- `skill/templates/change/`
+- `src/docs_driven_dev/templates.py`
+- `tests/test_cli.py`

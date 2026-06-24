@@ -35,7 +35,7 @@ def relative_path(project: Path, path: Path) -> str:
 
 def step_status_counts(text: str) -> dict[str, int]:
     section_match = re.search(
-        r"^#{2,3}\s+(?:Step Status|Step 状态总览)[^\n]*\n(?P<body>.*?)(?=^---\s*$|^##\s+|\Z)",
+        r"^#{2,3}\s+(?:Step Status|Step \u72b6\u6001\u603b\u89c8)[^\n]*\n(?P<body>.*?)(?=^---\s*$|^##\s+|\Z)",
         text,
         re.M | re.S,
     )

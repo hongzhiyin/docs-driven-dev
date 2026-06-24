@@ -121,9 +121,9 @@ def block_has_content(body: str | None) -> bool:
 def audit_decision_entry_completeness(decisions_path: Path, text: str) -> list[Finding]:
     findings: list[Finding] = []
     required_blocks: tuple[tuple[str, tuple[str, ...]], ...] = (
-        ("Options", ("Options", "选项")),
-        ("Chosen", ("Chosen", "选择")),
-        ("Risks", ("Risks", "风险")),
+        ("Options", ("Options", "\u9009\u9879")),
+        ("Chosen", ("Chosen", "\u9009\u62e9")),
+        ("Risks", ("Risks", "\u98ce\u9669")),
     )
     for decision_id, section in decision_sections(text):
         for label, aliases in required_blocks:
@@ -136,7 +136,7 @@ def audit_roadmap_acceptance(roadmap_path: Path, text: str) -> tuple[list[Findin
     findings: list[Finding] = []
     steps = roadmap_step_sections(text)
     for title, body in steps:
-        if "验收" not in body and "Acceptance" not in body:
+        if "\u9a8c\u6536" not in body and "Acceptance" not in body:
             findings.append(Finding("warn", f"{title} has no acceptance section", str(roadmap_path)))
     return findings, [title for title, _ in steps]
 
@@ -147,15 +147,15 @@ def architecture_omission_reason_exists(text: str) -> bool:
         lower = line.lower()
         if "ARCHITECTURE" not in upper:
             continue
-        has_omission = "omission" in lower or "省略" in line
-        has_reason = "reason" in lower or "原因" in line or "理由" in line
+        has_omission = "omission" in lower or "\u7701\u7565" in line
+        has_reason = "reason" in lower or "\u539f\u56e0" in line or "\u7406\u7531" in line
         if has_omission and has_reason:
             return True
     return False
 
 
 def current_phase_from_roadmap(text: str) -> str:
-    match = re.search(r"^\*\*[^*\n]*(?:Phase|阶段)[^*\n]*\*\*:\s*(.+)$", text, re.I | re.M)
+    match = re.search(r"^\*\*[^*\n]*(?:Phase|\u9636\u6bb5)[^*\n]*\*\*:\s*(.+)$", text, re.I | re.M)
     return match.group(1).strip() if match else ""
 
 
@@ -190,7 +190,7 @@ def section_has_real_table_row(section: str | None, pending_terms: tuple[str, ..
             continue
         if any("<" in cell and ">" in cell for cell in cells):
             continue
-        if cells[0].lower() in {"id", "acceptance", "验收项"}:
+        if cells[0].lower() in {"id", "acceptance", "\u9a8c\u6536\u9879"}:
             continue
         return True
     return False
@@ -251,31 +251,31 @@ def audit_change_packet(packet_dir: Path) -> tuple[list[Finding], dict[str, obje
 
     phase = current_phase_from_roadmap(roadmap_text)
     phase_lower = phase.lower()
-    implementing = "实现中" in phase or "implementation" in phase_lower or "implementing" in phase_lower
-    completed = "已完成" in phase or "completed" in phase_lower or "done" in phase_lower
+    implementing = "\u5b9e\u73b0\u4e2d" in phase or "implementation" in phase_lower or "implementing" in phase_lower
+    completed = "\u5df2\u5b8c\u6210" in phase or "completed" in phase_lower or "done" in phase_lower
 
     if implementing or completed:
-        pre_section = markdown_section(roadmap_text, ("Pre-Implementation Gate", "实现前门禁"))
+        pre_section = markdown_section(roadmap_text, ("Pre-Implementation Gate", "\u5b9e\u73b0\u524d\u95e8\u7981"))
         checked, unchecked = checkbox_counts(pre_section)
         if checked + unchecked == 0:
             findings.append(Finding("warn", "change packet has no pre-implementation gate checklist", str(roadmap_path)))
         elif unchecked:
             findings.append(Finding("warn", "change packet entered implementation before completing the pre-implementation gate", str(roadmap_path)))
 
-        research = markdown_section(roadmap_text, ("Research Log", "调研记录"))
+        research = markdown_section(roadmap_text, ("Research Log", "\u8c03\u7814\u8bb0\u5f55"))
         if not section_has_real_table_row(research):
             findings.append(Finding("warn", "change packet entered implementation without a concrete research log", str(roadmap_path)))
 
     if completed:
-        completion_section = markdown_section(roadmap_text, ("Completion Gate", "完成前门禁"))
+        completion_section = markdown_section(roadmap_text, ("Completion Gate", "\u5b8c\u6210\u524d\u95e8\u7981"))
         checked, unchecked = checkbox_counts(completion_section)
         if checked + unchecked == 0:
             findings.append(Finding("warn", "completed change packet has no completion gate checklist", str(roadmap_path)))
         elif unchecked:
             findings.append(Finding("warn", "completed change packet has unfinished completion gate items", str(roadmap_path)))
 
-        verification = markdown_section(roadmap_text, ("Verification Records", "验证记录"))
-        if not section_has_real_table_row(verification, ("pending", "待验证")):
+        verification = markdown_section(roadmap_text, ("Verification Records", "\u9a8c\u8bc1\u8bb0\u5f55"))
+        if not section_has_real_table_row(verification, ("pending", "\u5f85\u9a8c\u8bc1")):
             findings.append(Finding("warn", "completed change packet has no completed verification records", str(roadmap_path)))
 
     return findings, summary
@@ -395,7 +395,7 @@ def parse_current_status(roadmap: Path) -> tuple[str | None, str | None]:
         return None, None
     text = roadmap.read_text(encoding="utf-8")
     phase_match = re.search(r"\*\*Phase\*\*:\s*(.+)", text)
-    step_match = re.search(r"\*\*(?:Current\s+Step|当前\s*Step|Step)\*\*:\s*(.+)", text)
+    step_match = re.search(r"\*\*(?:Current\s+Step|\u5f53\u524d\s*Step|Step)\*\*:\s*(.+)", text)
     return (
         phase_match.group(1).strip() if phase_match else None,
         step_match.group(1).strip() if step_match else None,
@@ -424,27 +424,27 @@ def cmd_status(args: argparse.Namespace) -> int:
 
 def decision_skeleton(decision_id: int, title: str, today: str) -> str:
     return f"""
-## D-{decision_id:03d} · {title}
+## D-{decision_id:03d} - {title}
 
-**日期 / Date**: {today}
+**Date**: {today}
 
-**上下文 / Context**:
+**Context**:
 
-**选项 / Options**:
+**Options**:
 - A.
 - B.
 - C.
 
-**选择 / Chosen**:
+**Chosen**:
 
-**理由 / Rationale**:
+**Rationale**:
 -
 -
 
-**风险登记 / Risks**:
+**Risks**:
 -
 
-**对应代码 / 文档**：
+**Related code / docs**:
 - SPEC §
 - ``
 """

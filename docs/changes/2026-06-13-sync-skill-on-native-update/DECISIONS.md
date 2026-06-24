@@ -1,44 +1,46 @@
-# DECISIONS - native update 默认刷新 skill
+# DECISIONS - Sync Skill On Native Update
 
-> 本文件记录这次需求中为什么这么选。只写真实取舍，不为机械改动补仪式性决策。
+> Archived English summary for a historical docdev change packet.
 
-## 维护规则
+## Maintenance Rules
 
-1. `D-XXX` 在本工作包内单调递增，不复用。
-2. 每条记录 2-3 个真实选项；不要编造凑数选项。
-3. 写清选择、理由、风险和对应文件。
-4. 决策被推翻时，新增一条 D-XXX 引用旧决策，旧决策保留原文。
+1. Keep decision records concise and tied to real trade-offs.
+2. Preserve current product truth in root `docs/DECISIONS.md`.
+3. Use git history for detailed pre-compaction wording.
 
 ---
 
-## D-001 - Step 3 - 默认同步 skill，提供 no-sync opt-out
+## D-001 - Archive packet in English-only form
 
-**日期 / Date**: 2026-06-13
+**Date**: 2026-06-25
 
-**上下文 / Context**:
-旧设计为了避免 `docdev update` 隐式写入多个 agent homes，把 skill sync 设计成 `--sync-skill` 显式选项。但实际使用里，release 更新通常同时包含 CLI、skill、templates 和 docs workflow 变化；如果只更新 CLI，agent 仍可能读取旧 skill 内容。
+**Context**:
+The `sync-skill-on-native-update` packet was created on 2026-06-13 as part of earlier docdev maintenance.
+The repository now has a compatibility requirement that tracked docdev text use
+English only. Keeping the packet directory is useful for traceability, but the
+old detailed prose is no longer suitable as live tracked text.
 
-**选项 / Options**:
-- A. 保持 `--sync-skill` 显式 opt-in - 副作用最小，但普通更新容易留下 CLI/skill 版本不一致。
-- B. 默认同步 skill，新增 `--no-sync-skill` opt-out - 普通路径一致性最好，但默认副作用更大。
-- C. 做版本比较，只有 manifest version 变化时同步 - 更精细，但需要额外本地状态和边界处理，超过当前需求。
+**Options**:
+- A. Keep the original detailed packet unchanged - maximizes inline history, but
+  violates the repository-wide English-only contract.
+- B. Delete the packet - removes incompatible text, but loses discoverability of
+  the historical change topic.
+- C. Replace the packet with a concise English archive summary - keeps the
+  historical topic visible while satisfying the current compatibility rule.
 
-**选择 / Chosen**: B
+**Chosen**: C
 
-**理由 / Rationale**:
-- 满足 SPEC **#1**：release 更新后 agent 读取到的 workflow 与 CLI release 一致。
-- 保留 `--no-sync-skill`，让 CI、受限机器或只想更新 launcher 的用户可以避免写 agent homes。
-- 不改变 `sync.py` 的 replacement 合同，仍然不会生成 skill-local wrappers。
+**Rationale**:
+- The archive summary keeps the date, slug, and source-of-truth relationship.
+- Root docs and tests define current behavior; old packet details do not need to
+  stay in runtime context.
+- Git history remains the right place for exact pre-compaction wording.
 
-**风险 / Risks**:
-- 默认 update 会写 `~/.codex`、`~/.cursor`、`~/.agents`、`~/.claude` target。缓解：文档和 help 明确 `--no-sync-skill`。
-- 已发布旧版本仍需下一次 release 才获得新默认。缓解：在 ROADMAP 风险中记录后续 release。
+**Risks**:
+- Maintainers lose quick inline access to detailed old verification logs.
+  Mitigation: use git history when that level of evidence is needed.
 
-**对应代码 / 文档**:
-- SPEC §6
-- ROADMAP Step 4
-- ARCHITECTURE §3-§5
-- `src/docs_driven_dev/commands.py`
-- `src/docs_driven_dev/release.py`
-- `scripts/install_remote.sh`
-- `scripts/install_remote.ps1`
+**Related code / docs**:
+- `docs/changes/2026-06-13-sync-skill-on-native-update/`
+- `docs/DECISIONS.md` D-048
+- `docs/ROADMAP.md` Step 6ab

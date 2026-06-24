@@ -37,12 +37,12 @@ def template_dir_for(explicit: str | None = None) -> Path:
     )
 
 
-def change_template_dir_for(lang: str, explicit: str | None = None) -> Path:
+def change_template_dir_for(explicit: str | None = None) -> Path:
     base = template_dir_for(explicit)
-    candidate = base / "change" / lang
+    candidate = base / "change"
     if candidate.exists():
         return candidate
-    raise SystemExit(f"Could not find change templates for language {lang}: {candidate}")
+    raise SystemExit(f"Could not find change templates: {candidate}")
 
 
 def copy_template(name: str, docs_dir: Path, template_dir: Path, force: bool) -> bool:
@@ -146,7 +146,7 @@ def cmd_init(args: argparse.Namespace) -> int:
 def cmd_new_change(args: argparse.Namespace) -> int:
     project = Path(args.project).expanduser().resolve()
     docs_dir = docs_dir_for(project, args.docs_dir)
-    templates = change_template_dir_for(args.lang, args.template_dir)
+    templates = change_template_dir_for(args.template_dir)
     date = args.date or _dt.date.today().isoformat()
     slug = normalize_slug(args.slug)
     packet_dir = changes_dir_for(docs_dir) / f"{date}-{slug}"

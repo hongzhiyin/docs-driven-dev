@@ -7,7 +7,7 @@
 ## Current Progress
 
 **Phase**: Phase 1 - portable skill + CLI bootstrap
-**Current Step**: Step 6aa complete; v0.1.17 published and local install refreshed
+**Current Step**: Step 6ac in progress; v0.1.18 release packaging verified
 
 ### Step Status
 
@@ -60,6 +60,8 @@
 | 6y | Publish v0.1.16 runtime skill trim release | Done |
 | 6z | Add docs-health and trim current docs surface | Done |
 | 6aa | Publish v0.1.17 docs-health release | Done |
+| 6ab | Make docdev repository text English-only | Done |
+| 6ac | Publish v0.1.18 English-only and single change-template release | In Progress |
 
 ## Historical Summary
 
@@ -69,7 +71,7 @@
 | 5-5h | Added requirement change packets, Windows source maintenance scripts, install/update diagnostics, configurable skill homes, existing-code adoption, and explicit invocation rules | D-012 through D-020 |
 | 6-6h | Added GitHub Releases/native installer distribution, module split, default skill sync on native update, and uninstall | D-021 through D-028 |
 | 6i-6n | Added Windows bare-command install, UTF-8 launcher handling, and direct Claude copy sync; published v0.1.9 and v0.1.10 | D-029 through D-034 |
-| 6o-6aa | Removed skill-local wrapper residue from active guidance, promoted delegation, trimmed active skill, added docs-health, and published v0.1.17 | D-035 through D-047 |
+| 6o-6ac | Removed skill-local wrapper residue from active guidance, promoted delegation, trimmed active skill, added docs-health, published v0.1.17, made repository text English-only, and prepared the v0.1.18 release | D-035 through D-049 |
 
 Detailed step verification was intentionally moved out of the current view. Use
 the linked D-XXX records and requirement packets for historical evidence.
@@ -207,3 +209,94 @@ so fresh installs and `docdev update` receive the new maintenance capability.
   ran successfully, Codex/Cursor/Agents/Claude skill targets were 189 lines,
   and no old wrapper/cmd/source-checkout terms were found in source or installed
   skill files.
+
+---
+
+## Step 6ab - English-only repository text
+
+**Goal**: Make tracked docdev prose, runtime skill guidance, shipped
+templates, CLI-generated skeletons, tests, and source docs use English
+copy.
+
+**Tasks**:
+- [x] Create the scoped change packet.
+- [x] Convert `skill/SKILL.md` to English-only runtime guidance.
+- [x] Remove shipped Chinese change templates and make `new-change` use English templates by default.
+- [x] Update CLI-generated skeletons and tests so they no longer contain visible Chinese copy.
+- [x] Compact older archived change packets into English archive summaries.
+- [x] Update root SPEC / ARCHITECTURE / ROADMAP / DECISIONS.
+- [x] Run tests, audit, docs-health, and Chinese-residue scans.
+
+**Acceptance**:
+1. `docdev init`, `docdev new-change`, and `docdev new-decision` generate
+   English-only scaffolds.
+2. Tracked repository text has no Chinese characters across README, skill,
+   templates, source, tests, root docs, and archived change packets.
+3. Older archived `docs/changes/` packets remain discoverable as concise
+   English archive summaries; exact pre-compaction wording stays in git
+   history.
+4. Tests and project audit pass.
+
+**Verification**:
+- `PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests`
+  ran 43 tests successfully.
+- `PYTHONPATH=src python3 -m docs_driven_dev.cli audit
+  /Users/chihoyo/Project/docs-driven-dev` returned no findings.
+- `PYTHONPATH=src python3 -m docs_driven_dev.cli docs-health
+  /Users/chihoyo/Project/docs-driven-dev --write-report` completed and wrote
+  `docs/_generated/docdev/docs-health.json`.
+- Source smoke in `/private/tmp/docdev-english-smoke.Mxx6zB/project` ran
+  `init`, `new-change --with-architecture`, and `new-decision`; generated
+  output had no Chinese-character matches.
+- Repository-wide scan returned no matches:
+  `rg -n "[\\p{Han}]" . --glob '!.git/**' --glob '!__pycache__/**' --glob '!*.pyc'`.
+- `docdev sync-skill --source /Users/chihoyo/Project/docs-driven-dev/skill
+  --targets codex,cursor,agents,claude --force` refreshed local skill targets;
+  installed Codex/Cursor/Agents/Claude `SKILL.md` files are 217 lines and have
+  no Chinese-character matches.
+- `skill/SKILL.md` is 217 lines, under the 230-line runtime budget.
+
+---
+
+## Step 6ac - v0.1.18 English-only and single-template release
+
+**Goal**: Publish the English-only repository cleanup and the single
+`skill/templates/change/` template layout so fresh installs and `docdev update`
+receive the simplified runtime surface.
+
+**Tasks**:
+- [x] Bump release metadata to `0.1.18`.
+- [x] Run unit tests, project audit, docs-health, and residue scans.
+- [x] Package release assets.
+- [x] Run local simulated install smoke from packaged `0.1.18` assets.
+- [ ] Commit, tag, and push `v0.1.18`.
+- [ ] Publish GitHub Release `v0.1.18` as latest.
+- [ ] Run public latest smoke.
+- [ ] Update the local native install and synced skill targets to `0.1.18`.
+
+**Acceptance**:
+1. Release assets include `docdev-0.1.18.tar.gz`, checksum, manifest, and both
+   remote installers.
+2. Local simulated install launcher reports `docdev 0.1.18`.
+3. Public latest smoke can run version, init, new-change, audit, and
+   docs-health.
+4. Local `/Users/chihoyo/.local/bin/docdev` reports `docdev 0.1.18`.
+5. Source and installed skill targets have no Chinese characters and no
+   language-specific change-template subdirectories.
+
+**Verification**:
+- 44 tests passed with `PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m
+  unittest discover -s tests`.
+- Source checkout audit returned no findings, and source checkout
+  `docs-health --write-report` wrote `docs/_generated/docdev/docs-health.json`
+  with expected DECISIONS/source-doc/change-packet review signals.
+- Repository-wide Chinese-character scan returned no matches.
+- Legacy language-template path scan across source and installed skill targets
+  returned no matches.
+- Packaged release assets in `/private/tmp/docdev-release-assets-0.1.18.vyCByV`;
+  manifest listed `docdev-0.1.18.tar.gz` with SHA-256
+  `32cf5d222b7ce59fc62d47835cd98e20730538d0bca8a621bcc44893507478b8`.
+- Local file smoke in `/private/tmp/docdev-018-local-smoke.ciniTc` installed
+  `docdev 0.1.18`, ran init/new-change/audit/docs-health, confirmed the
+  packaged single change-template layout, and found no Chinese-character or
+  legacy language-template path matches.

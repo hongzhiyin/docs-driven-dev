@@ -1,41 +1,46 @@
-# DECISIONS - docs maintenance health
+# DECISIONS - Docs Maintenance Health
 
-> 本文件记录这次需求中为什么这么选。只写真实取舍，不为机械改动补仪式性决策。
+> Archived English summary for a historical docdev change packet.
 
-## 维护规则
+## Maintenance Rules
 
-1. `D-XXX` 在本工作包内单调递增，不复用。
-2. 每条记录 2-3 个真实选项；不要编造凑数选项。
-3. 写清选择、理由、风险和对应文件。
-4. 决策被推翻时，新增一条 D-XXX 引用旧决策，旧决策保留原文。
+1. Keep decision records concise and tied to real trade-offs.
+2. Preserve current product truth in root `docs/DECISIONS.md`.
+3. Use git history for detailed pre-compaction wording.
 
 ---
 
-## D-001 - Step 1 - Add docs-health report instead of automatic trimming
+## D-001 - Archive packet in English-only form
 
-**日期 / Date**: 2026-06-24
+**Date**: 2026-06-25
 
-**上下文 / Context**:
-用户希望继续精简 docdev 自身维护文档，并指出这种定期精简流程也应该成为 docdev 能力，供其他项目复用。
+**Context**:
+The `docs-maintenance-health` packet was created on 2026-06-24 as part of earlier docdev maintenance.
+The repository now has a compatibility requirement that tracked docdev text use
+English only. Keeping the packet directory is useful for traceability, but the
+old detailed prose is no longer suitable as live tracked text.
 
-**选项 / Options**:
-- A. 只手工精简当前仓库 - 最快，但其他项目无法复用。
-- B. 新增自动改写/归档命令 - 最完整，但容易误删历史和判断性内容。
-- C. 新增 deterministic `docs-health` 报告命令，agent 基于报告执行判断性精简 - 可复用且符合 skill/CLI 边界。
+**Options**:
+- A. Keep the original detailed packet unchanged - maximizes inline history, but
+  violates the repository-wide English-only contract.
+- B. Delete the packet - removes incompatible text, but loses discoverability of
+  the historical change topic.
+- C. Replace the packet with a concise English archive summary - keeps the
+  historical topic visible while satisfying the current compatibility rule.
 
-**选择 / Chosen**: C
+**Chosen**: C
 
-**理由 / Rationale**:
-- 文档精简包含判断：README 哪些该降噪、DECISIONS 哪些必须保留、ROADMAP 哪些可归档，这不应交给机械规则直接改写。
-- CLI 可以稳定统计行数、工作包体积、completed step 数和 review signals，适合其他项目复用。
-- 该设计延续 docdev 的边界：CLI 做确定性工作，skill/agent 做取舍。
+**Rationale**:
+- The archive summary keeps the date, slug, and source-of-truth relationship.
+- Root docs and tests define current behavior; old packet details do not need to
+  stay in runtime context.
+- Git history remains the right place for exact pre-compaction wording.
 
-**风险 / Risks**:
-- 报告阈值可能不适合所有项目。缓解：只作为 review signal，不让 `audit` 失败，也不自动修改文件。
+**Risks**:
+- Maintainers lose quick inline access to detailed old verification logs.
+  Mitigation: use git history when that level of evidence is needed.
 
-**对应代码 / 文档**:
-- SPEC §5
-- ROADMAP Step 1
-- `src/docs_driven_dev/docs_health.py`
-- `src/docs_driven_dev/commands.py`
-- `tests/test_cli.py`
+**Related code / docs**:
+- `docs/changes/2026-06-24-docs-maintenance-health/`
+- `docs/DECISIONS.md` D-048
+- `docs/ROADMAP.md` Step 6ab

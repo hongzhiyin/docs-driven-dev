@@ -47,6 +47,7 @@ Claude, and shared agent skill homes.
 | AG | Active skill runtime surface | Active skill omits source-checkout maintenance instructions and presents delegation as global workflow guidance when bounded subagent slices are available | See D-042 |
 | AH | Active skill compactness | Active skill stays a concise runtime contract, with install/update/release manuals kept in README and source docs | See D-043 |
 | AI | Docs maintenance health | `docdev docs-health` reports documentation size and maintenance signals without rewriting human-authored docs | See D-046 |
+| AJ | English-only repository text | Tracked docdev text uses English for portability; parsers may keep legacy compatibility without visible non-English copy | See D-048 |
 
 ## 3. Derived Rules
 
@@ -88,10 +89,11 @@ Required change packet files are `SPEC.md`, `ROADMAP.md`, and `DECISIONS.md`.
 boundaries, data flow, lifecycle, state, persistence, public APIs, events,
 configuration contracts, migration behavior, or other cross-cutting structure.
 
-Change packets default to Simplified Chinese templates because they are
-usually created from interactive requirement work. Code identifiers, file
-paths, commands, config keys, class/function names, branch names, and error
-messages retain their original spelling.
+Change packets use English templates by default. Tracked docdev prose,
+runtime skill guidance, shipped templates, CLI-generated skeletons, and active
+product docs should use English copy. Code identifiers, file paths, commands,
+config keys, class/function names, branch names, and error messages retain
+their original spelling.
 
 ### 3.2.1 Explicit Skill Invocation
 
@@ -114,8 +116,8 @@ Small fixes do not skip docs. They use a minimal `Workflow B0` packet:
 - omit packet ARCHITECTURE unless structure changes.
 
 After the packet states scope and acceptance, explicit user language such as
-"fix it", "补上吧", or "implement it" counts as implementation approval for the
-narrow fix.
+"fix it" or "implement it" counts as implementation approval for the narrow
+fix.
 
 ### 3.2.2 Agent Delegation
 
@@ -425,7 +427,7 @@ responsibility-focused internal modules such as `commands.py`, `templates.py`,
 `audit.py`, `sync.py`, and `release.py`.
 
 Constraints:
-- Input domain: project paths, optional docs dir override, change slug/date/lang, sync target list.
+- Input domain: project paths, optional docs dir override, change slug/date, sync target list.
 - Output domain: console summaries, markdown scaffolds, optional JSON audit.
 - Docs-health output domain: console summaries, optional JSON report under `_generated/docdev`.
 - Error categories: missing templates, missing docs, audit warnings/errors, unsafe sync replacement.
@@ -449,6 +451,7 @@ Constraints:
 - Keep `skill/SKILL.md` concise enough for runtime context. As a regression guard, it should stay at or below
   230 lines unless a future D-XXX explicitly accepts the extra context.
 - Mention `docs-health` as a pre-trim report command without turning active skill guidance into a maintenance runbook.
+- Keep tracked docdev prose, runtime skill guidance, shipped templates, CLI-generated skeletons, and source docs in English.
 
 ## 6. Non-Goals
 
@@ -477,3 +480,4 @@ Constraints:
 15. **#15**: Active skill guidance must not expose historical entrypoint migration details or implementation-specific command shim filenames when the current `docdev` command contract is enough.
 16. **#16**: Active skill guidance must stay concise runtime context; install, update, uninstall, release, and maintainer manuals belong in README / source docs unless they are necessary for immediate agent action.
 17. **#17**: Docs maintenance health checks must report review signals, not automatically rewrite or delete human-authored source documents.
+18. **#18**: Tracked docdev text must use English copy; legacy parser compatibility must not reintroduce visible non-English text into shipped output, generated scaffolds, or source documents.
