@@ -7,7 +7,7 @@
 ## Current Progress
 
 **Phase**: Phase 1 - portable skill + CLI bootstrap
-**Current Step**: Step 6ac in progress; v0.1.18 release packaging verified
+**Current Step**: Step 6ac complete; v0.1.18 published and local install refreshed
 
 ### Step Status
 
@@ -61,7 +61,7 @@
 | 6z | Add docs-health and trim current docs surface | Done |
 | 6aa | Publish v0.1.17 docs-health release | Done |
 | 6ab | Make docdev repository text English-only | Done |
-| 6ac | Publish v0.1.18 English-only and single change-template release | In Progress |
+| 6ac | Publish v0.1.18 English-only and single change-template release | Done |
 
 ## Historical Summary
 
@@ -269,10 +269,10 @@ receive the simplified runtime surface.
 - [x] Run unit tests, project audit, docs-health, and residue scans.
 - [x] Package release assets.
 - [x] Run local simulated install smoke from packaged `0.1.18` assets.
-- [ ] Commit, tag, and push `v0.1.18`.
-- [ ] Publish GitHub Release `v0.1.18` as latest.
-- [ ] Run public latest smoke.
-- [ ] Update the local native install and synced skill targets to `0.1.18`.
+- [x] Commit, tag, and push `v0.1.18`.
+- [x] Publish GitHub Release `v0.1.18` as latest.
+- [x] Run public latest smoke.
+- [x] Update the local native install and synced skill targets to `0.1.18`.
 
 **Acceptance**:
 1. Release assets include `docdev-0.1.18.tar.gz`, checksum, manifest, and both
@@ -300,3 +300,17 @@ receive the simplified runtime surface.
   `docdev 0.1.18`, ran init/new-change/audit/docs-health, confirmed the
   packaged single change-template layout, and found no Chinese-character or
   legacy language-template path matches.
+- Commit `1d7b4c4`, tag `v0.1.18`, and the `main` branch were pushed to
+  origin.
+- GitHub Release:
+  `https://github.com/hongzhiyin/docs-driven-dev/releases/tag/v0.1.18`.
+- Public latest smoke in `/private/tmp/docdev-018-public-smoke.RnbMIV`
+  installed the GitHub release, verified `docdev 0.1.18`, ran
+  init/new-change/audit/docs-health, confirmed packaged `SKILL.md` was 217
+  lines, confirmed the packaged single change-template layout, and found no
+  Chinese-character or legacy language-template path matches.
+- Local native update refreshed `/Users/chihoyo/.local/bin/docdev` to
+  `docdev 0.1.18`; `doctor` passed, Codex/Cursor/Agents/Claude skill targets
+  were refreshed to 217-line `SKILL.md` files, each target kept the single
+  change-template layout, and installed-surface residue scans returned no
+  matches.

@@ -126,10 +126,11 @@
 | SPEC-5 | `rg -n "[\\p{Han}]" . --glob '!.git/**' --glob '!__pycache__/**' --glob '!*.pyc'` | Passed | No matches |
 | SPEC-6 | Installed skill sync and scan | Passed | Codex/Cursor/Agents/Claude targets refreshed to 217-line English `SKILL.md`; no Chinese-character matches |
 | SPEC-7 | v0.1.18 local release smoke | Passed | Packaged release installed from local assets, generated a change packet, audit/docs-health passed, and residue scans returned no matches |
+| SPEC-8 | v0.1.18 public release and local native update | Passed | GitHub Release published; public latest smoke passed; local native `docdev` updated to 0.1.18 with synced installed skill targets |
 
 ## 4. Risks And Follow-Ups
 
 | ID | Risk / Follow-up | Impact | Handling |
 |---|---|---|---|
 | F-1 | Archived packet detail is compacted | Maintainers need git history for line-level old logs | Keep packet slugs and root decisions discoverable |
-| F-2 | Published native release still points to v0.1.17 until a new release is cut | Other machines will not receive this cleanup via `docdev update` yet | Publish a patch release when requested |
+| F-2 | Published native release needed the English-only cleanup | Other machines needed a patch release before `docdev update` could receive it | Resolved by the v0.1.18 patch release |
